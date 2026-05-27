@@ -26,7 +26,7 @@ def create_item(item: Item):
 
 @router.get("/{item_id}", response_model=Item)
 def get_item(item_id: int) -> Item:
-    if item_id < len(items):
+    if -1 < item_id < len(items):
         return items[item_id]
     else:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -34,7 +34,7 @@ def get_item(item_id: int) -> Item:
 
 @router.delete("/{item_id}")
 def remove_item(item_id: int):
-    if item_id < len(items):
+    if -1 < item_id < len(items):
         del items[item_id]
     else:
         raise HTTPException(status_code=404, detail="Item not found")
