@@ -4,7 +4,7 @@ from fastapi.exceptions import RequestValidationError, HTTPException
 from .routers import items
 from .database import engine, Base
 
-Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(engine)
 
 app = FastAPI()
 
