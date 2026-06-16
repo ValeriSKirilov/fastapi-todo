@@ -1,12 +1,36 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from app.routers import items
+from fastapi.exceptions import RequestValidationError, HTTPException
+from .routers import items
+from .database import engine, Base
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    print(f"INVALID USER INPUT: {exc}")
+
+    return JSONResponse(
+        status_code=400,
+        content={"message": exc.errors()},
+    )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    print(f"HTTP {exc.status_code}: {exc.detail}")
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail}
+    )
+
+
 @app.exception_handler(Exception)
-def global_exception_handler(request: Request, exc: Exception):
+async def general_exception_handler(request: Request, exc: Exception):
     print(f"CRITICAL SYSTEM FAILURE: {exc}")
 
     return JSONResponse(

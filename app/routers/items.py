@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException
-from app.models import Item
-
-items = []
+from fastapi import APIRouter, HTTPException, Depends
+from ..schemas import ItemResponse, ItemCreate
+from ..database import get_db
+from .. import crud
+from typing import List
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/items",
@@ -10,31 +12,41 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=list[Item])
-def list_items(limit: int = None):
-    if limit is None:
-        return items
+@router.get("", response_model=List[ItemResponse])
+def list_items(limit: int = None, db: Session = Depends(get_db)):
+    if limit > 0 or limit is None:
+        return crud.get_items(db, limit)
     else:
-        return items[0:limit]
+        raise HTTPException(status_code=400, detail="Invalid index")
 
 
-@router.post("", response_model=list[Item])
-def create_item(item: Item):
-    items.append(item)
-    return items
-
-
-@router.get("/{item_id}", response_model=Item)
-def get_item(item_id: int) -> Item:
-    if -1 < item_id < len(items):
-        return items[item_id]
+@router.get("/{item_id}", response_model=ItemResponse)
+def get_item(item_id: int, db: Session = Depends(get_db)):
+    item = crud.get_item(db, item_id)
+    if item:
+        return item
     else:
         raise HTTPException(status_code=404, detail="Item not found")
 
 
+@router.post("", response_model=ItemResponse)
+def create_item(item: ItemCreate, db: Session = Depends(get_db)):
+    return crud.create_item(db, item)
+
+
 @router.delete("/{item_id}")
-def remove_item(item_id: int):
-    if -1 < item_id < len(items):
-        del items[item_id]
+def remove_item(item_id: int, db: Session = Depends(get_db)):
+    item = crud.delete_item(db, item_id)
+    if item:
+        return item
+    else:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+
+@router.put("/{item_id}", response_model=ItemResponse)
+def update_item(item_id: int, new_item: ItemCreate, db: Session = Depends(get_db)):
+    item = crud.update_item(db, item_id, new_item)
+    if item:
+        return item
     else:
         raise HTTPException(status_code=404, detail="Item not found")
