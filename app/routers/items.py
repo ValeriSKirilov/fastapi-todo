@@ -14,7 +14,7 @@ router = APIRouter(
 
 @router.get("", response_model=List[ItemResponse])
 def list_items(limit: int = None, db: Session = Depends(get_db)):
-    if limit > 0 or limit is None:
+    if limit is None or limit > 0:
         return crud.get_items(db, limit)
     else:
         raise HTTPException(status_code=400, detail="Invalid index")
