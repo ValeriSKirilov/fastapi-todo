@@ -23,3 +23,5 @@ services:
         restart: true
     env_file:
       - .env
+    volumes:
+      - .:/fastapi-app
