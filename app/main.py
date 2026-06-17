@@ -2,9 +2,6 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError, HTTPException
 from .routers import items
-from .database import engine, Base
-
-Base.metadata.create_all(engine)
 
 app = FastAPI()
 
