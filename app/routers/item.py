@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-from ..schemas import ItemResponse, ItemCreate
+from ..schemas.item import ItemResponse, ItemCreate
 from ..database import get_db
 from .. import crud
 from typing import List
