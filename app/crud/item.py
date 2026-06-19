@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
-from models.item import Item
-from schemas.item import ItemCreate
+from ..models.item import Item
+from ..schemas.item import ItemCreate, ItemUpdate
 
 
 def get_items(db: Session, limit: int | None = None):
@@ -30,11 +30,11 @@ def delete_item(db: Session, item_id: int):
     return db_item
 
 
-def update_item(db: Session, item_id: int, item: ItemCreate):
+def update_item(db: Session, item_id: int, item: ItemUpdate):
     db_item = db.query(Item).filter(Item.id == item_id).first()
 
     if db_item:
-        for key, value in item.model_dump().items():
+        for key, value in item.model_dump(exclude_unset=True).items():
             setattr(db_item, key, value)
         db.commit()
         db.refresh(db_item)
