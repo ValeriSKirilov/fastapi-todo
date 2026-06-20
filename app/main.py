@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError, HTTPException
-from .routers import items
+from .routers import item
 
 app = FastAPI()
 
@@ -36,7 +36,7 @@ async def general_exception_handler(request: Request, exc: Exception):
     )
 
 
-app.include_router(items.router)
+app.include_router(item.router)
 
 
 @app.get("/")
