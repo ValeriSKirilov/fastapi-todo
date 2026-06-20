@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
-from ..schemas.item import ItemResponse, ItemCreate
+from ..schemas.item import ItemResponse, ItemCreate, ItemUpdate
 from ..database import get_db
-from .. import crud
+from ..crud import item as crud
 from typing import List
 from sqlalchemy.orm import Session
 
@@ -34,17 +34,15 @@ def create_item(item: ItemCreate, db: Session = Depends(get_db)):
     return crud.create_item(db, item)
 
 
-@router.delete("/{item_id}")
+@router.delete("/{item_id}", status_code=204)
 def remove_item(item_id: int, db: Session = Depends(get_db)):
     item = crud.delete_item(db, item_id)
-    if item:
-        return item
-    else:
+    if not item:
         raise HTTPException(status_code=404, detail="Item not found")
 
 
 @router.put("/{item_id}", response_model=ItemResponse)
-def update_item(item_id: int, new_item: ItemCreate, db: Session = Depends(get_db)):
+def update_item(item_id: int, new_item: ItemUpdate, db: Session = Depends(get_db)):
     item = crud.update_item(db, item_id, new_item)
     if item:
         return item

@@ -14,3 +14,8 @@ class ItemResponse(ItemBase):
     id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ItemUpdate(BaseModel):
+    text: str | None = None
+    is_done: bool | None = None

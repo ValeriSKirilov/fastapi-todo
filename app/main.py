@@ -41,4 +41,4 @@ app.include_router(item.router)
 
 @app.get("/")
 def root():
-    return {"message": "Hello World"}
+    return {"message": "Server is running"}
