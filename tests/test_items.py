@@ -6,6 +6,7 @@ from sqlalchemy.pool import StaticPool
 from app.main import app
 from app.database import get_db, Base
 from app.models.item import Item
+from app.models.user import User
 
 DATABASE_URL = "sqlite:///:memory:"
 
