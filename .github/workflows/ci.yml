@@ -11,6 +11,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "postgresql://fake:fake@localhost/fake"
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v6
