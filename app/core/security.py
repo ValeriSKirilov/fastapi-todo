@@ -54,3 +54,11 @@ def create_refresh_token(user_data: dict) -> str:
     )
 
     return token
+
+
+def decode_token(token: str) -> dict:
+    return jwt.decode(
+        token,
+        key=settings.SECRET_KEY,
+        algorithms=[settings.ALGORITHM]
+    )
