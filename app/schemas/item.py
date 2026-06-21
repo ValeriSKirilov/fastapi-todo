@@ -12,7 +12,6 @@ class ItemCreate(ItemBase):
 
 class ItemResponse(ItemBase):
     id: int
-
     model_config = ConfigDict(from_attributes=True)
 
 
