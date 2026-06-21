@@ -13,7 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: "postgresql://fake:fake@localhost/fake"
-      SECRET_KEY: "fake"
+      SECRET_KEY: "fake-secret-key"
+      ALGORITHM: "HS256"
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      REFRESH_TOKEN_EXPIRE_DAYS: 10
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v6
