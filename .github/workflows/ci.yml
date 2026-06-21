@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: "postgresql://fake:fake@localhost/fake"
+      SECRET_KEY: "fake"
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v6
