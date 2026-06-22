@@ -1,9 +1,11 @@
+from typing import List
+
 from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
+
 from ..schemas.item import ItemResponse, ItemCreate, ItemUpdate
 from ..database import get_db
 from ..crud import item as crud
-from typing import List
-from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/items",

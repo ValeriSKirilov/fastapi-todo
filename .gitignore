@@ -5,7 +5,4 @@ __pycache__/
 postgres_data/
 
 #TEMPORARY TODO
-app/schemas/
-app/dependencies/
-app/models/user.py
 app/routers/auth.py
