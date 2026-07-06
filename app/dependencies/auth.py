@@ -24,12 +24,15 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session 
     except InvalidTokenError:
         raise credentials_exception
 
-    user_id = payload["sub"]
+    if payload.get("type") != "access":
+        raise credentials_exception
+
+    user_id = payload.get("sub")
     if not user_id:
         raise credentials_exception
 
     user = get_user_by_id(db, int(user_id))
     if not user:
         raise credentials_exception
-    
+
     return user

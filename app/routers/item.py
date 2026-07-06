@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 
 from ..schemas.item import ItemResponse, ItemCreate, ItemUpdate
@@ -19,7 +19,10 @@ def list_items(limit: int = None, db: Session = Depends(get_db)):
     if limit is None or limit > 0:
         return crud.get_items(db, limit)
     else:
-        raise HTTPException(status_code=400, detail="Invalid index")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid index"
+        )
 
 
 @router.get("/{item_id}", response_model=ItemResponse)
@@ -28,7 +31,10 @@ def get_item(item_id: int, db: Session = Depends(get_db)):
     if item:
         return item
     else:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Item not found"
+        )
 
 
 @router.post("", response_model=ItemResponse)
@@ -36,11 +42,14 @@ def create_item(item: ItemCreate, db: Session = Depends(get_db)):
     return crud.create_item(db, item)
 
 
-@router.delete("/{item_id}", status_code=204)
+@router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_item(item_id: int, db: Session = Depends(get_db)):
     item = crud.delete_item(db, item_id)
     if not item:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Item not found"
+        )
 
 
 @router.put("/{item_id}", response_model=ItemResponse)
@@ -49,4 +58,7 @@ def update_item(item_id: int, new_item: ItemUpdate, db: Session = Depends(get_db
     if item:
         return item
     else:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Item not found"
+        )
