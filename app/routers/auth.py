@@ -6,23 +6,17 @@ from fastapi.security import OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 
 from ..models.user import User
-from ..schemas.user import UserResponse, UserCreate, UserUpdate
+from ..schemas.user import UserResponse
 from ..schemas.token import Token, TokenRefreshRequest
 from ..database import get_db
 from ..crud import user as crud
-from ..dependencies.auth import get_current_user
+from ..dependencies.auth import get_current_user, credentials_exception
 from ..core.security import verify_password, create_access_token, create_refresh_token, decode_token
 
 router = APIRouter(
     prefix="/auth",
     tags=["auth"],
     responses={404: {"description": "Not found"}},
-)
-
-credentials_exception = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Could not validate credentials",
-    headers={"WWW-Authenticate": "Bearer"},
 )
 
 
@@ -65,7 +59,7 @@ def refresh_access_token(request: TokenRefreshRequest, db: Session = Depends(get
     if not user_id:
         raise credentials_exception
 
-    if not crud.get_user_by_id(db, str(user_id)):
+    if not crud.get_user_by_id(db, int(user_id)):
         raise credentials_exception
 
     access_token = create_access_token(user_data={"id": str(user_id)})
