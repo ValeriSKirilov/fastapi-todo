@@ -59,7 +59,12 @@ def refresh_access_token(request: TokenRefreshRequest, db: Session = Depends(get
     if not user_id:
         raise credentials_exception
 
-    if not crud.get_user_by_id(db, int(user_id)):
+    try:
+        user_id_int = int(user_id)
+    except ValueError:
+        raise credentials_exception
+
+    if not crud.get_user_by_id(db, user_id_int):
         raise credentials_exception
 
     access_token = create_access_token(user_data={"id": str(user_id)})
