@@ -81,7 +81,10 @@ def test_update_item():
 
 
 def test_delete_item():
-    response = client.delete("/items/1")
+    response = client.post("/items", json={"text": "Item to delete"})
+    item_id = response.json()["id"]
+
+    response = client.delete(f"/items/{item_id}")
     assert response.status_code == 204
 
 
