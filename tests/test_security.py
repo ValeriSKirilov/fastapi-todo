@@ -39,9 +39,7 @@ def test_decode_token():
 
 
 def test_expired_token():
-    payload = {}
-    payload['sub'] = '1'
-    payload['exp'] = datetime.now(timezone.utc) - timedelta(minutes=5)
+    payload = {'sub': '1', 'exp': datetime.now(timezone.utc) - timedelta(minutes=5)}
 
     token = jwt.encode(
         payload=payload,

@@ -3,6 +3,8 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError, HTTPException
 
 from .routers import item
+from .routers import auth
+from .routers import user
 
 app = FastAPI()
 
@@ -38,6 +40,8 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 
 app.include_router(item.router)
+app.include_router(auth.router)
+app.include_router(user.router)
 
 
 @app.get("/")

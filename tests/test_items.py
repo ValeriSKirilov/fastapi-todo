@@ -7,6 +7,7 @@ from app.main import app
 from app.database import get_db, Base
 from app.models.item import Item
 from app.models.user import User
+from app.dependencies.auth import get_current_user
 
 DATABASE_URL = "sqlite:///:memory:"
 
@@ -30,14 +31,17 @@ def override_get_db():
         database.close()
 
 
-app.dependency_overrides[get_db] = override_get_db
+def override_get_current_user():
+    return User(id=1, email="test@test.com", hashed_password="fakepassword")
 
 
 def setup_module():
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
     Base.metadata.create_all(bind=engine)
 
     session = TestingSessionLocal()
-    db_item = Item(text="Test Item", is_done=False)
+    db_item = Item(text="Test Item", is_done=False, owner_id=1)
     session.add(db_item)
     session.commit()
     session.close()
@@ -77,7 +81,10 @@ def test_update_item():
 
 
 def test_delete_item():
-    response = client.delete("/items/1")
+    response = client.post("/items", json={"text": "Item to delete"})
+    item_id = response.json()["id"]
+
+    response = client.delete(f"/items/{item_id}")
     assert response.status_code == 204
 
 
@@ -91,5 +98,33 @@ def test_delete_nonexistent_item():
     assert response.status_code == 404
 
 
+def test_get_ownership_enforcement():
+    try:
+        app.dependency_overrides[get_current_user] = lambda: User(id=2, email="b@test.com", hashed_password="x")
+        response = client.get("/items/1")
+        assert response.status_code == 404
+    finally:
+        app.dependency_overrides[get_current_user] = override_get_current_user
+
+
+def test_update_ownership_enforcement():
+    try:
+        app.dependency_overrides[get_current_user] = lambda: User(id=2, email="b@test.com", hashed_password="x")
+        response = client.put("/items/1", json={"is_done": True})
+        assert response.status_code == 404
+    finally:
+        app.dependency_overrides[get_current_user] = override_get_current_user
+
+
+def test_delete_ownership_enforcement():
+    try:
+        app.dependency_overrides[get_current_user] = lambda: User(id=2, email="b@test.com", hashed_password="x")
+        response = client.delete("/items/1")
+        assert response.status_code == 404
+    finally:
+        app.dependency_overrides[get_current_user] = override_get_current_user
+
+
 def teardown_module():
+    app.dependency_overrides.clear()
     Base.metadata.drop_all(bind=engine)
