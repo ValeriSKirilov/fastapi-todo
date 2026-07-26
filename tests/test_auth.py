@@ -33,7 +33,8 @@ def override_get_db():
 def setup_module():
     app.dependency_overrides[get_db] = override_get_db
     Base.metadata.create_all(bind=engine)
-    client.post("/users/register", json={"email": "test@test.com", "password": "password123"})
+    client.post("/users/register",
+                json={"email": "test@test.com", "password": "password123", "first_name": "Test", "last_name": "User"})
 
 
 def get_tokens():
@@ -42,12 +43,15 @@ def get_tokens():
 
 
 def test_register_new_user():
-    response = client.post("/users/register", json={"email": "a@test.com", "password": "qwerty"})
+    response = client.post("/users/register", json={"email": "a@test.com", "password": "qwerty", "first_name": "Test",
+                                                    "last_name": "User"})
     assert response.status_code == 201
 
 
 def test_register_duplicate_user():
-    response = client.post("/users/register", json={"email": "test@test.com", "password": "pass123"})
+    response = client.post("/users/register",
+                           json={"email": "test@test.com", "password": "pass123", "first_name": "Test",
+                                 "last_name": "User"})
     assert response.status_code == 409
 
 

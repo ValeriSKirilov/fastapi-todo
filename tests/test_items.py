@@ -32,7 +32,7 @@ def override_get_db():
 
 
 def override_get_current_user():
-    return User(id=1, email="test@test.com", hashed_password="fakepassword")
+    return User(id=1, email="test@test.com", hashed_password="fakepassword", first_name="Test", last_name="User")
 
 
 def setup_module():
@@ -100,7 +100,8 @@ def test_delete_nonexistent_item():
 
 def test_get_ownership_enforcement():
     try:
-        app.dependency_overrides[get_current_user] = lambda: User(id=2, email="b@test.com", hashed_password="x")
+        app.dependency_overrides[get_current_user] = lambda: User(id=2, email="b@test.com", hashed_password="x",
+                                                                  first_name="Test", last_name="User")
         response = client.get("/items/1")
         assert response.status_code == 404
     finally:
@@ -109,7 +110,8 @@ def test_get_ownership_enforcement():
 
 def test_update_ownership_enforcement():
     try:
-        app.dependency_overrides[get_current_user] = lambda: User(id=2, email="b@test.com", hashed_password="x")
+        app.dependency_overrides[get_current_user] = lambda: User(id=2, email="b@test.com", hashed_password="x",
+                                                                  first_name="Test", last_name="User")
         response = client.put("/items/1", json={"is_done": True})
         assert response.status_code == 404
     finally:
@@ -118,7 +120,8 @@ def test_update_ownership_enforcement():
 
 def test_delete_ownership_enforcement():
     try:
-        app.dependency_overrides[get_current_user] = lambda: User(id=2, email="b@test.com", hashed_password="x")
+        app.dependency_overrides[get_current_user] = lambda: User(id=2, email="b@test.com", hashed_password="x",
+                                                                  first_name="Test", last_name="User")
         response = client.delete("/items/1")
         assert response.status_code == 404
     finally:

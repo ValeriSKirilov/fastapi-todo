@@ -16,7 +16,12 @@ def get_user_by_id(db: Session, user_id: int):
 def create_user(db: Session, user: UserCreate):
     hashed_password = hash_password(user.password)
 
-    db_user = User(email=user.email, hashed_password=hashed_password)
+    db_user = User(
+        email=user.email,
+        hashed_password=hashed_password,
+        first_name=user.first_name,
+        last_name=user.last_name
+    )
 
     db.add(db_user)
     db.commit()
