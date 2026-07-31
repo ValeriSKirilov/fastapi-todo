@@ -6,58 +6,78 @@
     <title>Checkmate</title>
     <link rel="stylesheet" href="./css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
 </head>
 <body>
-<div class="login-page" style="display: none">
-    <div class="login-form" id="login-section" style="display: none">
+<div class="login-page app-view" id="login-page">
+    <div class="login-form login-page-element" id="login-section">
         <img src="img/logo-with-text.png" alt="Checkmate Logo">
         <h1>Welcome Back!</h1>
         <p>Sign in to manage your tasks</p>
+        <p id="invalid-cred-msg">Your email or password may be incorrect. Check your details and try again.</p>
         <form class="auth-form" id="login-form">
             <div class="input-wrapper">
                 <i data-lucide="mail" class="input-icon"></i>
-                <input type="email" id="login-email" class="auth-input" placeholder="Email">
+                <input type="email" name="username" autocomplete="username" id="login-email"
+                       class="auth-input" placeholder="Email">
+                <i data-lucide="triangle-alert" class="invalid-input-icon"></i>
             </div>
             <div class="input-wrapper">
                 <i data-lucide="lock" class="input-icon"></i>
-                <input type="password" id="login-password" class="auth-input" placeholder="Password">
+                <input type="password" name="password" autocomplete="current-password" id="login-password"
+                       class="auth-input" placeholder="Password">
+                <i data-lucide="triangle-alert" class="invalid-input-icon"></i>
             </div>
             <button type="submit" id="login-btn">Log In</button>
         </form>
-        <p>Don't have an account yet? <a href="#" id="show-register">Sign Up</a></p>
+        <p>Don't have an account yet? <a href="#" id="show-register-btn">Sign Up</a></p>
     </div>
-    <div class="register-form" id="register-section" style="display: none">
-        <img src="./img/logo-with-text.png" alt="Checkmate Logo" style="width: 200px"> <!-- TODO  REMOVE -->
+    <div class="register-form login-page-element" id="register-section">
+        <img src="./img/logo-with-text.png" alt="Checkmate Logo">
         <h1>Create Your Account</h1>
         <p>Start your productive journey today. It's quick and easy</p>
         <form class="auth-form" id="register-form">
             <div class="input-wrapper">
                 <i data-lucide="user" class="input-icon"></i>
-                <input type="text" id="register-username" class="auth-input" placeholder="First Name">
+                <input type="text" name="first_name" id="register-first-name" class="auth-input"
+                       placeholder="First Name">
             </div>
             <div class="input-wrapper">
-                <i data-lucide="user" class="input-icon"></i>
-                <input type="text" id="register-lastname" class="auth-input" placeholder="Last Name">
+                <i data-lucide="users" class="input-icon"></i>
+                <input type="text" name="last_name" id="register-last-name" class="auth-input"
+                       placeholder="Last Name">
             </div>
             <div class="input-wrapper">
                 <i data-lucide="mail" class="input-icon"></i>
-                <input type="email" id="register-email" class="auth-input" placeholder="Email">
+                <input type="email" name="email" id="register-email" class="auth-input" placeholder="Email">
+                <i data-lucide="triangle-alert" class="invalid-input-icon" id="email-in-use-icon"></i>
             </div>
+            <p id="email-in-use-msg">The email is already in use. Please use another one.</p>
             <div class="input-wrapper">
                 <i data-lucide="lock" class="input-icon"></i>
-                <input type="password" id="register-password" class="auth-input" placeholder="Create Password">
+                <input type="password" name="password" id="register-password" class="auth-input"
+                       placeholder="Create Password">
             </div>
             <div class="input-wrapper">
-                <i data-lucide="lock" class="input-icon"></i>
-                <input type="password" id="confirm-register-password" class="auth-input" placeholder="Confirm Password">
+                <i data-lucide="lock-keyhole" class="input-icon"></i>
+                <input type="password" name="confirm-register-password" id="confirm-register-password"
+                       class="auth-input" placeholder="Confirm Password">
+                <i data-lucide="triangle-alert" class="invalid-input-icon" id="password-not-matching-icon"></i>
             </div>
+            <p id="password-not-matching-msg">Please confirm your password.</p>
             <button type="submit" id="register-btn">Register</button>
         </form>
-        <p>Already have an account? <a href="#" id="show-login">Log In</a></p>
+        <p>Already have an account? <a href="#" id="show-login-btn">Log In</a></p>
+    </div>
+    <div class="success-banner login-page-element" id="success-section">
+        <img src="./img/logo-with-text.png" alt="Checkmate Logo">
+        <h1>Welcome to Checkmate!</h1>
+        <p id="confirmation-msg">Your account has been created successfully!</p>
+        <p id="redirect-msg">You will be redirected to the login page in 2 seconds.
+            <a href="#" id="redirect-to-login">Click here</a> to proceed manually.</p>
     </div>
 </div>
-<div class="todo-page">
+<div class="todo-page app-view" id="todo-page">
     <div class="sidebar">
         <img src="./img/logo-with-text-alternative.png" alt="Checkmate Logo">
         <span class="sidebar-label">Menu</span>
@@ -144,12 +164,35 @@
                     <h1 id="curr-title">Today's Tasks</h1>
                     <p id="additional-info">Wed Oct 25</p>
                 </div>
-                <button class="logout-button">
+                <button class="logout-btn" id="logout-btn">
                     Log Out
                     <i data-lucide="power" class="logout-icon"></i>
                 </button>
             </div>
             <div class="tasks-container" id="tasks-list">
+                <div class="task-item new-task-item" data-id="1">
+                    <input type="checkbox" id="new-task-checkbox" disabled>
+                    <div class="task-body">
+                        <input type="text" name="new-task" class="new-task-input" placeholder="Enter a new task title"
+                               required>
+                    </div>
+                    <div class="task-meta new-task-meta">
+                        <div class="due-date-btn">
+                            <i data-lucide="calendar" class="task-icon"></i>
+                            <span id="due-date-text">Set date</span>
+                            <input type="date" id="new-task-date">
+                        </div>
+                        <div class="due-date-btn">
+                            <i data-lucide="clock" class="task-icon"></i>
+                            <span id="due-time-text">Set time</span>
+                            <input type="time" id="new-task-time">
+                        </div>
+                        <button type="button" id="add-task-btn">
+                            ADD TASK
+                        </button>
+                        <button type="button" id="new-task-cancel-btn">Cancel</button>
+                    </div>
+                </div>
                 <div class="task-item" data-id="1">
                     <input type="checkbox" class="task-checkbox" id="task-1">
                     <div class="task-body">
@@ -278,17 +321,15 @@
                     </div>
                 </div>
             </div>
-            <button class="new-task-button" id="add-task-btn">
-                <i data-lucide="circle-plus" class="new-task-icon"></i>
+            <button class="new-task-btn" id="add-new-task-btn">
+                <i data-lucide="circle-plus" class="new-task-btn-icon"></i>
                 Create new task
             </button>
         </div>
     </div>
 </div>
 
-<script>
-    lucide.createIcons();
-</script>
+<script type="module" src="./js/app.js"></script>
 
 </body>
 </html>
