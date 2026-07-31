@@ -19,13 +19,13 @@
             <div class="input-wrapper">
                 <i data-lucide="mail" class="input-icon"></i>
                 <input type="email" name="username" autocomplete="username" id="login-email"
-                       class="auth-input" placeholder="Email">
+                       class="auth-input" placeholder="Email" required>
                 <i data-lucide="triangle-alert" class="invalid-input-icon"></i>
             </div>
             <div class="input-wrapper">
                 <i data-lucide="lock" class="input-icon"></i>
                 <input type="password" name="password" autocomplete="current-password" id="login-password"
-                       class="auth-input" placeholder="Password">
+                       class="auth-input" placeholder="Password" required>
                 <i data-lucide="triangle-alert" class="invalid-input-icon"></i>
             </div>
             <button type="submit" id="login-btn">Log In</button>
@@ -40,28 +40,28 @@
             <div class="input-wrapper">
                 <i data-lucide="user" class="input-icon"></i>
                 <input type="text" name="first_name" id="register-first-name" class="auth-input"
-                       placeholder="First Name">
+                       placeholder="First Name" required>
             </div>
             <div class="input-wrapper">
                 <i data-lucide="users" class="input-icon"></i>
                 <input type="text" name="last_name" id="register-last-name" class="auth-input"
-                       placeholder="Last Name">
+                       placeholder="Last Name" required>
             </div>
             <div class="input-wrapper">
                 <i data-lucide="mail" class="input-icon"></i>
-                <input type="email" name="email" id="register-email" class="auth-input" placeholder="Email">
+                <input type="email" name="email" id="register-email" class="auth-input" placeholder="Email" required>
                 <i data-lucide="triangle-alert" class="invalid-input-icon" id="email-in-use-icon"></i>
             </div>
             <p id="email-in-use-msg">The email is already in use. Please use another one.</p>
             <div class="input-wrapper">
                 <i data-lucide="lock" class="input-icon"></i>
                 <input type="password" name="password" id="register-password" class="auth-input"
-                       placeholder="Create Password">
+                       placeholder="Create Password" required>
             </div>
             <div class="input-wrapper">
                 <i data-lucide="lock-keyhole" class="input-icon"></i>
                 <input type="password" name="confirm-register-password" id="confirm-register-password"
-                       class="auth-input" placeholder="Confirm Password">
+                       class="auth-input" placeholder="Confirm Password" required>
                 <i data-lucide="triangle-alert" class="invalid-input-icon" id="password-not-matching-icon"></i>
             </div>
             <p id="password-not-matching-msg">Please confirm your password.</p>
@@ -170,7 +170,7 @@
                 </button>
             </div>
             <div class="tasks-container" id="tasks-list">
-                <div class="task-item new-task-item" data-id="1">
+                <div class="task-item new-task-item">
                     <input type="checkbox" id="new-task-checkbox" disabled>
                     <div class="task-body">
                         <input type="text" name="new-task" class="new-task-input" placeholder="Enter a new task title"

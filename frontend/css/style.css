@@ -455,7 +455,7 @@ body {
     width: 100%;
     min-height: 65px;
     background-color: white;
-    border: 2px solid color-mix(in srgb, var(--text-secondary) 50%, transparent);;
+    border: 2px solid color-mix(in srgb, var(--text-secondary) 50%, transparent);
     border-radius: 12px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     font-size: 15px;
@@ -558,7 +558,7 @@ body {
     display: flex;
     align-items: center;
     margin: 0;
-    border-color: color-mix(in srgb, var(--orange-highlight) 50%, transparent);;
+    border-color: color-mix(in srgb, var(--orange-highlight) 50%, transparent);
 }
 
 #new-task-checkbox {
