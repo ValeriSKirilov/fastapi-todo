@@ -170,158 +170,44 @@
                 </button>
             </div>
             <div class="tasks-container" id="tasks-list">
-                <div class="task-item new-task-item">
+                <form class="task-item new-task-item" id="new-task-item">
                     <input type="checkbox" id="new-task-checkbox" disabled>
                     <div class="task-body">
-                        <input type="text" name="new-task" class="new-task-input" placeholder="Enter a new task title"
-                               required>
+                        <input type="text" name="text" class="new-task-input" id="new-task-input"
+                               placeholder="Enter a new task title" required>
                     </div>
                     <div class="task-meta new-task-meta">
                         <div class="due-date-btn">
                             <i data-lucide="calendar" class="task-icon"></i>
                             <span id="due-date-text">Set date</span>
-                            <input type="date" id="new-task-date">
+                            <input type="date" name="date" id="new-task-date">
                         </div>
                         <div class="due-date-btn">
                             <i data-lucide="clock" class="task-icon"></i>
                             <span id="due-time-text">Set time</span>
-                            <input type="time" id="new-task-time">
+                            <input type="time" name="time" id="new-task-time">
                         </div>
-                        <button type="button" id="add-task-btn">
+                        <button type="submit" id="add-task-btn">
                             ADD TASK
                         </button>
                         <button type="button" id="new-task-cancel-btn">Cancel</button>
                     </div>
-                </div>
+                </form>
                 <div class="task-item" data-id="1">
                     <input type="checkbox" class="task-checkbox" id="task-1">
-                    <div class="task-body">
-                        <label for="task-1" class="task-text">Design web app UI</label>
+                    <div class="task-body" id="body-1">
+                        <span class="task-text">Design web app UI</span>
                     </div>
                     <div class="task-meta">
-                        <span class="task-due">
-                            <i data-lucide="calendar" class="task-icon"></i>
-                            Due 6:00 PM
-                        </span>
-                        <button class="task-delete-btn">
-                            <i data-lucide="trash-2" class="task-icon"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="task-item completed" data-id="2">
-                    <input type="checkbox" class="task-checkbox" id="task-2">
-                    <div class="task-body">
-                        <label for="task-2" class="task-text">Buy groceries</label>
-                    </div>
-                    <div class="task-meta">
-                        <span class="task-due">
-                            <i data-lucide="calendar" class="task-icon"></i>
-                            Due 12:00 AM
-                        </span>
-                        <button class="task-delete-btn">
-                            <i data-lucide="trash-2" class="task-icon"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="task-item" data-id="3">
-                    <input type="checkbox" class="task-checkbox" id="task-3">
-                    <div class="task-body">
-                        <label for="task-3" class="task-text">Lorem Ipsum is simply dummy text of the printing and
-                            typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since
-                            1966, when designers at Letraset and James Mosley, the librarian at St Bride Printing
-                            Library in London, took a 1914 Cicero translation and scrambled it to make dummy text for
-                            Letraset's Body Type sheets. It has survived not only many decades, but also the leap into
-                            electronic typesetting, remaining essentially unchanged. It was popularised thanks to these
-                            sheets and more recently with desktop publishing software like Aldus PageMaker and Microsoft
-                            Word including versions of Lorem Ipsum.</label>
-                    </div>
-                    <div class="task-meta">
-                        <span class="task-due">
-                            <i data-lucide="calendar" class="task-icon"></i>
-                            Due 9:00 PM
-                        </span>
-                        <button class="task-delete-btn">
-                            <i data-lucide="trash-2" class="task-icon"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="task-item" data-id="4">
-                    <input type="checkbox" class="task-checkbox" id="task-4">
-                    <div class="task-body">
-                        <label for="task-4" class="task-text">Design web app UI</label>
-                    </div>
-                    <div class="task-meta">
-                        <span class="task-due">
-                            <i data-lucide="calendar" class="task-icon"></i>
-                            Due 6:00 PM
-                        </span>
-                        <button class="task-delete-btn">
-                            <i data-lucide="trash-2" class="task-icon"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="task-item" data-id="5">
-                    <input type="checkbox" class="task-checkbox" id="task-5">
-                    <div class="task-body">
-                        <label for="task-5" class="task-text">Design web app UI</label>
-                    </div>
-                    <div class="task-meta">
-                        <span class="task-due">
-                            <i data-lucide="calendar" class="task-icon"></i>
-                            Due 6:00 PM
-                        </span>
-                        <button class="task-delete-btn">
-                            <i data-lucide="trash-2" class="task-icon"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="task-item" data-id="6">
-                    <input type="checkbox" class="task-checkbox" id="task-6">
-                    <div class="task-body">
-                        <label for="task-6" class="task-text">Design web app UI</label>
-                    </div>
-                    <div class="task-meta">
-                        <span class="task-due">
-                            <i data-lucide="calendar" class="task-icon"></i>
-                            Due 6:00 PM
-                        </span>
-                        <button class="task-delete-btn">
-                            <i data-lucide="trash-2" class="task-icon"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="task-item" data-id="7">
-                    <input type="checkbox" class="task-checkbox" id="task-7">
-                    <div class="task-body">
-                        <label for="task-7" class="task-text">Design web app UI</label>
-                    </div>
-                    <div class="task-meta">
-                        <span class="task-due">
-                            <i data-lucide="calendar" class="task-icon"></i>
-                            Due 6:00 PM
-                        </span>
-                        <button class="task-delete-btn">
-                            <i data-lucide="trash-2" class="task-icon"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="task-item" data-id="8">
-                    <input type="checkbox" class="task-checkbox" id="task-8">
-                    <div class="task-body">
-                        <label for="task-8" class="task-text">Design web app UI</label>
-                    </div>
-                    <div class="task-meta">
-                        <span class="task-due">
-                            <i data-lucide="calendar" class="task-icon"></i>
-                            Due 6:00 PM
-                        </span>
-                        <button class="task-delete-btn">
+                        <i data-lucide="calendar" class="task-icon"></i>
+                        <span class="task-due" id="due-1">Due 6:00 PM</span>
+                        <button class="task-delete-btn" id="delete-1">
                             <i data-lucide="trash-2" class="task-icon"></i>
                         </button>
                     </div>
                 </div>
             </div>
-            <button class="new-task-btn" id="add-new-task-btn">
+            <button class="new-task-btn" id="new-task-btn">
                 <i data-lucide="circle-plus" class="new-task-btn-icon"></i>
                 Create new task
             </button>

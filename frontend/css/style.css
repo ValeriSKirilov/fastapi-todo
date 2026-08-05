@@ -18,6 +18,8 @@
     --font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
+/* ─── Reset ─────────────────────────────────────────────────────────────── */
+
 * {
     margin: 0;
     padding: 0;
@@ -28,23 +30,30 @@ input, button, textarea, select {
     font-family: inherit;
     font-size: inherit;
     line-height: normal;
+
     margin: 0;
     padding: 0;
     color: inherit;
 }
 
+/* ─── Base ─────────────────────────────────────────────────────────────── */
+
 body {
     font-family: var(--font-family);
-    background-color: var(--background);
     color: var(--text-primary);
+    background-color: var(--background);
 }
+
+/* ─── Login Page ─────────────────────────────────────────────────────────────── */
 
 .login-page {
     position: relative;
+
     display: none;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+
     font-size: 14px;
 }
 
@@ -52,11 +61,13 @@ body {
     content: '';
     position: absolute;
     inset: 0;
+    z-index: 0;
+
     background-image: url('../img/background.png');
     background-size: cover;
     background-position: center;
+
     filter: blur(4px);
-    z-index: 0;
 }
 
 .login-page img {
@@ -67,31 +78,37 @@ body {
 }
 
 .login-page h1 {
-    text-align: center;
     font-size: 32px;
     font-weight: 600;
+    text-align: center;
 }
 
 .login-page p {
-    text-align: center;
     font-size: 14px;
     font-weight: 500;
+    text-align: center;
 }
 
-.login-form, .register-form, .success-banner {
+/* ─── Auth Cards (login / register / success) ────────────────────────────── */
+
+.login-form,
+.register-form,
+.success-banner {
     position: relative;
     z-index: 1;
-    width: 480px;
-    height: auto;
-    background-color: var(--background);
-    border-radius: 12px;
-    padding: 48px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+
     display: flex;
     flex-direction: column;
-    gap: 16px;
     align-items: center;
+    gap: 16px;
+    width: 480px;
+    height: auto;
+    padding: 48px;
+
     color: var(--text-primary);
+    background-color: var(--background);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
 .register-form {
@@ -100,10 +117,12 @@ body {
 
 .success-banner {
     display: none;
+    gap: 24px;
     padding-top: 56px;
     padding-bottom: 56px;
-    gap: 24px;
 }
+
+/* ─── Auth Card — Typography ─────────────────────────────────────────────── */
 
 #confirmation-msg {
     font-size: 17px;
@@ -117,14 +136,18 @@ body {
 }
 
 #redirect-to-login {
-    color: var(--text-orange);
     font-weight: 800;
+    color: var(--text-orange);
 }
 
-#invalid-cred-msg {
+#invalid-cred-msg,
+#email-in-use-msg,
+#password-not-matching-msg {
     display: none;
     color: #c0392b;
 }
+
+/* ─── Auth Inputs ────────────────────────────────────────────────────────── */
 
 .input-wrapper {
     position: relative;
@@ -135,11 +158,13 @@ body {
     width: 350px;
     padding: 12px 32px 12px 40px;
     margin: 10px 0 10px 0;
+
+    font-size: 16px;
+    color: var(--text-primary);
+
     background-color: white;
     border: 1px solid var(--text-secondary);
     border-radius: 8px;
-    font-size: 16px;
-    color: var(--text-primary);
     outline: none;
 }
 
@@ -149,83 +174,90 @@ body {
 }
 
 .auth-input::placeholder {
-    color: var(--text-secondary);
     font-size: 14px;
+    color: var(--text-secondary);
 }
 
-.input-error {
+.auth-input.input-error {
     border-color: #d4846e;
     background-color: #faeae7;
 }
 
-.invalid-input-icon {
-    display: none;
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 18px;
-    height: 18px;
-    color: #740f0e;
-    pointer-events: none;
-}
-
-#email-in-use-msg {
-    display: none;
-    color: #c0392b;
-}
-
-#password-not-matching-msg {
-    display: none;
-    color: #c0392b;
-}
-
 .input-icon {
     position: absolute;
-    left: 12px;
     top: 50%;
+    left: 12px;
     transform: translateY(-50%);
+
     width: 18px;
     height: 18px;
+
     color: var(--text-secondary);
     pointer-events: none;
 }
 
-#login-btn, #register-btn {
+.invalid-input-icon {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+
+    display: none;
+    width: 18px;
+    height: 18px;
+
+    color: #740f0e;
+    pointer-events: none;
+}
+
+/* ─── Auth Buttons ───────────────────────────────────────────────────────── */
+
+#login-btn,
+#register-btn {
     width: 100%;
     padding: 12px;
-    margin: 12px 0 12px 0;
+    margin: 12px 0;
+
+    font-size: 16px;
+    color: var(--background);
+
     background-color: var(--orange);
     border: 2px solid var(--orange-highlight);
     border-radius: 8px;
-    font-size: 16px;
-    color: var(--background);
     cursor: pointer;
 }
 
-#login-btn:hover, #register-btn:hover {
+#login-btn:hover,
+#register-btn:hover {
     background-color: var(--orange-highlight);
     transition: background-color 0.2s ease;
 }
 
-#show-register-btn, #show-login-btn {
+#show-register-btn,
+#show-login-btn {
     color: var(--text-orange);
 }
+
+/* ─── Todo Page Layout ───────────────────────────────────────────────────── */
 
 .todo-page {
     display: none;
     min-height: 100vh;
-    background-color: var(--background);
+
     font-size: 14px;
+    background-color: var(--background);
 }
+
+/* ─── Sidebar ────────────────────────────────────────────────────────────── */
 
 .sidebar {
     width: var(--sidebar-width);
-    flex-shrink: 0;
-    background-color: var(--navy);
     min-height: 100vh;
+    flex-shrink: 0;
     padding-left: var(--sidebar-sides-padding);
     padding-right: var(--sidebar-sides-padding);
+
+    background-color: var(--navy);
 }
 
 .sidebar img {
@@ -238,49 +270,54 @@ body {
 
 .sidebar-list {
     list-style: none;
-    padding: 0;
     margin: 0;
+    padding: 0;
 }
 
 .sidebar-label {
     display: flex;
     flex-direction: column;
     align-items: start;
-    color: var(--text-secondary);
     margin-top: 32px;
     margin-bottom: 12px;
+
     font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
     font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
 }
+
+/* ─── Sidebar Buttons ────────────────────────────────────────────────────── */
 
 .sidebar-btn {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: white;
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
     width: 100%;
     padding: 10px;
     margin-top: 8px;
     margin-left: -10px;
+
     font-size: 15px;
+    color: white;
+
+    background-color: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
 }
 
 .sidebar-btn:hover {
     background-color: rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
     transition: background-color 0.2s ease;
 }
 
 .sidebar-btn.active {
-    background-color: color-mix(in srgb, var(--orange) 35%, transparent);
-    color: var(--orange);
-    border-radius: 8px;
     font-weight: 500;
+    color: var(--orange);
+
+    background-color: color-mix(in srgb, var(--orange) 35%, transparent);
 }
 
 .sidebar-btn.active .btn-icon {
@@ -290,25 +327,31 @@ body {
 .btn-icon {
     width: 18px;
     height: 18px;
+    flex-shrink: 0;
+
     color: var(--text-secondary);
     pointer-events: none;
-    flex-shrink: 0;
 }
 
+/* ─── Right Side ─────────────────────────────────────────────────────────── */
+
 .right-side {
-    flex: 1;
     display: flex;
+    flex: 1;
     flex-direction: column;
 }
 
+/* ─── Top Bar ────────────────────────────────────────────────────────────── */
+
 .top-bar {
     display: flex;
+    align-items: center;
     width: 100%;
     height: var(--top-bar-height);
     flex-shrink: 0;
-    background-color: var(--top-bar-color);
-    align-items: center;
     padding: 0 24px;
+
+    background-color: var(--top-bar-color);
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
@@ -321,14 +364,14 @@ body {
 .search-bar {
     width: 100%;
     height: 30px;
+    padding: 12px 12px 8px 36px;
+
     background-color: var(--search-bar-color);
     border: none;
     border-radius: 7px;
-    padding: 12px 12px 8px 36px;
 }
 
 .search-bar::placeholder {
-    align-items: center;
     font-size: 16px;
     color: var(--text-secondary);
 }
@@ -341,90 +384,107 @@ body {
 }
 
 .avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background-color: var(--orange);
-    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    font-size: 14px;
+    width: 36px;
+    height: 36px;
     flex-shrink: 0;
+
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+
+    background-color: var(--orange);
+    border-radius: 50%;
 }
 
 .user-name {
     max-width: 150px;
+
+    font-weight: 900;
+    color: var(--text-primary);
+
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-weight: 900;
-    color: var(--text-primary);
 }
 
+/* ─── Main Content ───────────────────────────────────────────────────────── */
+
 .main-content {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - var(--top-bar-height));
     margin-left: 30px;
     margin-right: 30px;
 }
 
 .main-header {
     display: flex;
+    align-items: center;
+    gap: 15px;
     width: 100%;
     height: 80px;
     flex-shrink: 0;
-    align-items: center;
-    gap: 15px;
 }
 
 .page-title {
     display: flex;
     align-items: center;
-    color: var(--text-primary);
     gap: 12px;
+
+    color: var(--text-primary);
 }
 
 .page-title p {
-    font-size: 15px;
-    color: var(--text-secondary);
     margin-top: 10px;
 
+    font-size: 15px;
+    color: var(--text-secondary);
 }
 
+/* ─── Logout Button ──────────────────────────────────────────────────────── */
+
 .logout-btn {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 8px;
-    height: 30px;
     width: 105px;
-    position: relative;
+    height: 30px;
     margin-left: auto;
-    background-color: var(--navy);
-    color: white;
-    border: none;
-    border-radius: 8px;
+    padding: 8px 14px;
+
     font-size: 16px;
     font-weight: 500;
-    cursor: pointer;
-    padding: 8px 14px;
+    color: white;
+
+    background-color: var(--navy);
+    border: none;
+    border-radius: 8px;
     white-space: nowrap;
+    cursor: pointer;
 }
 
 .logout-icon {
     width: 16px;
     height: 16px;
-    color: white;
-    pointer-events: none;
     flex-shrink: 0;
+
+    color: white;
     stroke-width: 3.2;
+    pointer-events: none;
 }
+
+/* ─── Tasks Container ────────────────────────────────────────────────────── */
 
 .tasks-container {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 10px;
     overflow-y: auto;
-    height: calc(100vh - 210px);
     margin-bottom: 10px;
     padding-right: 4px;
 }
@@ -446,40 +506,85 @@ body {
     background-color: rgba(0, 0, 0, 0.25);
 }
 
+/* ─── Task Item ──────────────────────────────────────────────────────────── */
+
 .task-item {
     display: flex;
     align-items: center;
-    flex-shrink: 0;
     gap: 12px;
-    padding: 12px 14px;
     width: 100%;
     min-height: 65px;
+    flex-shrink: 0;
+    padding: 12px 14px;
+
+    font-size: 15px;
+
     background-color: white;
     border: 2px solid color-mix(in srgb, var(--text-secondary) 50%, transparent);
     border-radius: 12px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    font-size: 15px;
+}
+
+.task-item.completed {
+    background-color: color-mix(in srgb, var(--orange) 10%, transparent);
+    border: 2px solid color-mix(in srgb, var(--orange) 30%, transparent);
 }
 
 .task-body {
+    display: flex;
+    align-items: center;
     flex: 1;
+    height: 100%;
 }
 
 .task-text {
-    color: var(--text-primary);
     font-weight: 500;
+    color: var(--text-primary);
 }
 
+/* ─── Task Inline Editing ────────────────────────────────────────────────── */
+
+.edit-task-input {
+    border: none;
+    background: transparent;
+    outline: none;
+}
+
+.edit-datetime-input {
+    width: 150px;
+
+    border: none;
+    background: transparent;
+    outline: none;
+    box-shadow: none;
+
+    font-family: var(--font-family);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+
+    padding: 0;
+    cursor: pointer;
+}
+
+.edit-datetime-input::-webkit-calendar-picker-indicator {
+    display: none;
+}
+
+/* ─── Task Checkbox ──────────────────────────────────────────────────────── */
+
 .task-checkbox {
-    appearance: none;
+    position: relative;
     width: 18px;
     height: 18px;
+    flex-shrink: 0;
+
+    background-color: white;
     border: 2px solid color-mix(in srgb, var(--text-secondary) 50%, transparent);
     border-radius: 4px;
+
+    appearance: none;
     cursor: pointer;
-    flex-shrink: 0;
-    position: relative;
-    background-color: white;
 }
 
 .task-checkbox:hover {
@@ -495,10 +600,7 @@ body {
     background-size: 100%;
 }
 
-.task-item.completed {
-    border: 2px solid color-mix(in srgb, var(--orange) 30%, transparent);
-    background-color: color-mix(in srgb, var(--orange) 10%, transparent);
-}
+/* ─── Task Meta (due date + delete) ─────────────────────────────────────── */
 
 .task-meta {
     display: flex;
@@ -508,26 +610,33 @@ body {
 }
 
 .task-due {
+    position: relative;
     display: flex;
     align-items: center;
+    justify-content: flex-start;
+    width: 170px;
     gap: 6px;
-    color: var(--text-secondary);
+
     font-size: 13px;
+    color: var(--text-secondary);
 }
 
 .task-delete-btn {
     display: flex;
     align-items: center;
+
+    color: var(--text-secondary);
     background: none;
     border: none;
     cursor: pointer;
-    color: var(--text-secondary);
 }
 
 .task-icon {
     width: 16px;
     height: 16px;
 }
+
+/* ─── New Task Button ────────────────────────────────────────────────────── */
 
 .new-task-btn {
     display: flex;
@@ -536,51 +645,72 @@ body {
     gap: 8px;
     width: 100%;
     height: 50px;
-    line-height: 50px;
+    flex-shrink: 0;
+    margin-top: auto;
+    margin-bottom: 10px;
+
+    font-size: 18px;
+    font-weight: bold;
+
     background-color: white;
     border: 2px solid color-mix(in srgb, var(--orange-highlight) 60%, transparent);
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
     cursor: pointer;
-    font-size: 18px;
-    font-weight: bold;
 }
 
 .new-task-btn:hover {
     background-color: #f5f5f5;
 }
 
+.new-task-btn.hiding {
+    animation: slideUp 0.2s ease forwards;
+}
+
 .new-task-btn-icon {
     stroke-width: 2px;
 }
 
+/* ─── New Task Form ──────────────────────────────────────────────────────── */
+
 .new-task-item {
-    display: flex;
+    display: none;
     align-items: center;
     margin: 0;
+
     border-color: color-mix(in srgb, var(--orange-highlight) 50%, transparent);
+
+    animation: slideDown 0.5s ease;
+}
+
+.new-task-item.hiding {
+    animation: slideUp 0.2s ease forwards;
 }
 
 #new-task-checkbox {
-    appearance: none;
+    position: relative;
     width: 18px;
     height: 18px;
+    flex-shrink: 0;
+
+    background-color: white;
     border: 2px solid color-mix(in srgb, var(--text-secondary) 50%, transparent);
     border-radius: 4px;
-    flex-shrink: 0;
-    position: relative;
-    background-color: white;
+
+    appearance: none;
 }
 
 .new-task-input {
     width: 100%;
-    color: var(--text-secondary);
+    padding: 0;
+    margin: 0;
+
     font-size: 15px;
     font-weight: 500;
     line-height: normal;
+    color: var(--text-secondary);
+
     border: none;
-    padding: 0;
-    margin: 0;
 }
 
 .new-task-input:focus {
@@ -610,26 +740,56 @@ body {
     gap: 8px;
     width: 115px;
     height: 35px;
-    line-height: 50px;
+
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+
     background-color: var(--orange);
     border: 2px solid var(--orange-highlight);
     border-radius: 12px;
-    color: white;
-    font-size: 16px;
-    font-weight: 600;
     cursor: pointer;
 }
 
+#add-task-btn:hover {
+    background: var(--orange-highlight);
+}
+
 #new-task-cancel-btn {
-    background-color: transparent;
-    border: none;
-    color: var(--text-orange);
     font-size: 15px;
     font-weight: 600;
+    color: var(--text-orange);
     text-decoration: underline;
+
+    background-color: transparent;
+    border: none;
     cursor: pointer;
 }
 
 #new-task-cancel-btn:hover {
     color: var(--orange-highlight);
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
 }

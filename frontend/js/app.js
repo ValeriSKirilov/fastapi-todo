@@ -1,10 +1,4 @@
-import {API_BASE_URL} from "./config.js";
-
-// GLOBAL VARIABLES
-
-let redirectTimer;
-
-// GENERAL
+import {API_BASE_URL} from './config.js';
 
 function switchView(targetID) {
     const pages = document.querySelectorAll('.app-view');
@@ -16,7 +10,7 @@ function switchView(targetID) {
     if (to_show) {
         to_show.style.display = 'flex';
     } else {
-        console.error("View not found: " + targetID);
+        console.error('View not found: ' + targetID);
     }
 }
 
@@ -29,17 +23,17 @@ function showLoginPageSection(sectionId) {
 }
 
 function renderUserProfile(userData) {
-    const first_name = userData.first_name;
-    const last_name = userData.last_name;
+    const firstName = userData.first_name;
+    const lastName = userData.last_name;
 
-    const icon_initials = first_name[0].toUpperCase() + last_name[0].toUpperCase();
-    const display_name = first_name + ' ' + last_name;
+    const iconInitials = firstName[0].toUpperCase() + lastName[0].toUpperCase();
+    const displayName = firstName + ' ' + lastName;
 
-    const user_avatar = document.getElementById('user-avatar');
-    const user_name = document.getElementById('user-name');
+    const userAvatar = document.getElementById('user-avatar');
+    const username = document.getElementById('user-name');
 
-    user_avatar.textContent = icon_initials;
-    user_name.textContent = display_name;
+    userAvatar.textContent = iconInitials;
+    username.textContent = displayName;
 }
 
 async function fetchAndRenderUser() {
@@ -48,13 +42,16 @@ async function fetchAndRenderUser() {
     if (token) {
         try {
             const response = await fetch(API_BASE_URL + '/auth/me', {
-                headers: {'Authorization': `Bearer ${token}`}
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
 
             if (response.ok) {
                 const userData = await response.json();
                 renderUserProfile(userData);
                 switchView('todo-page');
+                document.dispatchEvent(new Event('app:authSuccess'));
             } else {
                 switchView('login-page');
             }
@@ -66,36 +63,50 @@ async function fetchAndRenderUser() {
     }
 }
 
-// LOGIN PAGE
+function reformatDateTime(rawDateTime) {
+    const dateToDisplay = rawDateTime.toLocaleDateString([], {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+    });
+    const timeToDisplay = rawDateTime.toLocaleTimeString([], {
+        hour: 'numeric',
+        minute: '2-digit'
+    });
+
+    return dateToDisplay + ', ' + timeToDisplay;
+}
 
 function initLoginLogic() {
-    const login_email = document.getElementById("login-email");
-    const login_password = document.getElementById("login-password");
-    const login_form = document.getElementById("login-form");
-    const invalid_credentials_message = document.getElementById('invalid-cred-msg');
-    const show_register_btn = document.getElementById("show-register-btn");
+    const loginEmail = document.getElementById('login-email');
+    const loginPassword = document.getElementById('login-password');
+    const loginForm = document.getElementById('login-form');
+    const invalidCredentialsMessage = document.getElementById('invalid-cred-msg');
+    const showRegisterBtn = document.getElementById('show-register-btn');
 
-    login_email.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
+    loginEmail.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
             e.preventDefault();
-            login_password.focus();
+            loginPassword.focus();
         }
-    })
+    });
 
-    login_form.addEventListener("submit", async (e) => {
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        invalid_credentials_message.style.display = 'none';
-        login_email.classList.remove('input-error');
-        login_password.classList.remove('input-error');
+        invalidCredentialsMessage.style.display = 'none';
+        loginEmail.classList.remove('input-error');
+        loginPassword.classList.remove('input-error');
 
-        const formData = new FormData(login_form);
+        const formData = new FormData(loginForm);
         const data = new URLSearchParams(formData);
 
         try {
-            const response = await fetch(API_BASE_URL + "/auth/login", {
+            const response = await fetch(API_BASE_URL + '/auth/login', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
                 body: data
             });
 
@@ -106,96 +117,96 @@ function initLoginLogic() {
                 localStorage.setItem('refresh_token', result.refresh_token);
                 await fetchAndRenderUser();
             } else {
-                invalid_credentials_message.style.display = 'flex';
-                login_email.classList.add('input-error');
-                login_password.classList.add('input-error');
+                invalidCredentialsMessage.style.display = 'flex';
+                loginEmail.classList.add('input-error');
+                loginPassword.classList.add('input-error');
             }
         } catch (error) {
             console.log('Login failed:', error);
         }
-    })
+    });
 
-    show_register_btn.addEventListener("click", (e) => {
+    showRegisterBtn.addEventListener('click', (e) => {
         e.preventDefault();
         showLoginPageSection('register-section');
-    })
+    });
 }
 
-// REGISTER PAGE
-
 function initRegisterLogic() {
-    const register_first_name = document.getElementById("register-first-name");
-    const register_last_name = document.getElementById("register-last-name");
-    const register_email = document.getElementById("register-email");
-    const register_password = document.getElementById("register-password");
-    const confirm_register_password = document.getElementById("confirm-register-password");
-    const register_form = document.getElementById("register-form");
-    const email_in_use_icon = document.getElementById('email-in-use-icon');
-    const email_in_use_msg = document.getElementById('email-in-use-msg');
-    const show_login_btn = document.getElementById("show-login-btn");
-    const password_not_matching_img = document.getElementById("password-not-matching-icon");
-    const password_not_matching_msg = document.getElementById('password-not-matching-msg');
+    const registerFirstName = document.getElementById('register-first-name');
+    const registerLastName = document.getElementById('register-last-name');
+    const registerEmail = document.getElementById('register-email');
+    const registerPassword = document.getElementById('register-password');
+    const confirmRegPassword = document.getElementById('confirm-register-password');
+    const registerForm = document.getElementById('register-form');
+    const emailInUseIcon = document.getElementById('email-in-use-icon');
+    const emailInUseMsg = document.getElementById('email-in-use-msg');
+    const show_login_btn = document.getElementById('show-login-btn');
+    const passwordNotMatchingImg = document.getElementById('password-not-matching-icon');
+    const passwordNotMatchingMsg = document.getElementById('password-not-matching-msg');
+
+    let redirectTimer;
 
     function confirmRegisterPassword() {
-        const password = register_password.value;
-        const confirm_password = confirm_register_password.value;
+        const password = registerPassword.value;
+        const confirm_password = confirmRegPassword.value;
 
         if (confirm_password !== password) {
-            confirm_register_password.classList.add('input-error');
-            password_not_matching_img.style.display = 'flex';
-            password_not_matching_msg.style.display = 'flex';
+            confirmRegPassword.classList.add('input-error');
+            passwordNotMatchingImg.style.display = 'flex';
+            passwordNotMatchingMsg.style.display = 'flex';
             return false;
         } else {
-            confirm_register_password.classList.remove('input-error');
-            password_not_matching_img.style.display = 'none';
-            password_not_matching_msg.style.display = 'none';
+            confirmRegPassword.classList.remove('input-error');
+            passwordNotMatchingImg.style.display = 'none';
+            passwordNotMatchingMsg.style.display = 'none';
             return true;
         }
     }
 
-    register_first_name.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
+    registerFirstName.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
             e.preventDefault();
-            register_last_name.focus();
+            registerLastName.focus();
         }
-    })
-    register_last_name.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
+    });
+    registerLastName.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
             e.preventDefault();
-            register_email.focus();
+            registerEmail.focus();
         }
-    })
-    register_email.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
+    });
+    registerEmail.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
             e.preventDefault();
-            register_password.focus();
+            registerPassword.focus();
         }
-    })
-    register_password.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
+    });
+    registerPassword.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
             e.preventDefault();
-            confirm_register_password.focus();
+            confirmRegPassword.focus();
         }
-    })
-    confirm_register_password.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
+    });
+    confirmRegPassword.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
             e.preventDefault();
             if (confirmRegisterPassword() === true)
-                register_form.requestSubmit();
+                registerForm.requestSubmit();
         }
-    })
-    confirm_register_password.addEventListener("blur", (e) => {
+    });
+    confirmRegPassword.addEventListener('blur', (e) => {
         confirmRegisterPassword();
-    })
+    });
 
-    register_form.addEventListener("submit", async (e) => {
+    registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        register_email.classList.remove('input-error');
-        email_in_use_icon.style.display = 'none';
-        email_in_use_msg.style.display = 'none';
+        registerEmail.classList.remove('input-error');
+        emailInUseIcon.style.display = 'none';
+        emailInUseMsg.style.display = 'none';
 
-        const formData = new FormData(register_form);
+        const formData = new FormData(registerForm);
 
         const password = formData.get('password');
         const confirm_password = formData.get('confirm-register-password');
@@ -211,9 +222,11 @@ function initRegisterLogic() {
         const data = JSON.stringify(dataObject);
 
         try {
-            const response = await fetch(API_BASE_URL + "/users/register", {
+            const response = await fetch(API_BASE_URL + '/users/register', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: data
             });
 
@@ -223,97 +236,454 @@ function initRegisterLogic() {
                     showLoginPageSection('login-section');
                 }, 2000);
             } else if (response.status === 409) {
-                register_email.classList.add('input-error');
-                email_in_use_icon.style.display = 'flex';
-                email_in_use_msg.style.display = 'flex';
+                registerEmail.classList.add('input-error');
+                emailInUseIcon.style.display = 'flex';
+                emailInUseMsg.style.display = 'flex';
             } else {
-                console.error("Unexpected server error");
+                console.error('Unexpected server error');
             }
         } catch (error) {
             console.log('Register failed: ', error);
         }
-    })
+    });
 
-    show_login_btn.addEventListener("click", (e) => {
+    show_login_btn.addEventListener('click', (e) => {
         e.preventDefault();
         showLoginPageSection('login-section');
-    })
+    });
 }
 
-// SUCCESS PAGE
-
 function initSuccessfulLoginLogic() {
-    const redirect_to_login = document.getElementById("redirect-to-login");
-    redirect_to_login.addEventListener("click", (e) => {
+    const redirectToLogin = document.getElementById('redirect-to-login');
+    redirectToLogin.addEventListener('click', (e) => {
         e.preventDefault();
         clearTimeout(redirectTimer);
         showLoginPageSection('login-section');
-    })
+    });
 }
 
-// LOGOUT CONFIG
-
 function initLogoutLogic() {
-    const logout_btn = document.getElementById("logout-btn");
-    const tasks_list = document.getElementById('tasks-list');
+    const logoutBtn = document.getElementById('logout-btn');
+    const tasksList = document.getElementById('tasks-list');
 
-    logout_btn.addEventListener("click", (e) => {
+    logoutBtn.addEventListener('click', (e) => {
         e.preventDefault();
 
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
 
-        tasks_list.innerHTML = '';
+        tasksList.innerHTML = '';
 
         switchView('login-page');
-    })
+    });
 }
 
-// NEW TASK
-
 function initNewTaskCreationLogic() {
-    const new_task_date = document.getElementById("new-task-date");
-    const due_date_text = document.getElementById('due-date-text');
-    const due_time_text = document.getElementById('due-time-text');
-    const new_task_time = document.getElementById("new-task-time");
+    const newTaskDate = document.getElementById('new-task-date');
+    const dueDateText = document.getElementById('due-date-text');
+    const dueTimeText = document.getElementById('due-time-text');
+    const newTaskTime = document.getElementById('new-task-time');
+    const newTaskBtn = document.getElementById('new-task-btn');
+    const newTaskItem = document.getElementById('new-task-item');
+    const newTaskInput = document.getElementById('new-task-input');
+    const newTaskCancelBtn = document.getElementById('new-task-cancel-btn');
 
-    new_task_date.addEventListener("click", (e) => {
+    newTaskDate.addEventListener('click', (e) => {
         try {
             if ('showPicker' in HTMLInputElement.prototype) {
-                new_task_date.showPicker();
+                newTaskDate.showPicker();
             }
         } catch (error) {
             console.log('Date picker failed: ', error);
         }
-    })
+    });
 
-    new_task_date.addEventListener("change", (e) => {
-        due_date_text.textContent = e.target.value;
-    })
+    newTaskDate.addEventListener('change', (e) => {
+        dueDateText.textContent = e.target.value;
+    });
 
-    new_task_time.addEventListener("click", (e) => {
+    newTaskTime.addEventListener('click', (e) => {
         try {
             if ('showPicker' in HTMLInputElement.prototype) {
-                new_task_time.showPicker();
+                newTaskTime.showPicker();
             }
         } catch (error) {
             console.log('Time picker failed: ', error);
         }
-    })
+    });
 
-    new_task_time.addEventListener("change", (e) => {
-        due_time_text.textContent = e.target.value;
-    })
+    newTaskTime.addEventListener('change', (e) => {
+        dueTimeText.textContent = e.target.value;
+    });
+
+    function showNewTaskForm() {
+        newTaskItem.reset();
+        dueDateText.textContent = 'Set date';
+        dueTimeText.textContent = 'Set time';
+        newTaskBtn.style.display = 'none';
+        newTaskItem.style.display = 'flex';
+        newTaskInput.focus();
+    }
+
+    function hideNewTaskForm() {
+        newTaskItem.classList.add('hiding');
+
+        newTaskItem.addEventListener('animationend', (e) => {
+            newTaskItem.classList.remove('hiding');
+            newTaskItem.style.display = 'none';
+            newTaskBtn.style.display = 'flex';
+        }, {once: true});
+    }
+
+    newTaskBtn.addEventListener('click', (e) => {
+        showNewTaskForm();
+    });
+
+    newTaskCancelBtn.addEventListener('click', (e) => {
+        hideNewTaskForm();
+    });
+
+    newTaskItem.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const token = localStorage.getItem('access_token');
+
+        hideNewTaskForm();
+
+        const formData = new FormData(newTaskItem)
+        const date = formData.get('date');
+        const time = formData.get('time');
+        if (date && time) {
+            const localDateTime = new Date(`${date}T${time}`)
+            formData.append('due_date', localDateTime.toISOString());
+        }
+
+        formData.delete('date');
+        formData.delete('time');
+
+        const dataObject = Object.fromEntries(formData.entries());
+        const data = JSON.stringify(dataObject);
+
+        try {
+            const response = await fetch(API_BASE_URL + '/items', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: data,
+            });
+
+            if (response.ok) {
+                const newTask = await response.json();
+
+                document.dispatchEvent(new CustomEvent('app:itemCreated', {
+                    detail: newTask
+                }));
+            } else {
+                console.log('Item creation failed: ', response.body);
+            }
+        } catch (error) {
+            console.log('New item creation failed: ', error);
+        }
+    });
+
+    document.addEventListener('app:sidebarChanged', (e) => {
+        if (newTaskItem.style.display === 'flex') {
+            hideNewTaskForm();
+        }
+    });
+}
+
+function initTaskManagementLogic() {
+    const tasksList = document.getElementById('tasks-list');
+
+    let currentTasks = [];
+
+    async function fetchUserTasks() {
+        const token = localStorage.getItem('access_token');
+
+        if (token) {
+            try {
+                const response = await fetch(API_BASE_URL + '/items', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    }
+                });
+
+                if (response.ok) {
+                    return await response.json();
+                } else {
+                    console.log('Unexpected server error');
+                    return [];
+                }
+            } catch (error) {
+                console.log('Unable to get user\'s tasks: ' + error);
+                return [];
+            }
+        } else {
+            console.log('Unauthorized');
+            return [];
+        }
+    }
+
+    function renderTasks(tasksArray) {
+        let allTasksHTML = '';
+
+        for (const task of tasksArray) {
+            const rawDate = new Date(task.due_date);
+
+            const dueDate = reformatDateTime(rawDate)
+
+            allTasksHTML += `
+                <div class="task-item ${task.is_done ? "completed" : ''}" data-id="${task.id}">
+                    <input type="checkbox" class="task-checkbox" id="task-${task.id}" ${task.is_done ? "checked" : ''}>
+                    <div class="task-body" id="body-${task.id}">
+                        <span class="task-text">${task.text}</span>
+                    </div>
+                    <div class="task-meta">
+                        <i data-lucide="calendar" class="task-icon"></i>
+                        <span class="task-due" id="due-${task.id}">
+                            Due ${dueDate}
+                        </span>
+                        <button class="task-delete-btn" id="delete-${task.id}">
+                            <i data-lucide="trash-2" class="task-icon"></i>
+                        </button>
+                    </div>
+                </div>
+            `
+        }
+
+        const oldTasks = tasksList.querySelectorAll('.task-item:not(.new-task-item)');
+        oldTasks.forEach(task => task.remove());
+
+        tasksList.insertAdjacentHTML('beforeend', allTasksHTML);
+
+        lucide.createIcons();
+    }
+
+    document.addEventListener('app:authSuccess', async (e) => {
+        currentTasks = await fetchUserTasks();
+        renderTasks(currentTasks);
+    });
+
+    document.addEventListener('app:itemCreated', (e) => {
+        const newTask = e.detail;
+
+        currentTasks.push(newTask);
+
+        renderTasks(currentTasks);
+    });
+
+    // document.addEventListener('app:sidebarChanged', (e) => {})
+
+    async function sendTaskRequest(taskId, method, payloadObject) {
+        const token = localStorage.getItem('access_token');
+        const data = payloadObject ? JSON.stringify(payloadObject) : null;
+
+        try {
+            const response = await fetch(API_BASE_URL + '/items/' + taskId, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: data,
+            });
+
+            if (response.ok) {
+                const targetTask = currentTasks.find(task => task.id === Number(taskId));
+                if (targetTask) {
+                    Object.assign(targetTask, payloadObject);
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                console.log('Task operation failed');
+                return false;
+            }
+        } catch (error) {
+            console.log('Task operation error: ', error);
+            return false;
+        }
+    }
+
+    tasksList.addEventListener('click', async (e) => {
+        const clickedCheckbox = e.target.closest('.task-checkbox');
+        const clickedText = e.target.closest('.task-text');
+        const clickedDateTime = e.target.closest('.task-due');
+        const clickedDelete = e.target.closest('.task-delete-btn');
+
+        if (clickedCheckbox) {
+            const taskItemElement = clickedCheckbox.closest('.task-item');
+            const taskId = taskItemElement.getAttribute('data-id');
+
+            const isCompleted = clickedCheckbox.checked;
+            const payloadObject = {
+                is_done: isCompleted
+            }
+
+            const isSuccess = await sendTaskRequest(taskId, 'PUT', payloadObject);
+
+            if (isSuccess) {
+                taskItemElement.classList.toggle('completed', isCompleted);
+            } else {
+                taskItemElement.classList.remove('completed');
+                clickedCheckbox.checked = !isCompleted;
+            }
+        }
+
+        if (clickedText) {
+            const taskItemElement = clickedText.closest('.task-item');
+            const taskId = taskItemElement.getAttribute('data-id');
+
+            e.preventDefault();
+
+            const originalText = clickedText.textContent;
+
+            let inputTextElement = document.createElement('input');
+            inputTextElement.type = 'text';
+            inputTextElement.value = originalText;
+            inputTextElement.className = 'task-text edit-task-input';
+
+            clickedText.replaceWith(inputTextElement);
+            inputTextElement.focus();
+
+            let isProcessing = false;
+
+            async function replaceText(newText) {
+                if (newText === originalText || newText === '') {
+                    inputTextElement.replaceWith(clickedText);
+                    return;
+                }
+
+                const payloadObject = {
+                    text: newText
+                }
+
+                const isTextUpdated = await sendTaskRequest(taskId, 'PUT', payloadObject);
+
+                if (isTextUpdated) {
+                    clickedText.textContent = newText;
+                    inputTextElement.replaceWith(clickedText);
+                } else {
+                    inputTextElement.replaceWith(clickedText);
+                }
+            }
+
+            inputTextElement.addEventListener('keydown', async (e) => {
+                if (e.key === 'Escape') {
+                    isProcessing = true;
+                    inputTextElement.replaceWith(clickedText);
+                }
+
+                if (e.key === 'Enter') {
+                    if (isProcessing) return;
+                    isProcessing = true;
+                    const newText = e.target.value.trim();
+
+                    await replaceText(newText);
+                }
+            });
+
+            inputTextElement.addEventListener('blur', async (e) => {
+                if (isProcessing) return;
+                isProcessing = true;
+                const newText = e.target.value.trim();
+
+                await replaceText(newText);
+            });
+        }
+
+        if (clickedDateTime) {
+            const taskItemElement = clickedDateTime.closest('.task-item');
+            const taskId = taskItemElement.getAttribute('data-id');
+
+            e.preventDefault();
+
+            const targetTask = currentTasks.find(task => task.id === Number(taskId));
+            const originalDateTime = targetTask.due_date;
+
+            let formatedDateTime = '';
+            if (originalDateTime !== null && originalDateTime !== undefined) {
+                formatedDateTime = originalDateTime.slice(0, 16);
+            }
+
+            let inputDateTimeElement = document.createElement('input');
+            inputDateTimeElement.type = 'datetime-local';
+            inputDateTimeElement.value = formatedDateTime;
+            inputDateTimeElement.className = 'edit-datetime-input';
+
+            clickedDateTime.replaceWith(inputDateTimeElement);
+            inputDateTimeElement.focus();
+
+            setTimeout(() => {
+                inputDateTimeElement.showPicker();
+            }, 0);
+
+            let isProcessing = false;
+
+            inputDateTimeElement.addEventListener('change', async (e) => {
+                if (isProcessing) return;
+                isProcessing = true;
+                const inputValue = e.target.value.trim();
+                const dateObject = new Date(inputValue);
+                const newDateTime = dateObject.toISOString();
+
+                const payloadObject = {
+                    due_date: newDateTime
+                }
+
+                const isDateTimeUpdated = await sendTaskRequest(taskId, 'PUT', payloadObject);
+
+                if (isDateTimeUpdated) {
+                    clickedDateTime.textContent = "Due " + reformatDateTime(dateObject);
+                    inputDateTimeElement.replaceWith(clickedDateTime);
+                } else {
+                    inputDateTimeElement.replaceWith(clickedDateTime);
+                }
+            });
+
+            inputDateTimeElement.addEventListener('blur', async (e) => {
+                if (isProcessing) return;
+
+                inputDateTimeElement.replaceWith(clickedDateTime);
+            });
+        }
+
+        if (clickedDelete) {
+            const taskItemElement = clickedDelete.closest('.task-item');
+            const taskId = taskItemElement.getAttribute('data-id');
+
+            const isDeleted = await sendTaskRequest(taskId, 'DELETE');
+
+            if (isDeleted) {
+                taskItemElement.remove();
+                currentTasks = currentTasks.filter(task => task.id !== Number(taskId));
+            }
+        }
+
+
+    });
+}
+
+function initSidebarLogic() {
+
 }
 
 // DOM
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener('DOMContentLoaded', async () => {
     lucide.createIcons();
+
     initLoginLogic();
     initRegisterLogic();
     initSuccessfulLoginLogic();
     initLogoutLogic();
     initNewTaskCreationLogic();
+    initTaskManagementLogic();
+
     await fetchAndRenderUser();
-})
+});
