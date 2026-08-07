@@ -8,12 +8,13 @@
     --text-orange: #b88a5e;
 
     --sidebar-width: 260px;
-    --sidebar-sides-padding: 20px;
 
     --top-bar-height: 60px;
     --top-bar-color: white;
 
     --search-bar-color: #f3EEE8;
+
+    --expired-task-color: red; /* TODO REPLACE WITH PROPER COLOR */
 
     --font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
@@ -251,11 +252,13 @@ body {
 /* ─── Sidebar ────────────────────────────────────────────────────────────── */
 
 .sidebar {
+    display: flex;
+    flex-direction: column;
     width: var(--sidebar-width);
-    min-height: 100vh;
+    height: 100vh;
     flex-shrink: 0;
-    padding-left: var(--sidebar-sides-padding);
-    padding-right: var(--sidebar-sides-padding);
+    padding-left: 20px;
+    padding-right: 10px;
 
     background-color: var(--navy);
 }
@@ -288,6 +291,31 @@ body {
     color: var(--text-secondary);
 }
 
+.sidebar-contents {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.sidebar-contents::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-contents::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-contents::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+}
+
+.sidebar-contents::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
 /* ─── Sidebar Buttons ────────────────────────────────────────────────────── */
 
 .sidebar-btn {
@@ -297,7 +325,6 @@ body {
     width: 100%;
     padding: 10px;
     margin-top: 8px;
-    margin-left: -10px;
 
     font-size: 15px;
     color: white;
@@ -613,12 +640,22 @@ body {
     position: relative;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    width: 170px;
-    gap: 6px;
 
     font-size: 13px;
     color: var(--text-secondary);
+}
+
+.due-date-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 195px;
+    gap: 8px;
+}
+
+.no-due-date {
+    color: color-mix(in srgb, var(--text-secondary) 50%, transparent);
+    font-style: italic;
 }
 
 .task-delete-btn {
@@ -634,6 +671,33 @@ body {
 .task-icon {
     width: 16px;
     height: 16px;
+}
+
+.no-due-date-icon {
+    color: color-mix(in srgb, var(--text-secondary) 50%, transparent);
+    transform: skewX(-12deg);
+}
+
+/* ─── Expired Task ────────────────────────────────────────────────────── */
+
+.expired-task {
+    color: red;
+}
+
+.task-item.expired-task .task-text {
+    color: var(--expired-task-color);
+}
+
+.task-item.expired-task .task-meta {
+    color: var(--expired-task-color);
+}
+
+.task-item.expired-task .task-due {
+    color: var(--expired-task-color);
+}
+
+.task-item.expired-task .task-delete-btn {
+    color: var(--expired-task-color);
 }
 
 /* ─── New Task Button ────────────────────────────────────────────────────── */

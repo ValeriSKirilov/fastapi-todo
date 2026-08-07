@@ -1,5 +1,7 @@
 import {API_BASE_URL} from './config.js';
 
+let redirectTimer;
+
 function switchView(targetID) {
     const pages = document.querySelectorAll('.app-view');
     for (const page of pages) {
@@ -77,6 +79,44 @@ function reformatDateTime(rawDateTime) {
     return dateToDisplay + ', ' + timeToDisplay;
 }
 
+function toDatetimeLocalValue(isoUtcString) {
+    const d = new Date(isoUtcString);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function isSameDay(dueDate, otherDate) {
+    if (dueDate === null || dueDate === undefined) {
+        return false;
+    }
+
+    dueDate = new Date(dueDate);
+    if (dueDate && otherDate) {
+        return dueDate.getFullYear() === otherDate.getFullYear() && dueDate.getMonth() === otherDate.getMonth() && dueDate.getDate() === otherDate.getDate();
+    }
+}
+
+function isExpired(task) {
+    if (task.due_date === null || task.due_date === undefined) {
+        return false;
+    }
+
+    return new Date(task.due_date) < new Date() && !task.is_done;
+}
+
+const filters = {
+    all: (task) => true,
+    today: (task) => isSameDay(task.due_date, new Date()),
+    upcoming: (task) => !isSameDay(task.due_date, new Date()) && new Date(task.due_date) > new Date(),
+    expired: (task) => isExpired(task),
+    completed: (task) => task.is_done,
+};
+
+function filterTasks(tasks, filterId) {
+    const predicate = filters[filterId] || filters.all;
+    return tasks.filter(predicate);
+}
+
 function initLoginLogic() {
     const loginEmail = document.getElementById('login-email');
     const loginPassword = document.getElementById('login-password');
@@ -144,8 +184,6 @@ function initRegisterLogic() {
     const show_login_btn = document.getElementById('show-login-btn');
     const passwordNotMatchingImg = document.getElementById('password-not-matching-icon');
     const passwordNotMatchingMsg = document.getElementById('password-not-matching-msg');
-
-    let redirectTimer;
 
     function confirmRegisterPassword() {
         const password = registerPassword.value;
@@ -399,6 +437,7 @@ function initTaskManagementLogic() {
     const tasksList = document.getElementById('tasks-list');
 
     let currentTasks = [];
+    let currentFilterId = 'all';
 
     async function fetchUserTasks() {
         const token = localStorage.getItem('access_token');
@@ -432,24 +471,46 @@ function initTaskManagementLogic() {
         let allTasksHTML = '';
 
         for (const task of tasksArray) {
-            const rawDate = new Date(task.due_date);
+            let hasDueDate = true;
+            if (task.due_date === null || task.due_date === undefined) {
+                hasDueDate = false;
+            }
 
-            const dueDate = reformatDateTime(rawDate)
+            let rawDate = null, dueDate = null;
+            if (hasDueDate) {
+                rawDate = new Date(task.due_date);
+                dueDate = reformatDateTime(rawDate);
+            }
+
+            const hasDueDateHtml = `
+                <div class="due-date-wrapper">
+                    <i data-lucide="calendar" class="task-icon"></i>
+                    <span class="task-due" id="due-${task.id}">
+                        Due ${currentFilterId === "today" ? dueDate.split(',').pop().trim() : dueDate}
+                    </span>
+                </div>
+            `
+
+            const hasNoDueDateHtml = `
+                <div class="due-date-wrapper">
+                    <i data-lucide="calendar-plus-2" class="task-icon no-due-date-icon"></i>
+                    <span class="task-due no-due-date" id="due-${task.id}">
+                        Add Due Date
+                    </span>
+                </div>  
+            `
 
             allTasksHTML += `
-                <div class="task-item ${task.is_done ? "completed" : ''}" data-id="${task.id}">
+                <div class="task-item ${task.is_done ? "completed" : ''} ${isExpired(task) ? "expired-task" : ''}" data-id="${task.id}">
                     <input type="checkbox" class="task-checkbox" id="task-${task.id}" ${task.is_done ? "checked" : ''}>
                     <div class="task-body" id="body-${task.id}">
                         <span class="task-text">${task.text}</span>
                     </div>
                     <div class="task-meta">
-                        <i data-lucide="calendar" class="task-icon"></i>
-                        <span class="task-due" id="due-${task.id}">
-                            Due ${dueDate}
-                        </span>
+                        ${hasDueDate ? hasDueDateHtml : hasNoDueDateHtml}
                         <button class="task-delete-btn" id="delete-${task.id}">
                             <i data-lucide="trash-2" class="task-icon"></i>
-                        </button>
+                        </button> 
                     </div>
                 </div>
             `
@@ -463,20 +524,26 @@ function initTaskManagementLogic() {
         lucide.createIcons();
     }
 
+    function refreshUI() {
+        const filteredTasks = filterTasks(currentTasks, currentFilterId);
+        renderTasks(filteredTasks);
+    }
+
     document.addEventListener('app:authSuccess', async (e) => {
         currentTasks = await fetchUserTasks();
-        renderTasks(currentTasks);
+        refreshUI();
     });
 
     document.addEventListener('app:itemCreated', (e) => {
         const newTask = e.detail;
-
         currentTasks.push(newTask);
-
-        renderTasks(currentTasks);
+        refreshUI();
     });
 
-    // document.addEventListener('app:sidebarChanged', (e) => {})
+    document.addEventListener('app:sidebarChanged', (e) => {
+        currentFilterId = e.detail.filterId;
+        refreshUI();
+    });
 
     async function sendTaskRequest(taskId, method, payloadObject) {
         const token = localStorage.getItem('access_token');
@@ -513,7 +580,7 @@ function initTaskManagementLogic() {
     tasksList.addEventListener('click', async (e) => {
         const clickedCheckbox = e.target.closest('.task-checkbox');
         const clickedText = e.target.closest('.task-text');
-        const clickedDateTime = e.target.closest('.task-due');
+        const clickedDateTime = e.target.closest('.due-date-wrapper');
         const clickedDelete = e.target.closest('.task-delete-btn');
 
         if (clickedCheckbox) {
@@ -528,7 +595,7 @@ function initTaskManagementLogic() {
             const isSuccess = await sendTaskRequest(taskId, 'PUT', payloadObject);
 
             if (isSuccess) {
-                taskItemElement.classList.toggle('completed', isCompleted);
+                refreshUI();
             } else {
                 taskItemElement.classList.remove('completed');
                 clickedCheckbox.checked = !isCompleted;
@@ -566,8 +633,7 @@ function initTaskManagementLogic() {
                 const isTextUpdated = await sendTaskRequest(taskId, 'PUT', payloadObject);
 
                 if (isTextUpdated) {
-                    clickedText.textContent = newText;
-                    inputTextElement.replaceWith(clickedText);
+                    refreshUI();
                 } else {
                     inputTextElement.replaceWith(clickedText);
                 }
@@ -608,7 +674,7 @@ function initTaskManagementLogic() {
 
             let formatedDateTime = '';
             if (originalDateTime !== null && originalDateTime !== undefined) {
-                formatedDateTime = originalDateTime.slice(0, 16);
+                formatedDateTime = toDatetimeLocalValue(originalDateTime);
             }
 
             let inputDateTimeElement = document.createElement('input');
@@ -629,8 +695,8 @@ function initTaskManagementLogic() {
                 if (isProcessing) return;
                 isProcessing = true;
                 const inputValue = e.target.value.trim();
-                const dateObject = new Date(inputValue);
-                const newDateTime = dateObject.toISOString();
+
+                let newDateTime = inputValue === '' ? null : new Date(inputValue).toISOString();
 
                 const payloadObject = {
                     due_date: newDateTime
@@ -639,8 +705,7 @@ function initTaskManagementLogic() {
                 const isDateTimeUpdated = await sendTaskRequest(taskId, 'PUT', payloadObject);
 
                 if (isDateTimeUpdated) {
-                    clickedDateTime.textContent = "Due " + reformatDateTime(dateObject);
-                    inputDateTimeElement.replaceWith(clickedDateTime);
+                    refreshUI();
                 } else {
                     inputDateTimeElement.replaceWith(clickedDateTime);
                 }
@@ -660,17 +725,33 @@ function initTaskManagementLogic() {
             const isDeleted = await sendTaskRequest(taskId, 'DELETE');
 
             if (isDeleted) {
-                taskItemElement.remove();
                 currentTasks = currentTasks.filter(task => task.id !== Number(taskId));
+                refreshUI();
             }
         }
-
-
     });
 }
 
 function initSidebarLogic() {
+    const sidebarContents = document.getElementById('sidebar-contents');
+    sidebarContents.addEventListener('click', (e) => {
+        const clickedBtn = e.target.closest('.sidebar-btn');
 
+        if (clickedBtn === null || clickedBtn === undefined) {
+            return;
+        }
+
+        const currActiveBtn = document.querySelector('.sidebar-btn.active');
+        currActiveBtn?.classList.remove('active');
+        clickedBtn.classList.add('active');
+
+        const clickedBtnId = clickedBtn.id;
+        const filterId = clickedBtnId.split('-').pop();
+
+        document.dispatchEvent(new CustomEvent('app:sidebarChanged', {
+            detail: {filterId: filterId}
+        }));
+    });
 }
 
 // DOM
@@ -684,6 +765,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initLogoutLogic();
     initNewTaskCreationLogic();
     initTaskManagementLogic();
+    initSidebarLogic();
 
     await fetchAndRenderUser();
 });
