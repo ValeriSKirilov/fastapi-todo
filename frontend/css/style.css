@@ -12,9 +12,9 @@
     --top-bar-height: 60px;
     --top-bar-color: white;
 
-    --search-bar-color: #f3EEE8;
+    --search-bar-color: #f3eee8;
 
-    --expired-task-color: red; /* TODO REPLACE WITH PROPER COLOR */
+    --expired-task-color: #ac2a2a; /* TODO REPLACE WITH PROPER COLOR */
 
     --font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
@@ -649,7 +649,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    width: 195px;
+    min-width: 195px;
     gap: 8px;
 }
 
@@ -681,23 +681,25 @@ body {
 /* ─── Expired Task ────────────────────────────────────────────────────── */
 
 .expired-task {
-    color: red;
+    color: var(--expired-task-color);
+    background-color: color-mix(in srgb, var(--expired-task-color) 25%, transparent);
+    border-color: color-mix(in srgb, var(--expired-task-color) 50%, transparent);
 }
 
 .task-item.expired-task .task-text {
-    color: var(--expired-task-color);
+    color: inherit;
 }
 
 .task-item.expired-task .task-meta {
-    color: var(--expired-task-color);
+    color: inherit;
 }
 
 .task-item.expired-task .task-due {
-    color: var(--expired-task-color);
+    color: inherit;
 }
 
 .task-item.expired-task .task-delete-btn {
-    color: var(--expired-task-color);
+    color: inherit;
 }
 
 /* ─── New Task Button ────────────────────────────────────────────────────── */

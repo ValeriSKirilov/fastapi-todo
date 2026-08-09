@@ -70,6 +70,7 @@ function reformatDateTime(rawDateTime) {
         weekday: 'short',
         month: 'short',
         day: 'numeric',
+        ...(rawDateTime.getFullYear() !== new Date().getFullYear() ? {year: 'numeric'} : {})
     });
     const timeToDisplay = rawDateTime.toLocaleTimeString([], {
         hour: 'numeric',
@@ -107,10 +108,21 @@ function isExpired(task) {
 const filters = {
     all: (task) => true,
     today: (task) => isSameDay(task.due_date, new Date()),
+    important: (task) => task.is_important,
     upcoming: (task) => !isSameDay(task.due_date, new Date()) && new Date(task.due_date) > new Date(),
     expired: (task) => isExpired(task),
     completed: (task) => task.is_done,
+    archived: (task) => task.is_archived,
 };
+
+const pageTitles = {
+    all: 'All Tasks',
+    today: 'Today\'s Tasks',
+    important: 'Important Tasks',
+    upcoming: 'Upcoming Tasks',
+    expired: 'Expired Tasks',
+    completed: 'Completed Tasks'
+}
 
 function filterTasks(tasks, filterId) {
     const predicate = filters[filterId] || filters.all;
@@ -326,6 +338,8 @@ function initNewTaskCreationLogic() {
     const newTaskInput = document.getElementById('new-task-input');
     const newTaskCancelBtn = document.getElementById('new-task-cancel-btn');
 
+    let currentFilterId = 'all';
+
     newTaskDate.addEventListener('click', (e) => {
         try {
             if ('showPicker' in HTMLInputElement.prototype) {
@@ -356,7 +370,17 @@ function initNewTaskCreationLogic() {
 
     function showNewTaskForm() {
         newTaskItem.reset();
-        dueDateText.textContent = 'Set date';
+
+        if (currentFilterId === 'today') {
+            const today = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            const dateString = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
+            newTaskDate.value = dateString;
+            dueDateText.textContent = dateString;
+        } else {
+            dueDateText.textContent = 'Set date';
+        }
+
         dueTimeText.textContent = 'Set time';
         newTaskBtn.style.display = 'none';
         newTaskItem.style.display = 'flex';
@@ -427,6 +451,8 @@ function initNewTaskCreationLogic() {
     });
 
     document.addEventListener('app:sidebarChanged', (e) => {
+        currentFilterId = e.detail.filterId;
+
         if (newTaskItem.style.display === 'flex') {
             hideNewTaskForm();
         }
@@ -754,6 +780,18 @@ function initSidebarLogic() {
     });
 }
 
+function initPageHeaderLogic() {
+    document.addEventListener('app:sidebarChanged', (e) => {
+        const filterId = e.detail.filterId;
+        document.getElementById('curr-title').textContent = pageTitles[filterId] || 'Tasks';
+        document.getElementById('additional-info').textContent = new Date().toLocaleDateString([], {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric'
+        });
+    });
+}
+
 // DOM
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -766,6 +804,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initNewTaskCreationLogic();
     initTaskManagementLogic();
     initSidebarLogic();
+    initPageHeaderLogic();
 
     await fetchAndRenderUser();
 });

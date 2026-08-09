@@ -5,7 +5,7 @@ from ..schemas.item import ItemCreate, ItemUpdate
 
 
 def get_items(db: Session, user_id: int, limit: int | None = None):
-    return db.query(Item).filter(Item.owner_id == user_id).limit(limit).all()
+    return db.query(Item).filter(Item.owner_id == user_id, Item.is_deleted == False).limit(limit).all()
 
 
 def get_item(db: Session, item_id: int, user_id: int):
