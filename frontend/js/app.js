@@ -106,13 +106,14 @@ function isExpired(task) {
 }
 
 const filters = {
-    all: (task) => true,
-    today: (task) => isSameDay(task.due_date, new Date()),
+    all: (task) => !task.is_deleted,
+    today: (task) => isSameDay(task.due_date, new Date()) && !task.is_deleted,
     important: (task) => task.is_important,
-    upcoming: (task) => !isSameDay(task.due_date, new Date()) && new Date(task.due_date) > new Date(),
-    expired: (task) => isExpired(task),
-    completed: (task) => task.is_done,
-    archived: (task) => task.is_archived,
+    upcoming: (task) => !isSameDay(task.due_date, new Date()) && new Date(task.due_date) > new Date() && !task.is_deleted,
+    expired: (task) => isExpired(task) && !task.is_deleted,
+    completed: (task) => task.is_done && !task.is_deleted,
+    archived: (task) => task.is_archived && !task.is_deleted,
+    deleted: (task) => task.is_deleted,
 };
 
 const pageTitles = {
@@ -121,7 +122,8 @@ const pageTitles = {
     important: 'Important Tasks',
     upcoming: 'Upcoming Tasks',
     expired: 'Expired Tasks',
-    completed: 'Completed Tasks'
+    completed: 'Completed Tasks',
+    deleted: 'Deleted Tasks',
 }
 
 function filterTasks(tasks, filterId) {
