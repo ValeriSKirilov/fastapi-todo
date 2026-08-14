@@ -37,3 +37,10 @@ services:
       db:
         condition: service_healthy
         restart: true
+  scheduler:
+    build: ./scheduler
+    restart: always
+    depends_on:
+      - api
+    env_file:
+      - .env

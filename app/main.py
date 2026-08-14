@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routers import item
 from .routers import auth
 from .routers import user
+from .routers import internal
 from .config import settings
 
 app = FastAPI()
@@ -52,6 +53,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.include_router(item.router)
 app.include_router(auth.router)
 app.include_router(user.router)
+app.include_router(internal.router)
 
 
 @app.get("/")
