@@ -24,6 +24,21 @@ function showLoginPageSection(sectionId) {
     document.getElementById(sectionId).style.display = 'flex';
 }
 
+let toastTimeout;
+
+function showErrorToast(message) {
+    const toast = document.getElementById('error-toast');
+    const toastMessage = document.getElementById('toast-message');
+
+    clearTimeout(toastTimeout);
+    toastMessage.textContent = message;
+    toast.classList.add('visible');
+
+    toastTimeout = setTimeout(() => {
+        toast.classList.remove('visible');
+    }, 3000);
+}
+
 function renderUserProfile(userData) {
     const firstName = userData.first_name;
     const lastName = userData.last_name;
@@ -106,11 +121,11 @@ function isExpired(task) {
 }
 
 const filters = {
-    all: (task) => !task.is_deleted,
+    all: (task) => !task.is_deleted && !task.is_done,
     today: (task) => isSameDay(task.due_date, new Date()) && !task.is_deleted,
-    important: (task) => task.is_important,
-    upcoming: (task) => !isSameDay(task.due_date, new Date()) && new Date(task.due_date) > new Date() && !task.is_deleted,
-    expired: (task) => isExpired(task) && !task.is_deleted,
+    important: (task) => task.is_important && !task.is_deleted,
+    upcoming: (task) => !isSameDay(task.due_date, new Date()) && new Date(task.due_date) > new Date() && !task.is_deleted && !task.is_done,
+    expired: (task) => isExpired(task) && !task.is_deleted && !task.is_done,
     completed: (task) => task.is_done && !task.is_deleted,
     archived: (task) => task.is_archived && !task.is_deleted,
     deleted: (task) => task.is_deleted,
@@ -512,6 +527,7 @@ function initTaskManagementLogic() {
 
             const hasDueDateHtml = `
                 <div class="due-date-wrapper">
+                    ${isExpired(task) ? "<i data-lucide='circle-alert' class='task-icon'></i>" : ''}
                     <i data-lucide="calendar" class="task-icon"></i>
                     <span class="task-due" id="due-${task.id}">
                         Due ${currentFilterId === "today" ? dueDate.split(',').pop().trim() : dueDate}
@@ -525,20 +541,38 @@ function initTaskManagementLogic() {
                     <span class="task-due no-due-date" id="due-${task.id}">
                         Add Due Date
                     </span>
-                </div>  
+                </div>
             `
 
+            // TODO FIX task-menu-btn TO task-menu-btn and fix the css
+            const actionButtonHtml = currentFilterId === "deleted"
+                ? `<button class="task-restore-btn" id="restore-${task.id}">
+                        <i data-lucide="rotate-ccw" class="task-icon"></i>
+                    </button>`
+                : `<button class="task-menu-btn" id="delete-${task.id}">
+                        <i data-lucide="ellipsis" class="task-menu-icon"></i>
+                    </button>`
+
             allTasksHTML += `
-                <div class="task-item ${task.is_done ? "completed" : ''} ${isExpired(task) ? "expired-task" : ''}" data-id="${task.id}">
+                <div class="task-item ${task.is_done ? "completed" : ''} ${isExpired(task) ? "expired-task" : ''} ${currentFilterId === "deleted" ? "task-item-locked" : ''}" data-id="${task.id}">
                     <input type="checkbox" class="task-checkbox" id="task-${task.id}" ${task.is_done ? "checked" : ''}>
                     <div class="task-body" id="body-${task.id}">
-                        <span class="task-text">${task.text}</span>
+                        <span class="task-title-wrapper">
+                            <span class="task-title">${task.text}</span>
+                            <span class="task-title-tooltip-outer">
+                                <span class="task-title-tooltip">${task.text}</span>
+                            </span>
+                        </span>
+                        <span class="task-desc-wrapper">
+                            <span class="task-desc">TEMPORARY DESCRIPTION</span>
+                            <span class="task-desc-tooltip-outer">
+                                <span class="task-desc-tooltip">TEMP DESC</span>
+                            </span>
+                        </span>
                     </div>
                     <div class="task-meta">
                         ${hasDueDate ? hasDueDateHtml : hasNoDueDateHtml}
-                        <button class="task-delete-btn" id="delete-${task.id}">
-                            <i data-lucide="trash-2" class="task-icon"></i>
-                        </button> 
+                        ${actionButtonHtml}
                     </div>
                 </div>
             `
@@ -549,7 +583,18 @@ function initTaskManagementLogic() {
 
         tasksList.insertAdjacentHTML('beforeend', allTasksHTML);
 
-        lucide.createIcons();
+        requestAnimationFrame(() => {
+            markTruncatedText();
+            lucide.createIcons();
+        });
+    }
+
+    function markTruncatedText() {
+        const textElements = tasksList.querySelectorAll('.task-title, .task-desc');
+        textElements.forEach(el => {
+            const isTruncated = el.scrollWidth > el.clientWidth;
+            el.closest('.task-title-wrapper, .task-desc-wrapper').classList.toggle('has-tooltip', isTruncated);
+        });
     }
 
     function refreshUI() {
@@ -591,25 +636,26 @@ function initTaskManagementLogic() {
                 const targetTask = currentTasks.find(task => task.id === Number(taskId));
                 if (targetTask) {
                     Object.assign(targetTask, payloadObject);
-                    return true;
+                    return {success: true, status: response.status};
                 } else {
-                    return false;
+                    return {success: false, status: response.status};
                 }
             } else {
                 console.log('Task operation failed');
-                return false;
+                return {success: false, status: response.status};
             }
         } catch (error) {
             console.log('Task operation error: ', error);
-            return false;
+            return {success: false, status: null};
         }
     }
 
     tasksList.addEventListener('click', async (e) => {
         const clickedCheckbox = e.target.closest('.task-checkbox');
-        const clickedText = e.target.closest('.task-text');
+        const clickedText = e.target.closest('.task-title');
         const clickedDateTime = e.target.closest('.due-date-wrapper');
-        const clickedDelete = e.target.closest('.task-delete-btn');
+        const clickedDelete = e.target.closest('.task-menu-btn');
+        const clickedRestore = e.target.closest('.task-restore-btn');
 
         if (clickedCheckbox) {
             const taskItemElement = clickedCheckbox.closest('.task-item');
@@ -620,11 +666,12 @@ function initTaskManagementLogic() {
                 is_done: isCompleted
             }
 
-            const isSuccess = await sendTaskRequest(taskId, 'PUT', payloadObject);
+            const result = await sendTaskRequest(taskId, 'PUT', payloadObject);
 
-            if (isSuccess) {
+            if (result.success) {
                 refreshUI();
             } else {
+                showErrorToast('Something went wrong. Please try again.');
                 taskItemElement.classList.remove('completed');
                 clickedCheckbox.checked = !isCompleted;
             }
@@ -641,7 +688,7 @@ function initTaskManagementLogic() {
             let inputTextElement = document.createElement('input');
             inputTextElement.type = 'text';
             inputTextElement.value = originalText;
-            inputTextElement.className = 'task-text edit-task-input';
+            inputTextElement.className = 'task-title edit-task-input';
 
             clickedText.replaceWith(inputTextElement);
             inputTextElement.focus();
@@ -658,11 +705,12 @@ function initTaskManagementLogic() {
                     text: newText
                 }
 
-                const isTextUpdated = await sendTaskRequest(taskId, 'PUT', payloadObject);
+                const result = await sendTaskRequest(taskId, 'PUT', payloadObject);
 
-                if (isTextUpdated) {
+                if (result.success) {
                     refreshUI();
                 } else {
+                    showErrorToast('Something went wrong. Please try again.');
                     inputTextElement.replaceWith(clickedText);
                 }
             }
@@ -730,11 +778,12 @@ function initTaskManagementLogic() {
                     due_date: newDateTime
                 }
 
-                const isDateTimeUpdated = await sendTaskRequest(taskId, 'PUT', payloadObject);
+                const result = await sendTaskRequest(taskId, 'PUT', payloadObject);
 
-                if (isDateTimeUpdated) {
+                if (result.success) {
                     refreshUI();
                 } else {
+                    showErrorToast('Something went wrong. Please try again.');
                     inputDateTimeElement.replaceWith(clickedDateTime);
                 }
             });
@@ -750,11 +799,37 @@ function initTaskManagementLogic() {
             const taskItemElement = clickedDelete.closest('.task-item');
             const taskId = taskItemElement.getAttribute('data-id');
 
-            const isDeleted = await sendTaskRequest(taskId, 'DELETE');
+            const result = await sendTaskRequest(taskId, 'DELETE');
 
-            if (isDeleted) {
+            if (result.success) {
+                const targetTask = currentTasks.find(task => task.id === Number(taskId));
+                if (targetTask) {
+                    targetTask.is_deleted = true;
+                }
+                refreshUI();
+            } else {
+                showErrorToast('Something went wrong. Please try again.');
+            }
+        }
+
+        if (clickedRestore) {
+            const taskItemElement = clickedRestore.closest('.task-item');
+            const taskId = taskItemElement.getAttribute('data-id');
+
+            const payloadObject = {
+                is_deleted: false,
+            }
+
+            const result = await sendTaskRequest(taskId, 'PUT', payloadObject);
+
+            if (result.success) {
+                refreshUI();
+            } else if (result.status === 404) {
                 currentTasks = currentTasks.filter(task => task.id !== Number(taskId));
                 refreshUI();
+                showErrorToast('This task has already been permanently deleted');
+            } else {
+                showErrorToast('Something went wrong. Please try again.');
             }
         }
     });
