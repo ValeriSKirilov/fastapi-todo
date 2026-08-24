@@ -121,14 +121,14 @@ function isExpired(task) {
 }
 
 const filters = {
-    all: (task) => !task.is_deleted && !task.is_done,
-    today: (task) => isSameDay(task.due_date, new Date()) && !task.is_deleted,
-    important: (task) => task.is_important && !task.is_deleted,
-    upcoming: (task) => !isSameDay(task.due_date, new Date()) && new Date(task.due_date) > new Date() && !task.is_deleted && !task.is_done,
-    expired: (task) => isExpired(task) && !task.is_deleted && !task.is_done,
-    completed: (task) => task.is_done && !task.is_deleted,
+    all: (task) => !task.is_deleted && !task.is_done && !task.is_archived,
+    today: (task) => isSameDay(task.due_date, new Date()) && !task.is_deleted && !task.is_archived,
+    important: (task) => task.is_important && !task.is_archived && !task.is_deleted,
+    upcoming: (task) => !isSameDay(task.due_date, new Date()) && new Date(task.due_date) > new Date() && !task.is_deleted && !task.is_archived && !task.is_done,
+    expired: (task) => isExpired(task) && !task.is_deleted && !task.is_archived && !task.is_done,
+    completed: (task) => task.is_done && !task.is_archived && !task.is_deleted,
     archived: (task) => task.is_archived && !task.is_deleted,
-    deleted: (task) => task.is_deleted,
+    deleted: (task) => !task.is_archived && task.is_deleted,
 };
 
 const pageTitles = {
@@ -211,7 +211,6 @@ function initRegisterLogic() {
     const emailInUseIcon = document.getElementById('email-in-use-icon');
     const emailInUseMsg = document.getElementById('email-in-use-msg');
     const show_login_btn = document.getElementById('show-login-btn');
-    const passwordNotMatchingImg = document.getElementById('password-not-matching-icon');
     const passwordNotMatchingMsg = document.getElementById('password-not-matching-msg');
 
     function confirmRegisterPassword() {
@@ -220,12 +219,10 @@ function initRegisterLogic() {
 
         if (confirm_password !== password) {
             confirmRegPassword.classList.add('input-error');
-            passwordNotMatchingImg.style.display = 'flex';
             passwordNotMatchingMsg.style.display = 'flex';
             return false;
         } else {
             confirmRegPassword.classList.remove('input-error');
-            passwordNotMatchingImg.style.display = 'none';
             passwordNotMatchingMsg.style.display = 'none';
             return true;
         }
@@ -478,9 +475,11 @@ function initNewTaskCreationLogic() {
 
 function initTaskManagementLogic() {
     const tasksList = document.getElementById('tasks-list');
+    const taskMenu = document.getElementById('task-menu');
 
     let currentTasks = [];
     let currentFilterId = 'all';
+    let activeMenuTaskId = null;
 
     async function fetchUserTasks() {
         const token = localStorage.getItem('access_token');
@@ -544,29 +543,28 @@ function initTaskManagementLogic() {
                 </div>
             `
 
-            // TODO FIX task-menu-btn TO task-menu-btn and fix the css
             const actionButtonHtml = currentFilterId === "deleted"
-                ? `<button class="task-restore-btn" id="restore-${task.id}">
+                ? `<button type="button" class="task-restore-btn" id="restore-${task.id}">
                         <i data-lucide="rotate-ccw" class="task-icon"></i>
                     </button>`
-                : `<button class="task-menu-btn" id="delete-${task.id}">
+                : `<button type="button" class="task-menu-btn" id="menu-${task.id}">
                         <i data-lucide="ellipsis" class="task-menu-icon"></i>
                     </button>`
 
             allTasksHTML += `
-                <div class="task-item ${task.is_done ? "completed" : ''} ${isExpired(task) ? "expired-task" : ''} ${currentFilterId === "deleted" ? "task-item-locked" : ''}" data-id="${task.id}">
+                <div class="task-item ${task.is_done ? "completed" : ''} ${isExpired(task) ? "expired-task" : ''} ${currentFilterId === "deleted" ? "task-item-locked" : ''} ${task.is_important ? "important" : ''}" data-id="${task.id}">
                     <input type="checkbox" class="task-checkbox" id="task-${task.id}" ${task.is_done ? "checked" : ''}>
                     <div class="task-body" id="body-${task.id}">
                         <span class="task-title-wrapper">
-                            <span class="task-title">${task.text}</span>
+                            <span class="task-title">${task.title}</span>
                             <span class="task-title-tooltip-outer">
-                                <span class="task-title-tooltip">${task.text}</span>
+                                <span class="task-title-tooltip">${task.title}</span>
                             </span>
                         </span>
                         <span class="task-desc-wrapper">
-                            <span class="task-desc">TEMPORARY DESCRIPTION</span>
+                            <span class="task-desc">${task.description}</span>
                             <span class="task-desc-tooltip-outer">
-                                <span class="task-desc-tooltip">TEMP DESC</span>
+                                <span class="task-desc-tooltip">${task.description}</span>
                             </span>
                         </span>
                     </div>
@@ -597,9 +595,26 @@ function initTaskManagementLogic() {
         });
     }
 
+    function sortTasks(tasks) {
+        return [...tasks].sort((a, b) => {
+            const aExpired = isExpired(a);
+            const bExpired = isExpired(b);
+            if (aExpired !== bExpired) return aExpired ? -1 : 1;
+
+            if (a.is_important !== b.is_important) return a.is_important ? -1 : 1;
+
+            if (a.due_date === null && b.due_date === null) return 0;
+            if (a.due_date === null) return 1;
+            if (b.due_date === null) return -1;
+
+            return new Date(a.due_date) - new Date(b.due_date);
+        });
+    }
+
     function refreshUI() {
         const filteredTasks = filterTasks(currentTasks, currentFilterId);
-        renderTasks(filteredTasks);
+        const sortedTasks = sortTasks(filteredTasks);
+        renderTasks(sortedTasks);
     }
 
     document.addEventListener('app:authSuccess', async (e) => {
@@ -654,7 +669,7 @@ function initTaskManagementLogic() {
         const clickedCheckbox = e.target.closest('.task-checkbox');
         const clickedText = e.target.closest('.task-title');
         const clickedDateTime = e.target.closest('.due-date-wrapper');
-        const clickedDelete = e.target.closest('.task-menu-btn');
+        const clickedMenuBtn = e.target.closest('.task-menu-btn');
         const clickedRestore = e.target.closest('.task-restore-btn');
 
         if (clickedCheckbox) {
@@ -669,7 +684,10 @@ function initTaskManagementLogic() {
             const result = await sendTaskRequest(taskId, 'PUT', payloadObject);
 
             if (result.success) {
-                refreshUI();
+                taskItemElement.classList.add('removing');
+                setTimeout(() => {
+                    refreshUI();
+                }, 150);
             } else {
                 showErrorToast('Something went wrong. Please try again.');
                 taskItemElement.classList.remove('completed');
@@ -702,7 +720,7 @@ function initTaskManagementLogic() {
                 }
 
                 const payloadObject = {
-                    text: newText
+                    title: newText
                 }
 
                 const result = await sendTaskRequest(taskId, 'PUT', payloadObject);
@@ -738,6 +756,10 @@ function initTaskManagementLogic() {
                 await replaceText(newText);
             });
         }
+
+        // if (clickedDescription) {
+        //
+        // }
 
         if (clickedDateTime) {
             const taskItemElement = clickedDateTime.closest('.task-item');
@@ -795,20 +817,14 @@ function initTaskManagementLogic() {
             });
         }
 
-        if (clickedDelete) {
-            const taskItemElement = clickedDelete.closest('.task-item');
+        if (clickedMenuBtn) {
+            const taskItemElement = clickedMenuBtn.closest('.task-item');
             const taskId = taskItemElement.getAttribute('data-id');
 
-            const result = await sendTaskRequest(taskId, 'DELETE');
-
-            if (result.success) {
-                const targetTask = currentTasks.find(task => task.id === Number(taskId));
-                if (targetTask) {
-                    targetTask.is_deleted = true;
-                }
-                refreshUI();
+            if (activeMenuTaskId === taskId) {
+                closeMenu();
             } else {
-                showErrorToast('Something went wrong. Please try again.');
+                openMenu(clickedMenuBtn, taskId);
             }
         }
 
@@ -823,7 +839,10 @@ function initTaskManagementLogic() {
             const result = await sendTaskRequest(taskId, 'PUT', payloadObject);
 
             if (result.success) {
-                refreshUI();
+                taskItemElement.classList.add('removing');
+                setTimeout(() => {
+                    refreshUI();
+                }, 150);
             } else if (result.status === 404) {
                 currentTasks = currentTasks.filter(task => task.id !== Number(taskId));
                 refreshUI();
@@ -831,6 +850,130 @@ function initTaskManagementLogic() {
             } else {
                 showErrorToast('Something went wrong. Please try again.');
             }
+        }
+    });
+
+    function openMenu(triggerBtn, taskId) {
+        const targetTask = currentTasks.find(task => task.id === Number(taskId));
+
+        const importantItem = taskMenu.querySelector('[data-action="important"]');
+        importantItem.textContent = targetTask.is_important ? 'Remove Importance' : 'Mark Important';
+
+        const archiveItem = taskMenu.querySelector('[data-action="archive"]');
+        archiveItem.textContent = targetTask.is_archived ? 'Unarchive' : 'Archive';
+
+        const rect = triggerBtn.getBoundingClientRect();
+        const containerRect = tasksList.getBoundingClientRect();
+        const buttonCenterX = rect.left + rect.width / 2;
+
+        let left = buttonCenterX - taskMenu.offsetWidth / 2;
+        const minLeft = containerRect.left + 8;
+        const maxLeft = containerRect.right - taskMenu.offsetWidth - 8;
+        left = Math.min(Math.max(left, minLeft), maxLeft);
+
+        taskMenu.style.top = `${rect.bottom + 4}px`;
+        taskMenu.style.left = `${left}px`;
+        taskMenu.classList.add('visible');
+        activeMenuTaskId = taskId;
+    }
+
+    function closeMenu() {
+        taskMenu.classList.remove('visible');
+        activeMenuTaskId = null;
+    }
+
+    taskMenu.addEventListener('click', async (e) => {
+        const clickedItem = e.target.closest('.task-menu-item');
+        if (!clickedItem || activeMenuTaskId === null) return;
+
+        const action = clickedItem.dataset.action;
+        const taskId = activeMenuTaskId;
+        const targetTask = currentTasks.find(task => task.id === Number(taskId));
+
+        if (!targetTask) {
+            showErrorToast('Something went wrong. Please try again.');
+            closeMenu();
+            return;
+        }
+
+        if (action === 'delete') {
+            const result = await sendTaskRequest(taskId, 'DELETE');
+
+            if (result.success) {
+                const targetTask = currentTasks.find(task => task.id === Number(taskId));
+                if (targetTask) {
+                    targetTask.is_deleted = true;
+                }
+
+                const taskItemElement = document.querySelector(`.task-item[data-id="${taskId}"]`);
+
+                if (taskItemElement) {
+                    taskItemElement.classList.add('removing');
+                    setTimeout(() => {
+                        refreshUI();
+                    }, 150);
+                } else {
+                    refreshUI();
+                }
+
+            } else {
+                showErrorToast('Something went wrong. Please try again.');
+            }
+
+            closeMenu();
+            return;
+        }
+
+        let payloadObject;
+
+        switch (action) {
+            case 'important': {
+                payloadObject = {
+                    is_important: !targetTask.is_important,
+                }
+                break;
+            }
+            case 'archive': {
+                payloadObject = {
+                    is_archived: !targetTask.is_archived,
+                }
+                break;
+            }
+            default:
+                closeMenu();
+                return;
+        }
+
+        const result = await sendTaskRequest(taskId, 'PUT', payloadObject);
+
+        if (result.success) {
+            const taskItemElement = document.querySelector(`.task-item[data-id="${taskId}"]`);
+
+            if (taskItemElement && action === 'archive') {
+                taskItemElement.classList.add('removing');
+                setTimeout(() => {
+                    refreshUI();
+                }, 150);
+            } else {
+                refreshUI();
+            }
+        } else {
+            showErrorToast('Something went wrong. Please try again.');
+        }
+
+        closeMenu();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (activeMenuTaskId === null) return;
+        if (!e.target.closest('.task-menu') && !e.target.closest('.task-menu-btn')) {
+            closeMenu();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && activeMenuTaskId !== null) {
+            closeMenu();
         }
     });
 }

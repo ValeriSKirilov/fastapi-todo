@@ -1,9 +1,10 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 
 
 class ItemBase(BaseModel):
-    text: str
+    title: str = Field(max_length=255)
+    description: str | None = Field(default=None, max_length=10000)
     is_done: bool = False
     is_important: bool = False
     due_date: datetime | None = None
@@ -21,7 +22,8 @@ class ItemResponse(ItemBase):
 
 
 class ItemUpdate(BaseModel):
-    text: str | None = None
+    title: str | None = None
+    description: str | None = None
     is_done: bool | None = None
     is_deleted: bool | None = None
     is_important: bool | None = None

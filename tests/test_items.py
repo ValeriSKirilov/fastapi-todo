@@ -41,7 +41,7 @@ def setup_module():
     Base.metadata.create_all(bind=engine)
 
     session = TestingSessionLocal()
-    db_item = Item(text="Test Item", is_done=False, owner_id=1)
+    db_item = Item(title="Test Item", description="Test Description", is_done=False, owner_id=1)
     session.add(db_item)
     session.commit()
     session.close()
@@ -54,10 +54,10 @@ def test_read_main():
 
 
 def test_create_item():
-    response = client.post("/items", json={"text": "Test Item"})
+    response = client.post("/items", json={"title": "Test Item"})
     assert response.status_code == 200
     data = response.json()
-    assert data["text"] == "Test Item"
+    assert data["title"] == "Test Item"
     assert data["is_done"] == False
     assert "id" in data
 
@@ -66,7 +66,8 @@ def test_get_item():
     response = client.get("/items/1")
     assert response.status_code == 200
     data = response.json()
-    assert data["text"] == "Test Item"
+    assert data["title"] == "Test Item"
+    assert data["description"] == "Test Description"
     assert data["is_done"] == False
     assert data["id"] == 1
 
@@ -75,13 +76,14 @@ def test_update_item():
     response = client.put("/items/1", json={"is_done": True})
     assert response.status_code == 200
     data = response.json()
-    assert data["text"] == "Test Item"
+    assert data["title"] == "Test Item"
+    assert data["description"] == "Test Description"
     assert data["is_done"] == True
     assert data["id"] == 1
 
 
 def test_delete_item():
-    response = client.post("/items", json={"text": "Item to delete"})
+    response = client.post("/items", json={"title": "Item to delete"})
     item_id = response.json()["id"]
 
     response = client.delete(f"/items/{item_id}")
@@ -96,6 +98,18 @@ def test_get_nonexistent_item():
 def test_delete_nonexistent_item():
     response = client.delete("/items/999")
     assert response.status_code == 404
+
+
+def test_create_item_title_too_long():
+    long_title = "a" * 256
+    response = client.post("/items", json={"title": long_title})
+    assert response.status_code == 400
+
+
+def test_create_item_title_at_max_length():
+    max_title = "a" * 255
+    response = client.post("/items", json={"title": max_title})
+    assert response.status_code == 200
 
 
 def test_get_ownership_enforcement():
