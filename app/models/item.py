@@ -20,5 +20,8 @@ class Item(Base):
     is_important = Column(Boolean, default=False)
     is_archived = Column(Boolean, default=False)
     due_date = Column(DateTime(timezone=True), nullable=True)
+    parent_id = Column(Integer, ForeignKey("items.id"), index=True, nullable=True)
 
     owner = relationship("User", back_populates="items")
+    parent = relationship("Item", back_populates="children", remote_side=[id])
+    children = relationship("Item", back_populates="parent")

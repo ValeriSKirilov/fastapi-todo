@@ -228,6 +228,17 @@ function filterTasks(tasks, filterId) {
     return tasks.filter(predicate);
 }
 
+function getDepth(task, tasksById) {
+    let depth = 0;
+    let current = task;
+    while (current.parent_id !== null && current.parent_id !== undefined) {
+        current = tasksById.get(current.parent_id);
+        if (!current) break;
+        depth++;
+    }
+    return depth;
+}
+
 function initLoginLogic() {
     const loginEmail = document.getElementById('login-email');
     const loginPassword = document.getElementById('login-password');

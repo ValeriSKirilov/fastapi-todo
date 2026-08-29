@@ -142,6 +142,104 @@ def test_delete_ownership_enforcement():
         app.dependency_overrides[get_current_user] = override_get_current_user
 
 
+def test_delete_item_permanently():
+    response = client.post("/items", json={"title": "Item to permanently delete"})
+    item_id = response.json()["id"]
+
+    response = client.delete(f"/items/{item_id}/permanent")
+    assert response.status_code == 204
+
+    response = client.get(f"/items/{item_id}")
+    assert response.status_code == 404
+
+
+def test_create_child_item():
+    parent_response = client.post("/items", json={"title": "Parent Task"})
+    parent_id = parent_response.json()["id"]
+
+    child_response = client.post("/items", json={"title": "Child Task", "parent_id": parent_id})
+    assert child_response.status_code == 200
+    data = child_response.json()
+    assert data["parent_id"] == parent_id
+
+
+def test_create_item_with_nonexistent_parent():
+    response = client.post("/items", json={"title": "Orphan", "parent_id": 999999})
+    assert response.status_code == 400
+
+
+def test_create_item_with_another_users_parent():
+    own_response = client.post("/items", json={"title": "User1 Task"})
+    own_id = own_response.json()["id"]
+
+    try:
+        app.dependency_overrides[get_current_user] = lambda: User(id=2, email="c@test.com", hashed_password="x",
+                                                                  first_name="Test", last_name="User")
+
+        response = client.post("/items", json={"title": "Malicious child", "parent_id": own_id})
+        assert response.status_code == 400
+    finally:
+        app.dependency_overrides[get_current_user] = override_get_current_user
+
+
+def test_update_item_creates_cycle():
+    parent_response = client.post("/items", json={"title": "Cycle Parent"})
+    parent_id = parent_response.json()["id"]
+
+    child_response = client.post("/items", json={"title": "Cycle Child", "parent_id": parent_id})
+    child_id = child_response.json()["id"]
+
+    response = client.put(f"/items/{parent_id}", json={"parent_id": child_id})
+    assert response.status_code == 400
+
+
+def test_delete_cascades_to_children():
+    parent_response = client.post("/items", json={"title": "Parent To Delete"})
+    parent_id = parent_response.json()["id"]
+
+    child_response = client.post("/items", json={"title": "Child To Delete", "parent_id": parent_id})
+    child_id = child_response.json()["id"]
+
+    response = client.delete(f"/items/{parent_id}")
+    assert response.status_code == 204
+
+    response = client.get(f"/items/{child_id}")
+    assert response.status_code == 404
+
+
+def test_permanent_delete_cascades_to_children():
+    parent_response = client.post("/items", json={"title": "Parent To Delete"})
+    parent_id = parent_response.json()["id"]
+
+    child_response = client.post("/items", json={"title": "Child To Delete", "parent_id": parent_id})
+    child_id = child_response.json()["id"]
+
+    response = client.delete(f"/items/{parent_id}/permanent")
+    assert response.status_code == 204
+
+    session = TestingSessionLocal()
+    child_in_db = session.query(Item).filter(Item.id == child_id).first()
+    session.close()
+
+    assert child_in_db is None
+
+
+def test_restore_cascades_to_children():
+    parent_response = client.post("/items", json={"title": "Parent To Restore"})
+    parent_id = parent_response.json()["id"]
+
+    child_response = client.post("/items", json={"title": "Child To Restore", "parent_id": parent_id})
+    child_id = child_response.json()["id"]
+
+    client.delete(f"/items/{parent_id}")
+
+    response = client.put(f"/items/{parent_id}", json={"is_deleted": False})
+    assert response.status_code == 200
+
+    response = client.get(f"/items/{child_id}")
+    assert response.status_code == 200
+
+
 def teardown_module():
     app.dependency_overrides.clear()
     Base.metadata.drop_all(bind=engine)

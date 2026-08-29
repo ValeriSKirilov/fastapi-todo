@@ -54,7 +54,13 @@ def create_item(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
-    return crud.create_item(db, item, current_user.id)
+    try:
+        return crud.create_item(db, item, current_user.id)
+    except crud.InvalidParentError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -92,7 +98,14 @@ def update_item(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
-    item = crud.update_item(db, item_id, new_item, current_user.id)
+    try:
+        item = crud.update_item(db, item_id, new_item, current_user.id)
+    except crud.InvalidParentError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
     if item:
         return item
     else:

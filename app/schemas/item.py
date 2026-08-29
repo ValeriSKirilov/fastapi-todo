@@ -8,6 +8,7 @@ class ItemBase(BaseModel):
     is_done: bool = False
     is_important: bool = False
     due_date: datetime | None = None
+    parent_id: int | None = None
 
 
 class ItemCreate(ItemBase):
@@ -29,3 +30,4 @@ class ItemUpdate(BaseModel):
     is_important: bool | None = None
     is_archived: bool | None = None
     due_date: datetime | None = None
+    parent_id: int | None = None
