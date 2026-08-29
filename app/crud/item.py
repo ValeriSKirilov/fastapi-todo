@@ -34,6 +34,15 @@ def delete_item(db: Session, item_id: int, user_id: int):
     return db_item
 
 
+def delete_item_permanently(db: Session, item_id: int, user_id: int):
+    db_item = db.query(Item).filter(Item.id == item_id, Item.owner_id == user_id).first()
+    if db_item:
+        db.delete(db_item)
+        db.commit()
+
+    return db_item
+
+
 def update_item(db: Session, item_id: int, item: ItemUpdate, user_id: int):
     db_item = db.query(Item).filter(Item.id == item_id, Item.owner_id == user_id).first()
 

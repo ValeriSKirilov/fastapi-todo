@@ -1,6 +1,88 @@
 import {API_BASE_URL} from './config.js';
 
 let redirectTimer;
+let currentTasks = [];
+
+async function sendTaskRequest(taskId, method, payloadObject) {
+    const token = localStorage.getItem('access_token');
+    const data = payloadObject ? JSON.stringify(payloadObject) : null;
+
+    try {
+        const response = await fetch(API_BASE_URL + '/items/' + taskId, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: data
+        });
+
+        if (response.ok) {
+            const targetTask = currentTasks.find(task => task.id === Number(taskId));
+            if (targetTask) {
+                Object.assign(targetTask, payloadObject);
+                return {success: true, status: response.status};
+            } else {
+                return {success: false, status: response.status};
+            }
+        } else {
+            console.log('Task operation failed');
+            return {success: false, status: response.status};
+        }
+    } catch (error) {
+        console.log('Task operation error: ', error);
+        return {success: false, status: null};
+    }
+}
+
+async function createTaskRequest(payload) {
+    const token = localStorage.getItem('access_token');
+
+    try {
+        const response = await fetch(API_BASE_URL + '/items', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            const newTask = await response.json();
+            return {success: true, task: newTask, status: response.status};
+        } else {
+            console.log('New item creation failed', response.status);
+            return {success: false, status: response.status};
+        }
+    } catch (error) {
+        console.log('New item creation failed: ', error);
+        return {success: false, status: null};
+    }
+}
+
+async function deleteTaskPermanently(taskId) {
+    const token = localStorage.getItem('access_token');
+
+    try {
+        const response = await fetch(API_BASE_URL + '/items/' + taskId + '/permanent', {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            }
+        });
+
+        if (response.ok) {
+            return {success: true, status: response.status};
+        } else {
+            console.log('Permanent delete failed');
+            return {success: false, status: response.status};
+        }
+    } catch (error) {
+        console.log('Permanent delete error: ', error);
+        return {success: false, status: null};
+    }
+}
 
 function switchView(targetID) {
     const pages = document.querySelectorAll('.app-view');
@@ -382,24 +464,24 @@ function initNewTaskCreationLogic() {
         dueTimeText.textContent = e.target.value;
     });
 
-    function showNewTaskForm() {
-        newTaskItem.reset();
-
-        if (currentFilterId === 'today') {
-            const today = new Date();
-            const pad = (n) => String(n).padStart(2, '0');
-            const dateString = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
-            newTaskDate.value = dateString;
-            dueDateText.textContent = dateString;
-        } else {
-            dueDateText.textContent = 'Set date';
-        }
-
-        dueTimeText.textContent = 'Set time';
-        newTaskBtn.style.display = 'none';
-        newTaskItem.style.display = 'flex';
-        newTaskInput.focus();
-    }
+    // function showNewTaskForm() {
+    //     newTaskItem.reset();
+    //
+    //     if (currentFilterId === 'today') {
+    //         const today = new Date();
+    //         const pad = (n) => String(n).padStart(2, '0');
+    //         const dateString = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
+    //         newTaskDate.value = dateString;
+    //         dueDateText.textContent = dateString;
+    //     } else {
+    //         dueDateText.textContent = 'Set date';
+    //     }
+    //
+    //     dueTimeText.textContent = 'Set time';
+    //     newTaskBtn.style.display = 'none';
+    //     newTaskItem.style.display = 'flex';
+    //     newTaskInput.focus();
+    // }
 
     function hideNewTaskForm() {
         newTaskItem.classList.add('hiding');
@@ -411,11 +493,11 @@ function initNewTaskCreationLogic() {
         }, {once: true});
     }
 
-    newTaskBtn.addEventListener('click', (e) => {
-        showNewTaskForm();
+    newTaskBtn.addEventListener('click', () => {
+        document.dispatchEvent(new CustomEvent('app:openTaskModal', {detail: null}));
     });
 
-    newTaskCancelBtn.addEventListener('click', (e) => {
+    newTaskCancelBtn.addEventListener('click', () => {
         hideNewTaskForm();
     });
 
@@ -447,7 +529,7 @@ function initNewTaskCreationLogic() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
                 },
-                body: data,
+                body: data
             });
 
             if (response.ok) {
@@ -477,7 +559,6 @@ function initTaskManagementLogic() {
     const tasksList = document.getElementById('tasks-list');
     const taskMenu = document.getElementById('task-menu');
 
-    let currentTasks = [];
     let currentFilterId = 'all';
     let activeMenuTaskId = null;
 
@@ -617,7 +698,7 @@ function initTaskManagementLogic() {
         renderTasks(sortedTasks);
     }
 
-    document.addEventListener('app:authSuccess', async (e) => {
+    document.addEventListener('app:authSuccess', async () => {
         currentTasks = await fetchUserTasks();
         refreshUI();
     });
@@ -633,41 +714,9 @@ function initTaskManagementLogic() {
         refreshUI();
     });
 
-    async function sendTaskRequest(taskId, method, payloadObject) {
-        const token = localStorage.getItem('access_token');
-        const data = payloadObject ? JSON.stringify(payloadObject) : null;
-
-        try {
-            const response = await fetch(API_BASE_URL + '/items/' + taskId, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: data,
-            });
-
-            if (response.ok) {
-                const targetTask = currentTasks.find(task => task.id === Number(taskId));
-                if (targetTask) {
-                    Object.assign(targetTask, payloadObject);
-                    return {success: true, status: response.status};
-                } else {
-                    return {success: false, status: response.status};
-                }
-            } else {
-                console.log('Task operation failed');
-                return {success: false, status: response.status};
-            }
-        } catch (error) {
-            console.log('Task operation error: ', error);
-            return {success: false, status: null};
-        }
-    }
-
     tasksList.addEventListener('click', async (e) => {
+        const clickedItem = e.target.closest('.task-item');
         const clickedCheckbox = e.target.closest('.task-checkbox');
-        const clickedText = e.target.closest('.task-title');
         const clickedDateTime = e.target.closest('.due-date-wrapper');
         const clickedMenuBtn = e.target.closest('.task-menu-btn');
         const clickedRestore = e.target.closest('.task-restore-btn');
@@ -694,72 +743,6 @@ function initTaskManagementLogic() {
                 clickedCheckbox.checked = !isCompleted;
             }
         }
-
-        if (clickedText) {
-            const taskItemElement = clickedText.closest('.task-item');
-            const taskId = taskItemElement.getAttribute('data-id');
-
-            e.preventDefault();
-
-            const originalText = clickedText.textContent;
-
-            let inputTextElement = document.createElement('input');
-            inputTextElement.type = 'text';
-            inputTextElement.value = originalText;
-            inputTextElement.className = 'task-title edit-task-input';
-
-            clickedText.replaceWith(inputTextElement);
-            inputTextElement.focus();
-
-            let isProcessing = false;
-
-            async function replaceText(newText) {
-                if (newText === originalText || newText === '') {
-                    inputTextElement.replaceWith(clickedText);
-                    return;
-                }
-
-                const payloadObject = {
-                    title: newText
-                }
-
-                const result = await sendTaskRequest(taskId, 'PUT', payloadObject);
-
-                if (result.success) {
-                    refreshUI();
-                } else {
-                    showErrorToast('Something went wrong. Please try again.');
-                    inputTextElement.replaceWith(clickedText);
-                }
-            }
-
-            inputTextElement.addEventListener('keydown', async (e) => {
-                if (e.key === 'Escape') {
-                    isProcessing = true;
-                    inputTextElement.replaceWith(clickedText);
-                }
-
-                if (e.key === 'Enter') {
-                    if (isProcessing) return;
-                    isProcessing = true;
-                    const newText = e.target.value.trim();
-
-                    await replaceText(newText);
-                }
-            });
-
-            inputTextElement.addEventListener('blur', async (e) => {
-                if (isProcessing) return;
-                isProcessing = true;
-                const newText = e.target.value.trim();
-
-                await replaceText(newText);
-            });
-        }
-
-        // if (clickedDescription) {
-        //
-        // }
 
         if (clickedDateTime) {
             const taskItemElement = clickedDateTime.closest('.task-item');
@@ -810,7 +793,7 @@ function initTaskManagementLogic() {
                 }
             });
 
-            inputDateTimeElement.addEventListener('blur', async (e) => {
+            inputDateTimeElement.addEventListener('blur', async () => {
                 if (isProcessing) return;
 
                 inputDateTimeElement.replaceWith(clickedDateTime);
@@ -849,6 +832,19 @@ function initTaskManagementLogic() {
                 showErrorToast('This task has already been permanently deleted');
             } else {
                 showErrorToast('Something went wrong. Please try again.');
+            }
+        }
+
+        const hasSpecificAction = clickedCheckbox || clickedDateTime || clickedMenuBtn || clickedRestore;
+
+        if (!hasSpecificAction && clickedItem && !clickedItem.classList.contains('new-task-item')) {
+            const taskId = clickedItem.getAttribute('data-id');
+            const targetTask = currentTasks.find(task => task.id === Number(taskId));
+
+            if (targetTask) {
+                document.dispatchEvent(new CustomEvent('app:openTaskModal', {
+                    detail: targetTask
+                }));
             }
         }
     });
@@ -915,7 +911,6 @@ function initTaskManagementLogic() {
                 } else {
                     refreshUI();
                 }
-
             } else {
                 showErrorToast('Something went wrong. Please try again.');
             }
@@ -976,6 +971,472 @@ function initTaskManagementLogic() {
             closeMenu();
         }
     });
+
+    document.addEventListener('app:taskUpdated', () => {
+        refreshUI();
+    });
+}
+
+function initTaskModalLogic() {
+    const taskDetailsModal = document.getElementById('task-details-modal');
+    const modalCompleteBtn = document.getElementById('modal-complete-btn');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const modalImportantBtn = document.getElementById('modal-important-btn');
+    const modalTitleText = document.getElementById('modal-title-text');
+    const modalMissingTitleMsg = document.getElementById('modal-missing-title-msg');
+    const modalDescriptionText = document.getElementById('modal-desc-text');
+    const modalOverdueBadge = document.getElementById('modal-overdue-badge');
+    const modalDueDateControl = document.getElementById('modal-due-date-control');
+    const modalDueDateText = document.getElementById('modal-due-date-text');
+    const modalProjectControl = document.getElementById('modal-project-control');
+    const modalProjectText = document.getElementById('modal-project-text');
+    const modalCompletedSubtasksCounter = document.getElementById('modal-completed-subtasks-counter');
+    const modalAddSubtaskBtn = document.getElementById('modal-add-subtask-btn');
+    const modalSubtasksList = document.getElementById('modal-subtasks-list');
+    const modalArchiveBtn = document.getElementById('modal-archive-btn');
+    const modalDeleteBtn = document.getElementById('modal-delete-btn');
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+    const modalCreateTaskBtn = document.getElementById('modal-create-task-btn');
+
+    let currentTask;
+    let activeEdit = false;
+    let isCreatingTask = false;
+    let suppressBackdropClose = false;
+
+    async function updateCurrentTask(payloadObject) {
+        if (isCreatingTask && !currentTask.id) {
+            if (!currentTask.title && !payloadObject.title) {
+                modalTitleText.classList.add('modal-missing-title-error');
+                modalMissingTitleMsg.style.display = 'flex';
+                return false;
+            }
+            const result = await createTaskRequest(payloadObject);
+            if (result.success) {
+                currentTask.id = result.task.id;
+                Object.assign(currentTask, result.task);
+                document.dispatchEvent(new CustomEvent('app:itemCreated', {detail: currentTask}));
+                return true;
+            } else {
+                showErrorToast('Something went wrong. Please try again.');
+                return false;
+            }
+        }
+
+        const result = await sendTaskRequest(currentTask.id, 'PUT', payloadObject);
+
+        if (result.success) {
+            document.dispatchEvent(new CustomEvent('app:taskUpdated', {detail: currentTask}));
+            return true;
+        } else {
+            showErrorToast('Something went wrong. Please try again.');
+            return false;
+        }
+    }
+
+    function closeModal() {
+        taskDetailsModal.classList.add('hiding');
+
+        taskDetailsModal.addEventListener('animationend', (e) => {
+            if (e.target !== taskDetailsModal) return;
+
+            taskDetailsModal.classList.remove('hiding');
+            taskDetailsModal.style.display = 'none';
+            currentTask = null;
+        }, {once: true});
+    }
+
+    async function deleteCurrentTask() {
+        const result = await sendTaskRequest(currentTask.id, 'DELETE');
+
+        if (result.success) {
+            currentTask.is_deleted = true;
+
+            const taskItemElement = document.querySelector(`.task-item[data-id="${currentTask.id}"]`);
+            if (taskItemElement) {
+                taskItemElement.classList.add('removing');
+                setTimeout(() => {
+                    document.dispatchEvent(new CustomEvent('app:taskUpdated', {detail: currentTask}));
+                }, 150);
+            } else {
+                document.dispatchEvent(new CustomEvent('app:taskUpdated', {detail: currentTask}));
+            }
+
+            closeModal();
+        } else {
+            showErrorToast('Something went wrong. Please try again.');
+        }
+    }
+
+    async function requestClose() {
+        if (isCreatingTask && currentTask?.id) {
+            const result = await deleteTaskPermanently(currentTask.id);
+            if (!result.success) {
+                showErrorToast('Something went wrong. Please try again.');
+                return;
+            }
+        }
+        closeModal();
+    }
+
+    function refreshModalVisual() {
+        const hasDueDate = currentTask.due_date !== null && currentTask.due_date !== undefined;
+        const overdue = isExpired(currentTask);
+
+        modalDueDateControl.classList.toggle('modal-widget-unset-value', !hasDueDate);
+        modalDueDateControl.classList.toggle('task-overdue', overdue);
+        modalDueDateText.textContent = hasDueDate ? reformatDateTime(new Date(currentTask.due_date)) : 'Add Due Date';
+        modalOverdueBadge.classList.toggle('active', overdue);
+
+        const dueDateIcon = hasDueDate ? 'calendar' : 'calendar-plus-2';
+        document.getElementById('modal-due-date-icon').outerHTML =
+            `<i data-lucide="${dueDateIcon}" class="modal-widget-icon" id="modal-due-date-icon"></i>`;
+        lucide.createIcons();
+    }
+
+    document.addEventListener('app:openTaskModal', (e) => {
+        activeEdit = false;
+        suppressBackdropClose = false;
+        currentTask = e.detail ?? {title: '', description: null, due_date: null, is_important: null, is_archived: null};
+        isCreatingTask = e.detail === null;
+
+        modalTitleText.classList.remove('modal-unset-title', 'modal-missing-title-error');
+        modalMissingTitleMsg.style.display = 'none';
+        taskDetailsModal.classList.remove('hiding');
+        taskDetailsModal.style.display = 'flex';
+        modalDueDateControl.classList.remove('modal-widget-unset-value');
+        modalDueDateControl.classList.remove('task-overdue');
+
+        if (isCreatingTask) {
+            modalTitleText.classList.add('modal-unset-title');
+            modalTitleText.textContent = 'Task Name';
+
+            modalDescriptionText.textContent = 'Add a more detailed description...';
+            modalDescriptionText.classList.add('modal-unset-value-text');
+
+            modalDueDateControl.classList.remove('task-overdue');
+            modalDueDateControl.classList.add('modal-widget-unset-value');
+            modalDueDateText.classList.add('modal-unset-value-text');
+            modalDueDateText.textContent = 'Add Due Date';
+            document.getElementById('modal-due-date-icon').outerHTML =
+                `<i data-lucide="calendar-plus-2" class="modal-widget-icon" id="modal-due-date-icon"></i>`;
+            lucide.createIcons();
+
+            modalProjectControl.classList.add('modal-widget-unset-value');
+            modalProjectText.classList.add('modal-unset-value-text');
+            modalProjectText.textContent = 'Move to Project...';
+
+            // TODO SUBTASKS CREATION
+
+            modalTitleText.click();
+        } else {
+            modalCompleteBtn.classList.toggle('completed', currentTask.is_done);
+            modalImportantBtn.classList.toggle('active', currentTask.is_important);
+
+            modalTitleText.textContent = currentTask.title;
+
+            const hasDescription = currentTask.description !== null && currentTask.description !== undefined;
+            modalDescriptionText.classList.toggle('modal-unset-value-text', !hasDescription);
+            modalDescriptionText.textContent = hasDescription ? currentTask.description : 'Add a more detailed description...';
+
+            refreshModalVisual();
+
+            // TODO PROJECT AND SUBTASKS CREATION
+
+            const archiveIcon = currentTask.is_archived ? 'archive-restore' : 'archive';
+            const archiveLabel = currentTask.is_archived ? 'Unarchive' : 'Move to Archive';
+            document.getElementById('modal-archive-icon').outerHTML =
+                `<i data-lucide="${archiveIcon}" class="modal-actions-icon" id="modal-archive-icon"></i>`;
+            document.getElementById('modal-archive-label').textContent = archiveLabel;
+            lucide.createIcons();
+        }
+
+        modalCompleteBtn.style.display = isCreatingTask ? 'none' : 'flex';
+        modalCompletedSubtasksCounter.style.display = isCreatingTask ? 'none' : 'inline-flex';
+        modalArchiveBtn.style.display = isCreatingTask ? 'none' : 'flex';
+        modalDeleteBtn.style.display = isCreatingTask ? 'none' : 'flex';
+        modalCreateTaskBtn.style.display = isCreatingTask ? 'flex' : 'none';
+        modalCancelBtn.style.display = isCreatingTask ? 'flex' : 'none';
+    });
+
+    modalCloseBtn.addEventListener('click', async () => {
+        await requestClose();
+    });
+
+    taskDetailsModal.addEventListener('click', async (e) => {
+        if (suppressBackdropClose) {
+            suppressBackdropClose = false;
+            return;
+        }
+
+        if (e.target === taskDetailsModal && !activeEdit) {
+            isCreatingTask = false;
+            await requestClose();
+        }
+    });
+
+    document.addEventListener('keydown', async (e) => {
+        if (e.key === 'Escape' && taskDetailsModal.style.display === 'flex' && !activeEdit) {
+            await requestClose();
+        }
+    });
+
+    modalCompleteBtn.addEventListener('click', async () => {
+        const success = await updateCurrentTask({is_done: !currentTask.is_done});
+        if (success) closeModal();
+    });
+
+    modalTitleText.addEventListener('click', () => {
+        if (activeEdit) return;
+        activeEdit = true;
+        modalImportantBtn.style.display = 'none';
+
+        const originalText = currentTask.title;
+
+        const textAreaElement = document.createElement('textarea');
+        textAreaElement.value = originalText;
+        textAreaElement.className = 'modal-task-title edit-textarea edit-title-textarea';
+        textAreaElement.placeholder = 'Task Name'
+        textAreaElement.maxLength = 255;
+        textAreaElement.rows = 1;
+
+        modalTitleText.replaceWith(textAreaElement);
+
+        function autoResize() {
+            textAreaElement.style.height = 'auto';
+            textAreaElement.style.height = textAreaElement.scrollHeight + 'px';
+        }
+
+        autoResize();
+        textAreaElement.addEventListener('input', autoResize);
+
+        textAreaElement.setSelectionRange(originalText.length, originalText.length);
+        textAreaElement.focus({preventScroll: true});
+        textAreaElement.scrollIntoView({block: 'end'});
+
+        let isProcessing = false;
+
+        async function commit() {
+            const newText = textAreaElement.value.trim();
+
+            if (newText === '' || newText === originalText) {
+                textAreaElement.replaceWith(modalTitleText);
+                activeEdit = false;
+                modalImportantBtn.style.display = 'flex';
+                return;
+            }
+
+            const success = await updateCurrentTask({title: newText});
+            if (success) {
+                modalTitleText.textContent = newText;
+                modalTitleText.classList.remove('modal-unset-title', 'modal-missing-title-error');
+                modalMissingTitleMsg.style.display = 'none';
+            }
+            textAreaElement.replaceWith(modalTitleText);
+            activeEdit = false;
+            modalImportantBtn.style.display = 'flex';
+        }
+
+        textAreaElement.addEventListener('keydown', async (e) => {
+            if (e.key === 'Escape') {
+                if (isProcessing) return;
+                isProcessing = true;
+                textAreaElement.replaceWith(modalTitleText);
+                setTimeout(() => {
+                    activeEdit = false;
+                    modalImportantBtn.style.display = 'flex';
+                }, 0);
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (isProcessing) return;
+                isProcessing = true;
+                await commit();
+            }
+        });
+
+        textAreaElement.addEventListener('blur', async () => {
+            suppressBackdropClose = true;
+            if (isProcessing) return;
+            isProcessing = true;
+            await commit();
+        });
+    });
+
+    modalImportantBtn.addEventListener('click', async () => {
+        const newValue = !currentTask.is_important;
+        const success = await updateCurrentTask({is_important: newValue});
+        if (success) modalImportantBtn.classList.toggle('active', newValue);
+    });
+
+    modalDescriptionText.addEventListener('click', () => {
+        if (activeEdit) return;
+        activeEdit = true;
+
+        const hasDescription = currentTask.description !== null && currentTask.description !== undefined;
+        const originalText = hasDescription ? currentTask.description : '';
+
+        const textAreaElement = document.createElement('textarea');
+        textAreaElement.value = originalText;
+        textAreaElement.className = 'modal-task-desc edit-textarea edit-desc-textarea';
+        textAreaElement.maxLength = 5000;
+        textAreaElement.rows = 1;
+        textAreaElement.placeholder = 'Add a more detailed description...';
+
+        modalDescriptionText.replaceWith(textAreaElement);
+
+        function autoResize() {
+            textAreaElement.style.height = 'auto';
+            textAreaElement.style.height = textAreaElement.scrollHeight + 'px';
+        }
+
+        autoResize();
+        textAreaElement.addEventListener('input', autoResize);
+
+        textAreaElement.setSelectionRange(originalText.length, originalText.length);
+        textAreaElement.focus({preventScroll: true});
+        textAreaElement.scrollIntoView({block: 'end'});
+
+        let isProcessing = false;
+
+        async function commit() {
+            const newText = textAreaElement.value.trim();
+
+            if (newText === originalText) {
+                textAreaElement.replaceWith(modalDescriptionText);
+                activeEdit = false;
+                return;
+            }
+
+            const payloadDescription = newText === '' ? null : newText;
+            const success = await updateCurrentTask({description: payloadDescription});
+
+            if (success) {
+                if (payloadDescription === null) {
+                    modalDescriptionText.textContent = 'Add a more detailed description...';
+                    modalDescriptionText.classList.add('modal-unset-value-text');
+                } else {
+                    modalDescriptionText.textContent = newText;
+                    modalDescriptionText.classList.remove('modal-unset-value-text');
+                }
+            }
+
+            textAreaElement.replaceWith(modalDescriptionText);
+            activeEdit = false;
+        }
+
+        textAreaElement.addEventListener('keydown', async (e) => {
+            if (e.key === 'Escape') {
+                if (isProcessing) return;
+                isProcessing = true;
+                textAreaElement.replaceWith(modalDescriptionText);
+                setTimeout(() => {
+                    activeEdit = false;
+                }, 0);
+            }
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+
+                if (isProcessing) return;
+                isProcessing = true;
+                await commit();
+            }
+        });
+
+        textAreaElement.addEventListener('blur', async () => {
+            suppressBackdropClose = true;
+            if (isProcessing) return;
+            isProcessing = true;
+            await commit();
+        });
+    });
+
+    modalDueDateControl.addEventListener('click', () => {
+        if (activeEdit) return;
+        activeEdit = true;
+
+        const originalDateTime = currentTask.due_date;
+
+        let formatedDateTime = '';
+        if (originalDateTime !== null && originalDateTime !== undefined) {
+            formatedDateTime = toDatetimeLocalValue(originalDateTime);
+        }
+
+        let inputDateTimeElement = document.createElement('input');
+        inputDateTimeElement.type = 'datetime-local';
+        inputDateTimeElement.value = formatedDateTime;
+        inputDateTimeElement.className = 'modal-widget-control edit-datetime-input';
+
+        modalDueDateControl.replaceWith(inputDateTimeElement);
+        inputDateTimeElement.focus();
+
+        setTimeout(() => {
+            inputDateTimeElement.showPicker();
+        }, 0);
+
+        let isProcessing = false;
+
+        async function commit() {
+            const inputValue = inputDateTimeElement.value.trim();
+            const newDateTime = inputValue === '' ? null : new Date(inputValue).toISOString();
+
+            if (newDateTime !== originalDateTime) {
+                await updateCurrentTask({due_date: newDateTime});
+            }
+
+            inputDateTimeElement.replaceWith(modalDueDateControl);
+            refreshModalVisual();
+            activeEdit = false;
+        }
+
+        inputDateTimeElement.addEventListener('change', async () => {
+            if (isProcessing) return;
+            isProcessing = true;
+            await commit();
+        });
+
+        inputDateTimeElement.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                isProcessing = true;
+                inputDateTimeElement.replaceWith(modalDueDateControl);
+                setTimeout(() => {
+                    activeEdit = false;
+                }, 0);
+            }
+        });
+
+        inputDateTimeElement.addEventListener('blur', async () => {
+            suppressBackdropClose = true;
+            if (isProcessing) return;
+            if (inputDateTimeElement)
+                inputDateTimeElement.replaceWith(modalDueDateControl);
+            await commit();
+        });
+    });
+
+    modalArchiveBtn.addEventListener('click', async () => {
+        const newValue = !currentTask.is_archived;
+        const success = await updateCurrentTask({is_archived: newValue});
+        if (success) closeModal();
+    });
+
+    modalDeleteBtn.addEventListener('click', async () => {
+        await deleteCurrentTask();
+    });
+
+    modalCancelBtn.addEventListener('click', async () => {
+        await requestClose();
+    });
+
+    modalCreateTaskBtn.addEventListener('click', async () => {
+        if (!currentTask.id) {
+            modalTitleText.classList.add('modal-missing-title-error');
+            modalMissingTitleMsg.style.display = 'flex';
+            modalTitleText.click();
+            return;
+        }
+        isCreatingTask = false;
+        closeModal();
+    });
 }
 
 function initSidebarLogic() {
@@ -1023,6 +1484,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initLogoutLogic();
     initNewTaskCreationLogic();
     initTaskManagementLogic();
+    initTaskModalLogic();
     initSidebarLogic();
     initPageHeaderLogic();
 

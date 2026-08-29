@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..schemas.item import ItemResponse, ItemCreate, ItemUpdate
 from ..database import get_db
+
 from ..crud import item as crud
 from ..dependencies.auth import get_current_user
 from ..models.user import User
@@ -66,6 +67,20 @@ def remove_item(
     if not item:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
+            detail="Item not found"
+        )
+
+
+@router.delete("/{item_id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
+def permanent_delete(
+        item_id: int,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
+    item = crud.delete_item_permanently(db, item_id, current_user.id)
+    if not item:
+        raise HTTPException(
+            status_cade=status.HTTP_404_NOT_FOUND,
             detail="Item not found"
         )
 

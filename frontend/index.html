@@ -243,7 +243,7 @@
                         <span class="task-desc-wrapper">
                             <span class="task-desc">Test text for some very long description that takes the whole row and overflows but is replaced with random aah dots and this is not enough so some more random yap</span>
                             <span class="task-desc-tooltip-outer">
-                                <span class="task-desc-tooltip">Test text for some very long description that takes the whole row and overflows but is replaced with random aah dots and this is not enough so some more random yap</span>
+                                <span class="task-desc-tooltip">Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl malesuada lacinia integer nunc posuere ut hendrerit semper vel class aptent taciti sociosqu ad litora torquent per conubia nostra inceptos himenaeos orci varius natoque penatibus et magnis dis parturient montes nascetur ridiculus mus donec rhoncus eros lobortis nulla molestie mattis scelerisque maximus eget fermentum odio phasellus non purus est efficitur laoreet mauris pharetra vestibulum fusce dictum risus blandit quis suspendisse aliquet nisi sodales consequat magna ante condimentum neque at luctus nibh finibus facilisis dapibus etiam interdum tortor ligula congue sollicitudin erat viverra ac tincidunt nam porta elementum a enim euismod quam justo lectus commodo augue arcu dignissim velit aliquam imperdiet mollis nullam volutpat porttitor ullamcorper rutrum gravida cras eleifend turpis fames primis vulputate ornare sagittis vehicula praesent dui felis venenatis ultrices proin libero feugiat tristique accumsan maecenas potenti ultricies habitant morbi senectus netus suscipit auctor curabitur facilisi cubilia curae hac habitasse platea dictumst lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl malesuada lacinia integer nunc posuere ut hendrerit semper vel class aptent taciti sociosqu ad litora torquent per conubia nostra inceptos himenaeos orci varius natoque penatibus et magnis dis parturient montes nascetur ridiculus mus donec rhoncus eros lobortis nulla molestie mattis scelerisque maximus eget fermentum odio phasellus non purus est efficitur laoreet mauris pharetra vestibulum fusce dictum risus blandit quis suspendisse aliquet nisi sodales consequat magna ante condimentum neque at luctus nibh.</span>
                             </span>
                         </span>
                     </div>
@@ -285,149 +285,48 @@
             <div class="modal-body-grid">
                 <div class="modal-body-left-column">
                     <div class="modal-title-wrapper">
-                        <button type="button" class="modal-star-important-btn active">
+                        <button type="button" class="modal-star-important-btn" id="modal-important-btn">
                             <i data-lucide="star" class="modal-star-icon"></i>
                         </button>
                         <span role="button" tabindex="0" class="modal-task-title" id="modal-title-text">
                             Temporary Title For Testing
-                            <!--                            Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna tempor pulvinar vivamus fringilla lacus nec metus bibendum-->
                         </span>
                     </div>
+                    <span id="modal-missing-title-msg">
+                        A task name is required.
+                    </span>
                     <div class="modal-desc-wrapper">
                         <span class="modal-item-title">
                             Description
                         </span>
                         <div role="button" tabindex="0" class="modal-task-desc" id="modal-desc-text">
-                            <!-- TEMPORARY DESCRIPTION: Full detailed plan for the task.<br>Remember to leash the dog, bring water, and follow the new visual trail in the park. <br><br>The park visual trail has been updated for better user visual clarity.<br><br>Must check all visuals visual for consistency.<br><br>Need to check if the park visual trail has been updated.<br><br>Some extra stuff so it overflows<br>-->
-                            Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae
-                            pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean
-                            sed diam urna tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis
-                            massa nisl malesuada lacinia integer nunc posuere ut hendrerit semper vel class aptent
-                            taciti sociosqu ad litora torquent per conubia nostra inceptos himenaeos orci varius natoque
-                            penatibus et magnis dis parturient montes nascetur ridiculus mus donec rhoncus eros lobortis
-                            nulla molestie mattis scelerisque maximus eget fermentum odio phasellus non purus est
-                            efficitur laoreet mauris pharetra vestibulum fusce dictum risus blandit quis suspendisse
-                            aliquet nisi sodales consequat magna ante condimentum neque at luctus nibh finibus facilisis
-                            dapibus etiam interdum tortor ligula congue sollicitudin erat viverra ac tincidunt nam porta
-                            elementum a enim euismod quam justo lectus commodo augue arcu dignissim velit aliquam
-                            imperdiet mollis nullam volutpat porttitor ullamcorper rutrum gravida cras eleifend turpis
-                            fames primis vulputate ornare sagittis vehicula praesent dui felis venenatis ultrices proin
-                            libero feugiat tristique accumsan maecenas potenti ultricies habitant morbi senectus netus
-                            suscipit auctor curabitur facilisi cubilia curae hac habitasse platea dictumst lorem ipsum
-                            dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem
-                            placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna
-                            tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl
-                            malesuada lacinia integer nunc posuere ut hendrerit semper vel class aptent taciti sociosqu
-                            ad litora torquent per conubia nostra inceptos himenaeos orci varius natoque penatibus et
-                            magnis dis parturient montes nascetur ridiculus mus donec rhoncus eros lobortis nulla
-                            molestie mattis scelerisque maximus eget fermentum odio phasellus non purus est efficitur
-                            laoreet mauris pharetra vestibulum fusce dictum risus blandit quis suspendisse aliquet nisi
-                            sodales consequat magna ante condimentum neque at luctus nibh finibus facilisis dapibus
-                            etiam interdum tortor ligula congue sollicitudin erat viverra ac tincidunt nam porta
-                            elementum a enim euismod quam justo lectus commodo augue arcu dignissim velit aliquam
-                            imperdiet mollis nullam volutpat porttitor ullamcorper rutrum gravida cras eleifend turpis
-                            fames primis vulputate ornare sagittis vehicula praesent dui felis venenatis ultrices proin
-                            libero feugiat tristique accumsan maecenas potenti ultricies habitant morbi senectus netus
-                            suscipit auctor curabitur facilisi cubilia curae hac habitasse platea dictumst lorem ipsum
-                            dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem
-                            placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna
-                            tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl
-                            malesuada lacinia integer nunc posuere ut hendrerit semper vel class aptent taciti sociosqu
-                            ad litora torquent per conubia nostra inceptos himenaeos orci varius natoque penatibus et
-                            magnis dis parturient montes nascetur ridiculus mus donec rhoncus eros lobortis nulla
-                            molestie mattis scelerisque maximus eget fermentum odio phasellus non purus est efficitur
-                            laoreet mauris pharetra vestibulum fusce dictum risus blandit quis suspendisse aliquet nisi
-                            sodales consequat magna ante condimentum neque at luctus nibh finibus facilisis dapibus
-                            etiam interdum tortor ligula congue sollicitudin erat viverra ac tincidunt nam porta
-                            elementum a enim euismod quam justo lectus commodo augue arcu dignissim velit aliquam
-                            imperdiet mollis nullam volutpat porttitor ullamcorper rutrum gravida cras eleifend turpis
-                            fames primis vulputate ornare sagittis vehicula praesent dui felis venenatis ultrices proin
-                            libero feugiat tristique accumsan maecenas potenti ultricies habitant morbi senectus netus
-                            suscipit auctor curabitur facilisi cubilia curae hac habitasse platea dictumst lorem ipsum
-                            dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem
-                            placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna
-                            tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl
-                            malesuada lacinia integer nunc posuere ut hendrerit semper vel class aptent taciti sociosqu
-                            ad litora torquent per conubia nostra inceptos himenaeos orci varius natoque penatibus et
-                            magnis dis parturient montes nascetur ridiculus mus donec rhoncus eros lobortis nulla
-                            molestie mattis scelerisque maximus eget fermentum odio phasellus non purus est efficitur
-                            laoreet mauris pharetra vestibulum fusce dictum risus blandit quis suspendisse aliquet nisi
-                            sodales consequat magna ante condimentum neque at luctus nibh finibus facilisis dapibus
-                            etiam interdum tortor ligula congue sollicitudin erat viverra ac tincidunt nam porta
-                            elementum a enim euismod quam justo lectus commodo augue arcu dignissim velit aliquam
-                            imperdiet mollis nullam volutpat porttitor ullamcorper rutrum gravida cras eleifend turpis
-                            fames primis vulputate ornare sagittis vehicula praesent dui felis venenatis ultrices proin
-                            libero feugiat tristique accumsan maecenas potenti ultricies habitant morbi senectus netus
-                            suscipit auctor curabitur facilisi cubilia curae hac habitasse platea dictumst lorem ipsum
-                            dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem
-                            placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna
-                            tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl
-                            malesuada lacinia integer nunc posuere ut hendrerit semper vel class aptent taciti sociosqu
-                            ad litora torquent per conubia nostra inceptos himenaeos orci varius natoque penatibus et
-                            magnis dis parturient montes nascetur ridiculus mus donec rhoncus eros lobortis nulla
-                            molestie mattis scelerisque maximus eget fermentum odio phasellus non purus est efficitur
-                            laoreet mauris pharetra vestibulum fusce dictum risus blandit quis suspendisse aliquet nisi
-                            sodales consequat magna ante condimentum neque at luctus nibh finibus facilisis dapibus
-                            etiam interdum tortor ligula congue sollicitudin erat viverra ac tincidunt nam porta
-                            elementum a enim euismod quam justo lectus commodo augue arcu dignissim velit aliquam
-                            imperdiet mollis nullam volutpat porttitor ullamcorper rutrum gravida cras eleifend turpis
-                            fames primis vulputate ornare sagittis vehicula praesent dui felis venenatis ultrices proin
-                            libero feugiat tristique accumsan maecenas potenti ultricies habitant morbi senectus netus
-                            suscipit auctor curabitur facilisi cubilia curae hac habitasse platea dictumst lorem ipsum
-                            dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem
-                            placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna
-                            tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl
-                            malesuada lacinia integer nunc posuere ut hendrerit semper vel class aptent taciti sociosqu
-                            ad litora torquent per conubia nostra inceptos himenaeos orci varius natoque penatibus et.
-                            Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae
-                            pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean
-                            sed diam urna tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis
-                            massa nisl malesuada lacinia integer nunc posuere ut hendrerit semper vel class aptent
-                            taciti sociosqu ad litora torquent per conubia nostra inceptos himenaeos orci varius natoque
-                            penatibus et magnis dis parturient montes nascetur ridiculus mus donec rhoncus eros lobortis
-                            nulla molestie mattis scelerisque maximus eget fermentum odio phasellus non purus est
-                            efficitur laoreet mauris pharetra vestibulum fusce dictum risus blandit quis suspendisse
-                            aliquet nisi sodales consequat magna ante condimentum neque at luctus nibh finibus facilisis
-                            dapibus etiam interdum tortor ligula congue sollicitudin erat viverra ac tincidunt nam porta
-                            elementum a enim euismod quam justo lectus commodo augue arcu dignissim velit aliquam
-                            imperdiet mollis nullam volutpat porttitor ullamcorper rutrum gravida cras eleifend turpis
-                            fames primis vulputate ornare sagittis vehicula praesent dui felis venenatis ultrices proin
-                            libero feugiat tristique accumsan maecenas potenti ultricies habitant morbi senectus netus
-                            suscipit auctor curabitur facilisi cubilia curae hac habitasse platea dictumst lorem ipsum
-                            dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem
-                            placerat in id cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna
-                            tempor pulvinar vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl
-                            malesuada lacinia integer nunc posuere ut hendrerit semper vel class aptent taciti sociosqu
-                            ad litora torquent per conubia nostra inceptos himenaeos orci varius natoque penatibus et
-                            magnis dis parturient montes nascetur ridiculus mus donec rhoncus eros lobortis nulla
-                            molestie mattis scelerisque maximus eget fermentum odio phasellus non purus est efficitur
-                            laoreet mauris pharetra vestibulum fusce dictum risus blandit quis suspendisse aliquet nisi
-                            sodales consequat magna ante condimentum neque at luctus nibh. Lorem ipsum dolor sit amet
-                            consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id
-                            cursus mi pretium tellus duis convallis tempus leo eu aenean sed diam urna tempor pulvinar
-                            vivamus fringilla lacus nec metus bibendum egestas iaculis massa nisl malesuada lacinia
-                            integer nunc posuere ut hendrerit semper vel class aptent taciti sociosqu ad litora torquent
-                            per conubia nostra inceptos himenaeos orci varius natoque penatibus et magnis dis parturient
-                            montes nascetur ridiculus mus donec rhoncus eros lobortis nulla molestie mattis scelerisque
-                            maximus eget fermentum odio phasellus non purus est efficitur laoreet mauris pharetra
-                            vestibulum fusce.
+                            TEMPORARY DESCRIPTION: Full detailed plan for the task.<br>Remember to leash the dog, bring
+                            water, and follow the new visual trail in the park. <br><br>The park visual trail has been
+                            updated for better user visual clarity.<br><br>Must check all visuals visual for
+                            consistency.<br><br>Need to check if the park visual trail has been updated.<br><br>Some
+                            extra stuff so it overflows<br>
                         </div>
                     </div>
                 </div>
                 <div class="modal-body-right-column">
-                    <!-- TODO MOVE TO CORRECT POSITION AND FIX -->
-                    <!-- <span class="expired-status-badge" id="modal-overdue-badge">-->
-                    <!--     <i data-lucide="circle-alert" class="modal-overdue-icon"></i>-->
-                    <!--     Overdue-->
-                    <!-- </span>-->
                     <div class="modal-widget-wrapper">
-                        <span class="modal-item-title">
-                            Due Date
-                        </span>
-                        <button type="button" class="modal-widget-control">
-                            <i data-lucide="calendar" class="modal-widget-icon"></i>
+                        <div class="modal-due-date-meta-wrapper">
+                            <span class="modal-item-title">
+                                Due Date
+                            </span>
+                            <span class="expired-status-badge" id="modal-overdue-badge">
+                                <i data-lucide="circle-alert" class="modal-overdue-icon"></i>
+                                Overdue
+                            </span>
+                        </div>
+                        <button type="button" class="modal-widget-control" id="modal-due-date-control">
+                            <i data-lucide="calendar" class="modal-widget-icon" id="modal-due-date-icon"></i>
                             <span id="modal-due-date-text">Tue, Aug 11, 2026, 9:37 AM</span>
                         </button>
+                        <!--                        <button type="button" class="modal-widget-control task-overdue">-->
+                        <!--                            <i data-lucide="calendar" class="modal-widget-icon"></i>-->
+                        <!--                            <span id="modal-due-date-text">Tue, Aug 11, 2026, 9:37 AM</span>-->
+                        <!--                        </button>-->
                         <!--                        <button type="button" class="modal-widget-control modal-widget-unset-value">-->
                         <!--                            <i data-lucide="calendar-plus-2" class="modal-widget-icon"></i>-->
                         <!--                            <span id="modal-due-date-text">Add Due Date</span>-->
@@ -437,79 +336,87 @@
                         <span class="modal-item-title">
                             Project
                         </span>
-                        <button type="button"
-                                class="modal-widget-control modal-projects-display">
+                        <button type="button" class="modal-widget-control modal-projects-display"
+                                id="modal-project-control">
                             <i data-lucide="folder" class="modal-widget-icon"></i>
                             <span id="modal-project-text">Lorem ipsum dolor sit amet consectetur adipiscing.</span>
                             <i data-lucide="chevron-down" class="modal-widget-icon"></i>
                         </button>
-                        <!--                        <button type="button"-->
-                        <!--                                class="modal-widget-control modal-projects-display modal-widget-unset-value">-->
-                        <!--                            <i data-lucide="folder" class="modal-widget-icon"></i>-->
-                        <!--                            <span id="modal-project-text">Move to Project...</span>-->
-                        <!--                            <i data-lucide="chevron-down" class="modal-widget-icon"></i>-->
-                        <!--                        </button>-->
+                        <!--<button type="button" class="modal-widget-control modal-projects-display modal-widget-unset-value">-->
+                        <!--    <i data-lucide="folder" class="modal-widget-icon"></i>-->
+                        <!--    <span id="modal-project-text">Move to Project...</span>-->
+                        <!--    <i data-lucide="chevron-down" class="modal-widget-icon"></i>-->
+                        <!--</button>-->
                     </div>
-                    <!-- TODO MAKE SCROLLABLE -->
                     <div class="modal-widget-wrapper">
-                        <div class="modal-subtasks-wrapper">
+                        <div class="modal-subtasks-meta-wrapper">
                             <div class="modal-meta-wrapper">
                                 <span class="modal-item-title">
                                     Subtasks
                                 </span>
-                                <span class="modal-completed-subtasks-counter">
+                                <span class="modal-completed-subtasks-counter" id="modal-completed-subtasks-counter">
                                     15/15 Completed
                                 </span>
                             </div>
-                            <button type="button" class="modal-add-subtask-btn">
+                            <button type="button" class="modal-add-subtask-btn" id="modal-add-subtask-btn">
                                 <i data-lucide="plus" class="modal-add-subtask-icon"></i>
                             </button>
                         </div>
-                        <ul class="modal-widget-control">
+                        <ul class="modal-subtasks-list" id="modal-subtasks-list">
                             <li class="modal-subtasks-item">
-                                <input type="checkbox" class="modal-subtask-checkbox" id="subtask-1" checked>
-                                <label for="subtask-1" class="modal-subtask-label completed">
-                                    Find leash
+                                <label class="modal-subtask-row" for="subtask-1">
+                                    <input type="checkbox" class="modal-subtask-checkbox" id="subtask-1" checked>
+                                    <span class="modal-subtask-label completed">Find leash</span>
                                 </label>
                             </li>
                             <li class="modal-subtasks-item">
-                                <input type="checkbox" class="modal-subtask-checkbox" id="subtask-2" checked>
-                                <label for="subtask-2" class="modal-subtask-label completed">
-                                    Fill water bottle
+                                <label class="modal-subtask-row" for="subtask-2">
+                                    <input type="checkbox" class="modal-subtask-checkbox" id="subtask-2" checked>
+                                    <span class="modal-subtask-label completed">Fill water bottle</span>
                                 </label>
                             </li>
                             <li class="modal-subtasks-item">
-                                <input type="checkbox" class="modal-subtask-checkbox" id="subtask-3">
-                                <label for="subtask-3" class="modal-subtask-label">
-                                    Check visual path
+                                <label class="modal-subtask-row" for="subtask-3">
+                                    <input type="checkbox" class="modal-subtask-checkbox" id="subtask-3">
+                                    <span class="modal-subtask-label">Check visual path</span>
                                 </label>
                             </li>
                             <li class="modal-subtasks-item">
-                                <input type="checkbox" class="modal-subtask-checkbox" id="subtask-4">
-                                <label for="subtask-4" class="modal-subtask-label">
-                                    Take treat
+                                <label class="modal-subtask-row" for="subtask-4">
+                                    <input type="checkbox" class="modal-subtask-checkbox" id="subtask-4">
+                                    <span class="modal-subtask-label">Take treat</span>
                                 </label>
                             </li>
                             <li class="modal-subtasks-item">
-                                <input type="checkbox" class="modal-subtask-checkbox" id="subtask-5">
-                                <label for="subtask-5" class="modal-subtask-label">
-                                    Test Overflow
+                                <label class="modal-subtask-row" for="subtask-5">
+                                    <input type="checkbox" class="modal-subtask-checkbox" id="subtask-5">
+                                    <span class="modal-subtask-label">Test Overflow</span>
                                 </label>
                             </li>
                         </ul>
                     </div>
                     <div class="modal-widget-wrapper">
-                        <span class=" modal-item-title">
+                        <span class="modal-item-title">
                             Actions
                         </span>
-                        <button type="button" class="modal-actions-btn modal-archive-btn" data-action="archive">
-                            <i data-lucide="archive" class="modal-actions-icon"></i>
-                            Move to Archive
-                        </button>
-                        <button type="button" class="modal-actions-btn modal-delete-btn" data-action="delete">
-                            <i data-lucide="trash-2" class="modal-actions-icon"></i>
-                            Delete Task
-                        </button>
+                        <div class="modal-actions-wrapper" id="modal-actions-wrapper">
+                            <button type="button" class="modal-actions-btn" id="modal-archive-btn">
+                                <i data-lucide="archive" class="modal-actions-icon" id="modal-archive-icon"></i>
+                                <span id="modal-archive-label">Move to Archive</span>
+                            </button>
+                            <button type="button" class="modal-actions-btn" id="modal-delete-btn">
+                                <i data-lucide="trash-2" class="modal-actions-icon"></i>
+                                Delete Task
+                            </button>
+                        </div>
+                        <div class="new-task-actions-wrapper">
+                            <button type="button" class="new-task-actions-btn" id="modal-cancel-btn">
+                                Cancel
+                            </button>
+                            <button type="button" class="new-task-actions-btn" id="modal-create-task-btn">
+                                Create Task
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
