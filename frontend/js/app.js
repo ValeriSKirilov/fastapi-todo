@@ -2,6 +2,7 @@ import {API_BASE_URL} from './config.js';
 
 let redirectTimer;
 let currentTasks = [];
+const MAX_SUBTASK_DEPTH = 2;
 
 async function sendTaskRequest(taskId, method, payloadObject) {
     const token = localStorage.getItem('access_token');
@@ -61,6 +62,59 @@ async function createTaskRequest(payload) {
     }
 }
 
+async function cascadeSubtaskCompletion(taskId, isDone, tasksArray) {
+    const childrenByParent = new Map();
+    for (const task of tasksArray) {
+        if (task.parent_id !== null && task.parent_id !== undefined) {
+            if (!childrenByParent.has(task.parent_id)) {
+                childrenByParent.set(task.parent_id, []);
+            }
+            childrenByParent.get(task.parent_id).push(task);
+        }
+    }
+
+    const descendants = [];
+
+    function collect(id) {
+        const children = childrenByParent.get(id);
+        if (!children) return;
+        for (const child of children) {
+            descendants.push(child);
+            collect(child.id);
+        }
+    }
+
+    collect(taskId);
+
+    if (descendants.length === 0) {
+        return true;
+    }
+
+    const results = await Promise.all(
+        descendants.map(task => sendTaskRequest(task.id, 'PUT', {is_done: isDone}))
+    );
+
+    descendants.forEach((task, index) => {
+        if (results[index].success)
+            task.is_done = isDone;
+    });
+
+    return results.every(r => r.success);
+}
+
+async function completeTaskWithCascade(taskId, isDone) {
+    const result = await sendTaskRequest(taskId, 'PUT', {is_done: isDone});
+    if (!result.success) {
+        return {success: false};
+    }
+
+    const task = currentTasks.find(t => t.id === Number(taskId));
+    if (task) task.is_done = isDone;
+
+    const cascadeSuccess = await cascadeSubtaskCompletion(Number(taskId), isDone, currentTasks);
+    return {success: true, cascadeSuccess};
+}
+
 async function deleteTaskPermanently(taskId) {
     const token = localStorage.getItem('access_token');
 
@@ -82,6 +136,15 @@ async function deleteTaskPermanently(taskId) {
         console.log('Permanent delete error: ', error);
         return {success: false, status: null};
     }
+}
+
+function markTruncatedText(root = document) {
+    const textElements = root.querySelectorAll('.task-title, .task-desc, .modal-subtask-label');
+    textElements.forEach(el => {
+        const isTruncated = el.scrollWidth > el.clientWidth;
+        el.closest('.task-title-wrapper, .task-desc-wrapper, .modal-subtask-label-wrapper')
+            .classList.toggle('has-tooltip', isTruncated);
+    });
 }
 
 function switchView(targetID) {
@@ -119,6 +182,13 @@ function showErrorToast(message) {
     toastTimeout = setTimeout(() => {
         toast.classList.remove('visible');
     }, 3000);
+}
+
+// TODO RECONSIDER MISSING TASKS TITLES OVERALL
+function showMissingTasksMessage(heading = 'No tasks found', subtext = 'Try adjusting your filters or create a new task to get started.') {
+    document.getElementById('no-tasks-heading').textContent = heading;
+    document.getElementById('no-tasks-subtext').textContent = subtext;
+    document.getElementById('no-tasks-message').style.display = 'flex';
 }
 
 function renderUserProfile(userData) {
@@ -216,16 +286,6 @@ const filters = {
 const pageTitles = {
     all: 'All Tasks',
     today: 'Today\'s Tasks',
-    important: 'Important Tasks',
-    upcoming: 'Upcoming Tasks',
-    expired: 'Expired Tasks',
-    completed: 'Completed Tasks',
-    deleted: 'Deleted Tasks',
-}
-
-function filterTasks(tasks, filterId) {
-    const predicate = filters[filterId] || filters.all;
-    return tasks.filter(predicate);
 }
 
 function getDepth(task, tasksById) {
@@ -237,6 +297,139 @@ function getDepth(task, tasksById) {
         depth++;
     }
     return depth;
+}
+
+const floatingTooltipShell = document.getElementById('floating-tooltip-shell');
+const floatingTooltip = document.getElementById('floating-tooltip');
+const floatingTooltipArrow = document.getElementById('floating-tooltip-arrow');
+
+let tooltipTarget = null;
+let hideTimeout = null;
+
+function positionFloatingTooltip(textEl, axis = 'vertical') {
+    if (!textEl) return;
+
+    const rect = textEl.getBoundingClientRect();
+    const margin = 4;
+    const minSpace = 100;
+
+    const spaceAbove = rect.top - margin;
+    const spaceBelow = window.innerHeight - rect.bottom - margin;
+    const spaceLeft = rect.left - margin;
+    const spaceRight = window.innerWidth - rect.right - margin;
+
+    let placement;
+    if (axis === 'horizontal' && Math.max(spaceLeft, spaceRight) >= minSpace) {
+        placement = spaceRight >= spaceLeft ? 'right' : 'left';
+    } else {
+        placement = spaceBelow >= spaceAbove ? 'below' : 'above';
+    }
+
+    floatingTooltipShell.style.maxWidth = '';
+    floatingTooltipShell.style.maxHeight = '';
+
+    if (placement === 'above' || placement === 'below') {
+        const available = Math.max(80, placement === 'below' ? spaceBelow : spaceAbove);
+        floatingTooltipShell.style.maxHeight = `${Math.min(available, window.innerHeight * 0.4)}px`;
+    } else {
+        const availableWidth = placement === 'right' ? spaceRight : spaceLeft;
+        floatingTooltipShell.style.maxWidth = `${Math.min(Math.max(availableWidth, 120), 320)}px`;
+        floatingTooltipShell.style.maxHeight = `${window.innerHeight * 0.4}px`;
+    }
+
+    const tipRect = floatingTooltipShell.getBoundingClientRect();
+
+    let top, left;
+    if (placement === 'below') {
+        top = rect.bottom + margin;
+        left = rect.left + (rect.width - tipRect.width) / 2;
+    } else if (placement === 'above') {
+        top = Math.max(margin, rect.top - tipRect.height - margin);
+        left = rect.left + (rect.width - tipRect.width) / 2;
+    } else if (placement === 'right') {
+        left = rect.right + margin;
+        top = rect.top + (rect.height - tipRect.height) / 2;
+    } else if (placement === 'left') {
+        left = Math.max(margin, rect.left - tipRect.width - margin);
+        top = rect.top + (rect.height - tipRect.height) / 2;
+    }
+
+    left = Math.max(margin, Math.min(left, window.innerWidth - -tipRect.width - margin));
+    top = Math.max(margin, Math.min(top, window.innerHeight - -tipRect.height - margin));
+
+    floatingTooltipShell.style.top = `${top}px`;
+    floatingTooltipShell.style.left = `${left}px`;
+
+    const arrowSize = 8;
+    const cornerInset = 6;
+    let arrowLeft, arrowTop;
+
+    if (placement === 'below' || placement === 'above') {
+        arrowLeft = rect.left + rect.width / 2 - arrowSize / 2;
+        arrowLeft = Math.max(left + cornerInset, Math.min(arrowLeft, left + tipRect.width - arrowSize - cornerInset));
+        arrowTop = placement === 'below' ? top - arrowSize / 2 : top + tipRect.height - arrowSize / 2;
+    } else {
+        arrowTop = rect.top + rect.height / 2 - arrowSize / 2;
+        arrowTop = Math.max(top + cornerInset, Math.min(arrowTop, top + tipRect.height - arrowSize - cornerInset));
+        arrowLeft = placement === 'right' ? left - arrowSize / 2 : left + tipRect.width - arrowSize / 2;
+    }
+
+    floatingTooltipArrow.style.left = `${arrowLeft}px`;
+    floatingTooltipArrow.style.top = `${arrowTop}px`;
+}
+
+function showFloatingTooltip(wrapper, textEl, text, axis) {
+    clearTimeout(hideTimeout);
+    tooltipTarget = wrapper;
+    floatingTooltip.textContent = text;
+    floatingTooltipShell.classList.add('visible');
+    floatingTooltipArrow.classList.add('visible');
+    positionFloatingTooltip(textEl, axis);
+}
+
+function hideFloatingTooltip() {
+    tooltipTarget = null;
+    floatingTooltipShell.classList.remove('visible');
+    floatingTooltipArrow.classList.remove('visible');
+}
+
+function scheduleHide() {
+    clearTimeout(hideTimeout);
+    hideTimeout = setTimeout(hideFloatingTooltip, 120);
+}
+
+floatingTooltip.addEventListener('mouseenter', () => clearTimeout(hideTimeout));
+floatingTooltip.addEventListener('mouseleave', scheduleHide);
+
+function attachFloatingTooltips(container, wrapperSelector, textSelector, axis = 'vertical') {
+    container.addEventListener('mouseover', (e) => {
+        const wrapper = e.target.closest(`${wrapperSelector}.has-tooltip`);
+        if (!wrapper || wrapper === tooltipTarget) return;
+
+        const textEl = wrapper.querySelector(textSelector);
+        if (!textEl) return;
+
+        showFloatingTooltip(wrapper, textEl, textEl.textContent, axis);
+    });
+
+    container.addEventListener('mouseout', (e) => {
+        const wrapper = e.target.closest(wrapperSelector);
+        if (wrapper && (!e.relatedTarget || !wrapper.contains(e.relatedTarget))) {
+            scheduleHide();
+        }
+    });
+
+    container.addEventListener('scroll', () => {
+        if (!tooltipTarget || !container.contains(tooltipTarget)) return;
+
+        const textEl = tooltipTarget.querySelector(textSelector);
+        if (!textEl) {
+            hideFloatingTooltip();
+            return;
+        }
+
+        positionFloatingTooltip(textEl, axis);
+    }, true);
 }
 
 function initLoginLogic() {
@@ -352,7 +545,7 @@ function initRegisterLogic() {
                 registerForm.requestSubmit();
         }
     });
-    confirmRegPassword.addEventListener('blur', (e) => {
+    confirmRegPassword.addEventListener('blur', () => {
         confirmRegisterPassword();
     });
 
@@ -435,143 +628,21 @@ function initLogoutLogic() {
     });
 }
 
-function initNewTaskCreationLogic() {
-    const newTaskDate = document.getElementById('new-task-date');
-    const dueDateText = document.getElementById('due-date-text');
-    const dueTimeText = document.getElementById('due-time-text');
-    const newTaskTime = document.getElementById('new-task-time');
-    const newTaskBtn = document.getElementById('new-task-btn');
-    const newTaskItem = document.getElementById('new-task-item');
-    const newTaskInput = document.getElementById('new-task-input');
-    const newTaskCancelBtn = document.getElementById('new-task-cancel-btn');
-
-    let currentFilterId = 'all';
-
-    newTaskDate.addEventListener('click', (e) => {
-        try {
-            if ('showPicker' in HTMLInputElement.prototype) {
-                newTaskDate.showPicker();
-            }
-        } catch (error) {
-            console.log('Date picker failed: ', error);
-        }
-    });
-
-    newTaskDate.addEventListener('change', (e) => {
-        dueDateText.textContent = e.target.value;
-    });
-
-    newTaskTime.addEventListener('click', (e) => {
-        try {
-            if ('showPicker' in HTMLInputElement.prototype) {
-                newTaskTime.showPicker();
-            }
-        } catch (error) {
-            console.log('Time picker failed: ', error);
-        }
-    });
-
-    newTaskTime.addEventListener('change', (e) => {
-        dueTimeText.textContent = e.target.value;
-    });
-
-    // function showNewTaskForm() {
-    //     newTaskItem.reset();
-    //
-    //     if (currentFilterId === 'today') {
-    //         const today = new Date();
-    //         const pad = (n) => String(n).padStart(2, '0');
-    //         const dateString = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
-    //         newTaskDate.value = dateString;
-    //         dueDateText.textContent = dateString;
-    //     } else {
-    //         dueDateText.textContent = 'Set date';
-    //     }
-    //
-    //     dueTimeText.textContent = 'Set time';
-    //     newTaskBtn.style.display = 'none';
-    //     newTaskItem.style.display = 'flex';
-    //     newTaskInput.focus();
-    // }
-
-    function hideNewTaskForm() {
-        newTaskItem.classList.add('hiding');
-
-        newTaskItem.addEventListener('animationend', (e) => {
-            newTaskItem.classList.remove('hiding');
-            newTaskItem.style.display = 'none';
-            newTaskBtn.style.display = 'flex';
-        }, {once: true});
-    }
-
-    newTaskBtn.addEventListener('click', () => {
-        document.dispatchEvent(new CustomEvent('app:openTaskModal', {detail: null}));
-    });
-
-    newTaskCancelBtn.addEventListener('click', () => {
-        hideNewTaskForm();
-    });
-
-    newTaskItem.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const token = localStorage.getItem('access_token');
-
-        hideNewTaskForm();
-
-        const formData = new FormData(newTaskItem)
-        const date = formData.get('date');
-        const time = formData.get('time');
-        if (date && time) {
-            const localDateTime = new Date(`${date}T${time}`)
-            formData.append('due_date', localDateTime.toISOString());
-        }
-
-        formData.delete('date');
-        formData.delete('time');
-
-        const dataObject = Object.fromEntries(formData.entries());
-        const data = JSON.stringify(dataObject);
-
-        try {
-            const response = await fetch(API_BASE_URL + '/items', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: data
-            });
-
-            if (response.ok) {
-                const newTask = await response.json();
-
-                document.dispatchEvent(new CustomEvent('app:itemCreated', {
-                    detail: newTask
-                }));
-            } else {
-                console.log('Item creation failed: ', response.body);
-            }
-        } catch (error) {
-            console.log('New item creation failed: ', error);
-        }
-    });
-
-    document.addEventListener('app:sidebarChanged', (e) => {
-        currentFilterId = e.detail.filterId;
-
-        if (newTaskItem.style.display === 'flex') {
-            hideNewTaskForm();
-        }
-    });
-}
-
 function initTaskManagementLogic() {
     const tasksList = document.getElementById('tasks-list');
     const taskMenu = document.getElementById('task-menu');
+    const newTaskBtn = document.getElementById('new-task-btn');
 
+    let currentViewType = 'filter';
     let currentFilterId = 'all';
     let activeMenuTaskId = null;
+
+    let tasksById = new Map();
+
+    let expandedTaskIds = new Set();
+
+    attachFloatingTooltips(tasksList, '.task-title-wrapper', '.task-title');
+    attachFloatingTooltips(tasksList, '.task-desc-wrapper', '.task-desc');
 
     async function fetchUserTasks() {
         const token = localStorage.getItem('access_token');
@@ -601,14 +672,43 @@ function initTaskManagementLogic() {
         }
     }
 
-    function renderTasks(tasksArray) {
+    function renderTasks(tasksArray, tasksById) {
+        document.getElementById('no-tasks-message').style.display = 'none';
+
+        if (tasksArray.length === 0) {
+            if (currentFilterId === 'completed') {
+                showMissingTasksMessage(
+                    'Nothing to see here',
+                    'Your completed tasks will live here once you finish them.'
+                )
+            } else if (currentViewType === 'project') {
+                showMissingTasksMessage(
+                    'This project is empty',
+                    'Create a new task to start filling out your project board.'
+                )
+            } else {
+                showMissingTasksMessage();
+            }
+        }
+
         let allTasksHTML = '';
 
-        for (const task of tasksArray) {
-            let hasDueDate = true;
-            if (task.due_date === null || task.due_date === undefined) {
-                hasDueDate = false;
+        for (const item of tasksArray) {
+            if (item.isGhostRow) {
+                allTasksHTML += `
+                    <div class="task-item is-subtask ghost-row" data-depth="${item.depth}" data-parent-id="${item.parentId}">
+                        <button type="button" class="ghost-add-btn">
+                            <i data-lucide="plus" class="task-icon"></i>
+                            Add subtask
+                        </button>
+                    </div>
+                `;
+                continue;
             }
+
+            const task = item;
+            let hasDescription = task.description !== null && task.description !== undefined && task.description !== '';
+            const hasDueDate = task.due_date !== null && task.due_date !== undefined;
 
             let rawDate = null, dueDate = null;
             if (hasDueDate) {
@@ -643,48 +743,79 @@ function initTaskManagementLogic() {
                         <i data-lucide="ellipsis" class="task-menu-icon"></i>
                     </button>`
 
+            const depth = getDepth(task, tasksById);
+            const isExpanded = expandedTaskIds.has(task.id);
+
+            const defaultDisplay = (depth > 0 && !task.forceVisible) ? 'style="display: none;"' : '';
+
             allTasksHTML += `
-                <div class="task-item ${task.is_done ? "completed" : ''} ${isExpired(task) ? "expired-task" : ''} ${currentFilterId === "deleted" ? "task-item-locked" : ''} ${task.is_important ? "important" : ''}" data-id="${task.id}">
+                <div class="task-item ${task.is_done ? "completed" : ''} ${isExpired(task) ? "expired-task" : ''} ${currentFilterId === "deleted" ? "task-item-locked" : ''} ${task.is_important ? "important" : ''} ${depth > 0 ? "is-subtask" : ''} ${item.isForcedAncestor ? "forced-ancestor" : ''}" data-id="${task.id}" data-depth="${depth}" ${defaultDisplay}>
+                ${depth < MAX_SUBTASK_DEPTH
+                ? `<button type="button" class="task-chevron ${isExpanded ? 'expanded' : ''}" id="task-chevron-${task.id}">
+                        <i data-lucide="chevron-right" class="chevron-icon"></i>
+                   </button>`
+                : ''}
                     <input type="checkbox" class="task-checkbox" id="task-${task.id}" ${task.is_done ? "checked" : ''}>
                     <div class="task-body" id="body-${task.id}">
                         <span class="task-title-wrapper">
                             <span class="task-title">${task.title}</span>
-                            <span class="task-title-tooltip-outer">
-                                <span class="task-title-tooltip">${task.title}</span>
-                            </span>
+                            <!-- <span class="tooltip-outer above">  
+                                <span class="tooltip-bubble">${task.title}</span>
+                            </span> -->
                         </span>
+                        ${hasDescription ? `
                         <span class="task-desc-wrapper">
                             <span class="task-desc">${task.description}</span>
-                            <span class="task-desc-tooltip-outer">
-                                <span class="task-desc-tooltip">${task.description}</span>
-                            </span>
+                            <!-- <span class="tooltip-outer below">
+                                <span class="tooltip-bubble">${task.description}</span>
+                            </span> -->
                         </span>
+                        ` : ''}
                     </div>
                     <div class="task-meta">
                         ${hasDueDate ? hasDueDateHtml : hasNoDueDateHtml}
                         ${actionButtonHtml}
                     </div>
                 </div>
-            `
+            `;
         }
 
-        const oldTasks = tasksList.querySelectorAll('.task-item:not(.new-task-item)');
-        oldTasks.forEach(task => task.remove());
+        const oldElements = tasksList.querySelectorAll('.task-item:not(.new-task-item), .breadcrumb-item');
+        oldElements.forEach(task => task.remove());
 
         tasksList.insertAdjacentHTML('beforeend', allTasksHTML);
 
+        tasksList.querySelectorAll('.task-item.is-subtask').forEach(el => {
+            el.style.setProperty('--subtask-depth', el.dataset.depth);
+        });
+
+        expandedTaskIds.forEach(taskId => {
+            const taskEl = tasksList.querySelector(`.task-item[data-id="${taskId}"]`);
+            if (taskEl) {
+                expandTask(taskEl);
+            } else {
+                expandedTaskIds.delete(taskId);
+            }
+        });
+
         requestAnimationFrame(() => {
-            markTruncatedText();
+            markTruncatedText(tasksList);
             lucide.createIcons();
         });
     }
 
-    function markTruncatedText() {
-        const textElements = tasksList.querySelectorAll('.task-title, .task-desc');
-        textElements.forEach(el => {
-            const isTruncated = el.scrollWidth > el.clientWidth;
-            el.closest('.task-title-wrapper, .task-desc-wrapper').classList.toggle('has-tooltip', isTruncated);
-        });
+    function updateSidebarCounts() {
+        const counts = {today: 0, important: 0, expired: 0};
+
+        for (const task of currentTasks) {
+            if (filters.today(task)) counts.today++;
+            if (filters.important(task)) counts.important++;
+            if (filters.expired(task)) counts.expired++;
+        }
+
+        document.getElementById('today-tasks-counter').textContent = counts.today;
+        document.getElementById('important-tasks-counter').textContent = counts.important;
+        document.getElementById('expired-tasks-counter').textContent = counts.expired;
     }
 
     function sortTasks(tasks) {
@@ -703,47 +834,276 @@ function initTaskManagementLogic() {
         });
     }
 
+    function buildRenderOrder(tasks, tasksById) {
+        const childrenByParent = new Map();
+        const topLevel = [];
+        const taskIds = new Set(tasks.map(t => t.id));
+
+        for (const task of tasks) {
+            const parentInSet = task.parent_id !== null && task.parent_id !== undefined && taskIds.has(task.parent_id);
+            if (!parentInSet) {
+                topLevel.push(task);
+            } else {
+                if (!childrenByParent.has(task.parent_id)) {
+                    childrenByParent.set(task.parent_id, []);
+                }
+                childrenByParent.get(task.parent_id).push(task);
+            }
+        }
+
+        function walk(taskList) {
+            const ordered = [];
+            for (const task of sortTasks(taskList)) {
+                ordered.push(task);
+
+                const children = childrenByParent.get(task.id);
+                if (children) {
+                    ordered.push(...walk(children));
+                }
+
+                const absoluteDepth = getDepth(task, tasksById);
+
+                if (absoluteDepth < MAX_SUBTASK_DEPTH) {
+                    ordered.push({
+                        isGhostRow: true,
+                        parentId: task.id,
+                        depth: absoluteDepth + 1
+                    });
+                }
+            }
+            return ordered;
+        }
+
+        return walk(topLevel);
+    }
+
+    function computeVisibleTaskSet(allTasks, tasksById, filterId) {
+        const predicate = filters[filterId];
+        if (!predicate) {
+            return new Map();
+        }
+
+        const isBaseVisible = (task) => {
+            if (filterId !== 'deleted' && task.is_deleted) return false;
+            if (filterId !== 'archived' && task.is_archived) return false;
+            return true;
+        };
+
+        const childrenByParent = new Map();
+        for (const task of allTasks) {
+            if (task.parent_id !== null && task.parent_id !== undefined) {
+                if (!childrenByParent.has(task.parent_id)) {
+                    childrenByParent.set(task.parent_id, []);
+                }
+                childrenByParent.get(task.parent_id).push(task);
+            }
+        }
+
+        const visible = new Map();
+
+        const directMatches = allTasks.filter(predicate);
+        for (const task of directMatches) {
+            visible.set(task.id, {task, isDirectMatch: true, isForcedAncestor: false, forceVisible: false});
+        }
+
+        function pullDescendants(taskId) {
+            const children = childrenByParent.get(taskId);
+            if (!children) return;
+            for (const child of children) {
+                if (!isBaseVisible(child)) continue;
+                if (!visible.get(child.id)) {
+                    visible.set(child.id, {
+                        task: child,
+                        isDirectMatch: predicate(child),
+                        isForcedAncestor: false,
+                        forceVisible: false
+                    });
+                }
+                pullDescendants(child.id);
+            }
+        }
+
+        for (const task of directMatches) {
+            pullDescendants(task.id);
+        }
+
+        for (const task of directMatches) {
+            const chain = [task];
+            let current = task;
+            let needsForce = false;
+
+            while (current.parent_id !== null && current.parent_id !== undefined) {
+                const parent = tasksById.get(current.parent_id);
+                if (!parent || !isBaseVisible(parent)) break;
+
+                const parentEntry = visible.get(parent.id);
+
+                if (parentEntry && !parentEntry.isForcedAncestor)
+                    break;
+
+                if (parentEntry && parentEntry.isForcedAncestor && parentEntry.forceVisible) {
+                    needsForce = true;
+                    break;
+                }
+
+                needsForce = true;
+                if (!parentEntry) {
+                    visible.set(parent.id, {
+                        task: parent,
+                        isDirectMatch: predicate(parent),
+                        isForcedAncestor: true,
+                        forceVisible: false
+                    });
+                }
+                chain.push(parent);
+                current = parent;
+            }
+
+            if (needsForce) {
+                for (const t of chain) {
+                    visible.get(t.id).forceVisible = true;
+                }
+            }
+        }
+
+        return visible;
+    }
+
     function refreshUI() {
-        const filteredTasks = filterTasks(currentTasks, currentFilterId);
-        const sortedTasks = sortTasks(filteredTasks);
-        renderTasks(sortedTasks);
+        tasksById = new Map(currentTasks.map(task => [task.id, task]));
+
+        const visibleSet = computeVisibleTaskSet(currentTasks, tasksById, currentFilterId);
+        const visibleTasks = Array.from(visibleSet.values()).map(entry => ({
+            ...entry.task,
+            isForcedAncestor: entry.isForcedAncestor,
+            forceVisible: entry.forceVisible,
+        }));
+
+        const orderedTasks = buildRenderOrder(visibleTasks, tasksById);
+        renderTasks(orderedTasks, tasksById);
+    }
+
+    function getDescendantRows(taskEl) {
+        const depth = Number(taskEl.dataset.depth);
+        const descendants = [];
+        let sibling = taskEl.nextElementSibling;
+
+        while (sibling && sibling.classList.contains('task-item')) {
+            const siblingDepth = Number(sibling.dataset.depth);
+            if (siblingDepth <= depth) break;
+            descendants.push(sibling);
+            sibling = sibling.nextElementSibling;
+        }
+
+        return descendants;
     }
 
     document.addEventListener('app:authSuccess', async () => {
         currentTasks = await fetchUserTasks();
         refreshUI();
+        updateSidebarCounts();
     });
 
     document.addEventListener('app:itemCreated', (e) => {
-        const newTask = e.detail;
-        currentTasks.push(newTask);
+        currentTasks.push(e.detail);
         refreshUI();
+        updateSidebarCounts();
     });
 
     document.addEventListener('app:sidebarChanged', (e) => {
+        expandedTaskIds = new Set();
+        currentViewType = e.detail.viewType;
         currentFilterId = e.detail.filterId;
         refreshUI();
+        tasksList.scrollTop = tasksList.top;
     });
+
+    function collapseTask(taskEl) {
+        const descendants = getDescendantRows(taskEl);
+
+        descendants.forEach((el, index) => {
+            setTimeout(() => {
+                el.classList.add('collapsing');
+            }, index * 20);
+        });
+
+        const lastDelay = (descendants.length - 1) * 40;
+        setTimeout(() => {
+            descendants.forEach(el => {
+                el.style.display = 'none';
+                el.classList.remove('collapsing');
+            });
+        }, lastDelay + 40);
+    }
+
+    function expandTask(taskEl) {
+        const depth = Number(taskEl.dataset.depth);
+        let sibling = taskEl.nextElementSibling;
+
+        let skipDeeperThan = 9999;
+
+        while (sibling && sibling.classList.contains('task-item')) {
+            const siblingDepth = Number(sibling.dataset.depth);
+
+            if (siblingDepth <= depth) break;
+
+            if (siblingDepth > skipDeeperThan) {
+                sibling = sibling.nextElementSibling;
+                continue;
+            }
+
+            sibling.style.display = 'flex';
+            requestAnimationFrame(() => {
+                sibling.classList.remove('collapsing');
+            });
+
+            const siblingId = Number(sibling.getAttribute('data-id'));
+            if (!expandedTaskIds.has(siblingId)) {
+                skipDeeperThan = siblingDepth;
+            } else {
+                skipDeeperThan = 9999;
+            }
+
+            sibling = sibling.nextElementSibling;
+        }
+    }
 
     tasksList.addEventListener('click', async (e) => {
         const clickedItem = e.target.closest('.task-item');
+        const clickedChevron = e.target.closest('.task-chevron');
         const clickedCheckbox = e.target.closest('.task-checkbox');
         const clickedDateTime = e.target.closest('.due-date-wrapper');
         const clickedMenuBtn = e.target.closest('.task-menu-btn');
         const clickedRestore = e.target.closest('.task-restore-btn');
+        const clickedGhostBtn = e.target.closest('.ghost-add-btn');
+
+        if (clickedChevron) {
+            const taskItemElement = clickedChevron.closest('.task-item');
+            const taskId = Number(taskItemElement.getAttribute('data-id'));
+            const isExpanded = clickedChevron.classList.contains('expanded');
+
+            if (isExpanded) {
+                collapseTask(taskItemElement);
+                clickedChevron.classList.remove('expanded');
+                clickedChevron.classList.add('collapsed');
+                expandedTaskIds.delete(taskId);
+            } else {
+                expandTask(taskItemElement);
+                clickedChevron.classList.add('expanded');
+                clickedChevron.classList.remove('collapsed');
+                expandedTaskIds.add(taskId);
+            }
+        }
 
         if (clickedCheckbox) {
             const taskItemElement = clickedCheckbox.closest('.task-item');
             const taskId = taskItemElement.getAttribute('data-id');
-
             const isCompleted = clickedCheckbox.checked;
-            const payloadObject = {
-                is_done: isCompleted
-            }
 
-            const result = await sendTaskRequest(taskId, 'PUT', payloadObject);
+            const {success, cascadeSuccess} = await completeTaskWithCascade(taskId, isCompleted);
 
-            if (result.success) {
+            if (success) {
+                if (!cascadeSuccess) showErrorToast('Some subtasks could not be updated.');
                 taskItemElement.classList.add('removing');
                 setTimeout(() => {
                     refreshUI();
@@ -846,42 +1206,140 @@ function initTaskManagementLogic() {
             }
         }
 
-        const hasSpecificAction = clickedCheckbox || clickedDateTime || clickedMenuBtn || clickedRestore;
+        if (clickedGhostBtn) {
+            const ghostRow = clickedGhostBtn.closest('.ghost-row');
+            const parentId = Number(ghostRow.dataset.parentId);
+            const depth = Number(ghostRow.dataset.depth);
+
+            const inputEl = document.createElement('input');
+            inputEl.type = 'text';
+            inputEl.className = 'ghost-add-input';
+            inputEl.placeholder = 'Subtask title';
+            inputEl.maxLength = 255;
+
+            ghostRow.classList.add('ghost-row-input');
+            clickedGhostBtn.replaceWith(inputEl);
+            inputEl.focus();
+
+            let isProcessing = false;
+
+            async function commit() {
+                const title = inputEl.value.trim();
+
+                if (title === '') {
+                    inputEl.replaceWith(clickedGhostBtn);
+                    ghostRow.classList.remove('ghost-row-input');
+                    return;
+                }
+
+                const result = await createTaskRequest({title: title, parent_id: parentId});
+
+                if (result.success) {
+                    currentTasks.push(result.task);
+                    expandedTaskIds.add(parentId);
+                    refreshUI();
+
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            const newGhostBtn = tasksList.querySelector(
+                                `.ghost-row[data-parent-id="${parentId}"] .ghost-add-btn`
+                            );
+                            if (newGhostBtn) {
+                                newGhostBtn.click();
+                            }
+                        });
+                    });
+                } else {
+                    showErrorToast('Something went wrong. Please try again.');
+                    inputEl.replaceWith(clickedGhostBtn);
+                }
+
+                ghostRow.classList.remove('ghost-row-input');
+            }
+
+            inputEl.addEventListener('keydown', async (e) => {
+                if (e.key === 'Escape') {
+                    isProcessing = true;
+                    inputEl.replaceWith(clickedGhostBtn);
+                    ghostRow.classList.remove('ghost-row-input');
+                }
+                if (e.key === 'Enter') {
+                    if (isProcessing) return;
+                    isProcessing = true;
+                    await commit();
+                }
+            });
+
+            inputEl.addEventListener('blur', async () => {
+                if (isProcessing) return;
+                isProcessing = true;
+                await commit();
+            });
+        }
+
+        const hasSpecificAction = clickedChevron || clickedCheckbox || clickedDateTime || clickedMenuBtn || clickedRestore || clickedGhostBtn;
 
         if (!hasSpecificAction && clickedItem && !clickedItem.classList.contains('new-task-item')) {
+            if (clickedItem.classList.contains('forced-ancestor')) {
+                return;
+            }
+
             const taskId = clickedItem.getAttribute('data-id');
             const targetTask = currentTasks.find(task => task.id === Number(taskId));
+            const taskDepth = getDepth(targetTask, tasksById);
 
             if (targetTask) {
                 document.dispatchEvent(new CustomEvent('app:openTaskModal', {
-                    detail: targetTask
+                    detail: {
+                        task: targetTask,
+                        depth: taskDepth,
+                    },
                 }));
             }
         }
     });
 
+    newTaskBtn.addEventListener('click', () => {
+        document.dispatchEvent(new CustomEvent('app:openTaskModal', {
+            detail: null
+        }));
+    });
+
     function openMenu(triggerBtn, taskId) {
-        const targetTask = currentTasks.find(task => task.id === Number(taskId));
+        try {
+            const targetTask = currentTasks.find(task => task.id === Number(taskId));
 
-        const importantItem = taskMenu.querySelector('[data-action="important"]');
-        importantItem.textContent = targetTask.is_important ? 'Remove Importance' : 'Mark Important';
+            const importantIcon = targetTask.is_important ? 'star-off' : 'star';
+            document.getElementById('menu-important-icon').outerHTML =
+                `<i data-lucide="${importantIcon}" class="task-icon" id="menu-important-icon"></i>`;
+            document.getElementById('menu-important-label').textContent =
+                targetTask.is_important ? 'Remove Importance' : 'Mark Important';
 
-        const archiveItem = taskMenu.querySelector('[data-action="archive"]');
-        archiveItem.textContent = targetTask.is_archived ? 'Unarchive' : 'Archive';
+            const archiveIcon = targetTask.is_archived ? 'archive-restore' : 'archive';
+            document.getElementById('menu-archive-icon').outerHTML =
+                `<i data-lucide="${archiveIcon}" class="task-icon" id="menu-archive-icon"></i>`;
+            document.getElementById('menu-archive-label').textContent =
+                targetTask.is_archived ? 'Unarchive' : 'Archive';
 
-        const rect = triggerBtn.getBoundingClientRect();
-        const containerRect = tasksList.getBoundingClientRect();
-        const buttonCenterX = rect.left + rect.width / 2;
+            lucide.createIcons();
 
-        let left = buttonCenterX - taskMenu.offsetWidth / 2;
-        const minLeft = containerRect.left + 8;
-        const maxLeft = containerRect.right - taskMenu.offsetWidth - 8;
-        left = Math.min(Math.max(left, minLeft), maxLeft);
+            const rect = triggerBtn.getBoundingClientRect();
+            const containerRect = tasksList.getBoundingClientRect();
+            const buttonCenterX = rect.left + rect.width / 2;
 
-        taskMenu.style.top = `${rect.bottom + 4}px`;
-        taskMenu.style.left = `${left}px`;
-        taskMenu.classList.add('visible');
-        activeMenuTaskId = taskId;
+            let left = buttonCenterX - taskMenu.offsetWidth / 2;
+            const minLeft = containerRect.left + 8;
+            const maxLeft = containerRect.right - taskMenu.offsetWidth - 8;
+            left = Math.min(Math.max(left, minLeft), maxLeft);
+
+            taskMenu.style.top = `${rect.bottom + 4}px`;
+            taskMenu.style.left = `${left}px`;
+            taskMenu.classList.add('visible');
+            activeMenuTaskId = taskId;
+        } catch (error) {
+            showErrorToast('Something went wrong. Please try again.');
+            console.log('openMenu failed:' + error);
+        }
     }
 
     function closeMenu() {
@@ -972,7 +1430,13 @@ function initTaskManagementLogic() {
 
     document.addEventListener('click', (e) => {
         if (activeMenuTaskId === null) return;
-        if (!e.target.closest('.task-menu') && !e.target.closest('.task-menu-btn')) {
+
+        const path = e.composedPath();
+        const clickedInsideMenuOrBtn = path.some(el =>
+            el.classList && (el.classList.contains('task-menu') || el.classList.contains('task-menu-btn'))
+        );
+
+        if (!clickedInsideMenuOrBtn) {
             closeMenu();
         }
     });
@@ -985,25 +1449,33 @@ function initTaskManagementLogic() {
 
     document.addEventListener('app:taskUpdated', () => {
         refreshUI();
+        updateSidebarCounts();
     });
 }
 
 function initTaskModalLogic() {
     const taskDetailsModal = document.getElementById('task-details-modal');
+
+    const modalBackBtn = document.getElementById('modal-back-btn');
     const modalCompleteBtn = document.getElementById('modal-complete-btn');
     const modalCloseBtn = document.getElementById('modal-close-btn');
+
     const modalImportantBtn = document.getElementById('modal-important-btn');
     const modalTitleText = document.getElementById('modal-title-text');
     const modalMissingTitleMsg = document.getElementById('modal-missing-title-msg');
     const modalDescriptionText = document.getElementById('modal-desc-text');
+
     const modalOverdueBadge = document.getElementById('modal-overdue-badge');
     const modalDueDateControl = document.getElementById('modal-due-date-control');
     const modalDueDateText = document.getElementById('modal-due-date-text');
+
     const modalProjectControl = document.getElementById('modal-project-control');
     const modalProjectText = document.getElementById('modal-project-text');
+
     const modalCompletedSubtasksCounter = document.getElementById('modal-completed-subtasks-counter');
     const modalAddSubtaskBtn = document.getElementById('modal-add-subtask-btn');
     const modalSubtasksList = document.getElementById('modal-subtasks-list');
+
     const modalArchiveBtn = document.getElementById('modal-archive-btn');
     const modalDeleteBtn = document.getElementById('modal-delete-btn');
     const modalCancelBtn = document.getElementById('modal-cancel-btn');
@@ -1013,6 +1485,36 @@ function initTaskModalLogic() {
     let activeEdit = false;
     let isCreatingTask = false;
     let suppressBackdropClose = false;
+    let ancestorIds = [];
+    let currentTaskDepth = 0;
+    let nestingLimitNotReached = true;
+    let noSubtasksDefaultMessageActive = false;
+
+    const noSubtasksDefaultMessage = `
+        <li class="modal-subtasks-item no-subtasks-msg" id="no-subtasks-msg">
+            <i data-lucide="list-plus" class="no-subtasks-icon"></i>
+            <span class="no-subtasks-heading">
+                You haven't added any subtasks yet
+            </span>
+            <span class="no-subtasks-subtext">
+                Click the [+] button above to add your first subtask
+            </span>
+        </li>
+    `;
+
+    const nestingLimitReachedMessage = `
+        <li class="modal-subtasks-item no-subtasks-msg" id="no-subtasks-msg">
+            <i data-lucide="info" class="no-subtasks-icon"></i>
+            <span class="no-subtasks-heading">
+                Maximum nesting limit reached
+            </span>
+            <span class="no-subtasks-subtext">
+                Tasks can only be nested up to ${MAX_SUBTASK_DEPTH + 1} levels deep
+            </span>
+        </li>
+    `
+
+    attachFloatingTooltips(modalSubtasksList, '.modal-subtask-label-wrapper', '.modal-subtask-label', 'horizontal');
 
     async function updateCurrentTask(payloadObject) {
         if (isCreatingTask && !currentTask.id) {
@@ -1021,7 +1523,9 @@ function initTaskModalLogic() {
                 modalMissingTitleMsg.style.display = 'flex';
                 return false;
             }
+
             const result = await createTaskRequest(payloadObject);
+
             if (result.success) {
                 currentTask.id = result.task.id;
                 Object.assign(currentTask, result.task);
@@ -1036,6 +1540,12 @@ function initTaskModalLogic() {
         const result = await sendTaskRequest(currentTask.id, 'PUT', payloadObject);
 
         if (result.success) {
+            if (Object.prototype.hasOwnProperty.call(payloadObject, 'is_done')) {
+                const cascadeSuccess = await cascadeSubtaskCompletion(currentTask.id, payloadObject.is_done, currentTasks);
+                if (!cascadeSuccess) {
+                    showErrorToast('Some subtasks could not be updated.');
+                }
+            }
             document.dispatchEvent(new CustomEvent('app:taskUpdated', {detail: currentTask}));
             return true;
         } else {
@@ -1054,6 +1564,8 @@ function initTaskModalLogic() {
             taskDetailsModal.style.display = 'none';
             currentTask = null;
         }, {once: true});
+
+        document.dispatchEvent(new CustomEvent('app:taskUpdated'));
     }
 
     async function deleteCurrentTask() {
@@ -1072,7 +1584,10 @@ function initTaskModalLogic() {
                 document.dispatchEvent(new CustomEvent('app:taskUpdated', {detail: currentTask}));
             }
 
-            closeModal();
+            if (ancestorIds.length === 0)
+                closeModal();
+            else
+                modalBackBtn.click();
         } else {
             showErrorToast('Something went wrong. Please try again.');
         }
@@ -1089,6 +1604,36 @@ function initTaskModalLogic() {
         closeModal();
     }
 
+    function getSubtasksCount() {
+        const childrenByParent = new Map();
+        for (const task of currentTasks) {
+            if (task.parent_id !== null && task.parent_id !== undefined && !task.is_deleted) {
+                if (!childrenByParent.has(task.parent_id)) {
+                    childrenByParent.set(task.parent_id, []);
+                }
+                childrenByParent.get(task.parent_id).push(task);
+            }
+        }
+
+        let all = 0, completed = 0;
+
+        function walk(id) {
+            const children = childrenByParent.get(id);
+            if (!children) return;
+            for (const child of children) {
+                all++;
+                if (child.is_done) completed++;
+                walk(child.id);
+            }
+        }
+
+        walk(currentTask.id);
+
+        const directSubtasks = childrenByParent.get(currentTask.id);
+
+        return {directSubtasks, all, completed};
+    }
+
     function refreshModalVisual() {
         const hasDueDate = currentTask.due_date !== null && currentTask.due_date !== undefined;
         const overdue = isExpired(currentTask);
@@ -1102,22 +1647,74 @@ function initTaskModalLogic() {
         document.getElementById('modal-due-date-icon').outerHTML =
             `<i data-lucide="${dueDateIcon}" class="modal-widget-icon" id="modal-due-date-icon"></i>`;
         lucide.createIcons();
+
+        const {directSubtasks: subtasks, all: allSubtasks, completed: completedSubtasks} = getSubtasksCount();
+        modalCompletedSubtasksCounter.textContent = completedSubtasks + '/' + allSubtasks + ' Completed';
+
+        modalCompletedSubtasksCounter.style.display = nestingLimitNotReached ? 'inline-flex' : 'none';
+
+        const oldElements = modalSubtasksList.querySelectorAll('.modal-subtasks-item');
+        oldElements.forEach(subtask => subtask.remove());
+
+        let modalSubtasksHTML = '';
+
+        if (allSubtasks === 0) {
+            noSubtasksDefaultMessageActive = true;
+            modalSubtasksHTML += nestingLimitNotReached ? noSubtasksDefaultMessage : nestingLimitReachedMessage;
+        }
+
+        if (subtasks) {
+            noSubtasksDefaultMessageActive = false;
+            for (const subtask of subtasks) {
+                modalSubtasksHTML += `
+                <li class="modal-subtasks-item ${subtask.is_done ? 'completed' : ''} ${isExpired(subtask) ? 'expired' : ''}" id="modal-subtask-${subtask.id}" data-modal-subtask-id="${subtask.id}">
+                        <input type="checkbox" class="modal-subtask-checkbox" ${subtask.is_done ? 'checked' : ''}>
+                        <span class="modal-subtask-label-wrapper">
+                            <span class="modal-subtask-label">${subtask.title}</span>
+                        </span>
+                </li>
+            `;
+            }
+        }
+
+        modalSubtasksList.insertAdjacentHTML('beforeend', modalSubtasksHTML);
+
+        requestAnimationFrame(() => {
+            markTruncatedText(modalSubtasksList);
+        });
     }
 
     document.addEventListener('app:openTaskModal', (e) => {
+        hideFloatingTooltip();
         activeEdit = false;
         suppressBackdropClose = false;
-        currentTask = e.detail ?? {title: '', description: null, due_date: null, is_important: null, is_archived: null};
-        isCreatingTask = e.detail === null;
 
+        currentTaskDepth = 0;
+        nestingLimitNotReached = true;
+
+        const detail = e.detail;
+        const isWrapped = detail && typeof detail === 'object' && 'task' in detail;
+        const task = isWrapped ? detail.task : null;
+
+        ancestorIds = isWrapped && detail.ancestorIds ? detail.ancestorIds : [];
+        currentTask = task ?? {title: '', description: null, due_date: null, is_important: null, is_archived: null};
+        isCreatingTask = task === null || task === undefined;
+        if (detail && detail.depth !== null && detail.depth !== undefined) {
+            currentTaskDepth = detail.depth;
+            nestingLimitNotReached = currentTaskDepth < MAX_SUBTASK_DEPTH;
+        }
+
+        modalBackBtn.style.display = ancestorIds.length > 0 ? 'flex' : 'none';
         modalTitleText.classList.remove('modal-unset-title', 'modal-missing-title-error');
         modalMissingTitleMsg.style.display = 'none';
         taskDetailsModal.classList.remove('hiding');
         taskDetailsModal.style.display = 'flex';
         modalDueDateControl.classList.remove('modal-widget-unset-value');
         modalDueDateControl.classList.remove('task-overdue');
+        modalAddSubtaskBtn.style.display = currentTaskDepth < MAX_SUBTASK_DEPTH ? 'flex' : 'none';
 
         if (isCreatingTask) {
+            modalImportantBtn.classList.remove('active');
             modalTitleText.classList.add('modal-unset-title');
             modalTitleText.textContent = 'Task Name';
 
@@ -1130,17 +1727,21 @@ function initTaskModalLogic() {
             modalDueDateText.textContent = 'Add Due Date';
             document.getElementById('modal-due-date-icon').outerHTML =
                 `<i data-lucide="calendar-plus-2" class="modal-widget-icon" id="modal-due-date-icon"></i>`;
-            lucide.createIcons();
 
             modalProjectControl.classList.add('modal-widget-unset-value');
             modalProjectText.classList.add('modal-unset-value-text');
             modalProjectText.textContent = 'Move to Project...';
 
+            modalSubtasksList.innerHTML = '';
+            modalSubtasksList.insertAdjacentHTML('beforeend', nestingLimitNotReached ? noSubtasksDefaultMessage : nestingLimitReachedMessage);
+            noSubtasksDefaultMessageActive = true;
+
+            lucide.createIcons();
             // TODO SUBTASKS CREATION
 
             modalTitleText.click();
         } else {
-            modalCompleteBtn.classList.toggle('completed', currentTask.is_done);
+            document.getElementById('modal-complete-btn-text').textContent = currentTask.is_done ? 'Mark Incomplete' : 'Mark Complete';
             modalImportantBtn.classList.toggle('active', currentTask.is_important);
 
             modalTitleText.textContent = currentTask.title;
@@ -1162,11 +1763,28 @@ function initTaskModalLogic() {
         }
 
         modalCompleteBtn.style.display = isCreatingTask ? 'none' : 'flex';
-        modalCompletedSubtasksCounter.style.display = isCreatingTask ? 'none' : 'inline-flex';
+        if (isCreatingTask)
+            modalCompletedSubtasksCounter.style.display = 'none';
         modalArchiveBtn.style.display = isCreatingTask ? 'none' : 'flex';
         modalDeleteBtn.style.display = isCreatingTask ? 'none' : 'flex';
         modalCreateTaskBtn.style.display = isCreatingTask ? 'flex' : 'none';
         modalCancelBtn.style.display = isCreatingTask ? 'flex' : 'none';
+    });
+
+    modalBackBtn.addEventListener('click', () => {
+        if (ancestorIds.length === 0) return;
+
+        const parentId = ancestorIds[ancestorIds.length - 1];
+        const parentTask = currentTasks.find(task => task.id === parentId);
+        if (!parentTask) return;
+
+        document.dispatchEvent(new CustomEvent('app:openTaskModal', {
+            detail: {
+                task: parentTask,
+                ancestorIds: ancestorIds.slice(0, -1),
+                depth: currentTaskDepth - 1,
+            },
+        }));
     });
 
     modalCloseBtn.addEventListener('click', async () => {
@@ -1196,6 +1814,11 @@ function initTaskModalLogic() {
         if (success) closeModal();
     });
 
+    function autoResize(textAreaElement) {
+        textAreaElement.style.height = 'auto';
+        textAreaElement.style.height = textAreaElement.scrollHeight + 'px';
+    }
+
     modalTitleText.addEventListener('click', () => {
         if (activeEdit) return;
         activeEdit = true;
@@ -1206,18 +1829,13 @@ function initTaskModalLogic() {
         const textAreaElement = document.createElement('textarea');
         textAreaElement.value = originalText;
         textAreaElement.className = 'modal-task-title edit-textarea edit-title-textarea';
-        textAreaElement.placeholder = 'Task Name'
+        textAreaElement.placeholder = 'Task Title'
         textAreaElement.maxLength = 255;
         textAreaElement.rows = 1;
 
         modalTitleText.replaceWith(textAreaElement);
 
-        function autoResize() {
-            textAreaElement.style.height = 'auto';
-            textAreaElement.style.height = textAreaElement.scrollHeight + 'px';
-        }
-
-        autoResize();
+        autoResize(textAreaElement);
         textAreaElement.addEventListener('input', autoResize);
 
         textAreaElement.setSelectionRange(originalText.length, originalText.length);
@@ -1237,6 +1855,7 @@ function initTaskModalLogic() {
             }
 
             const success = await updateCurrentTask({title: newText});
+
             if (success) {
                 modalTitleText.textContent = newText;
                 modalTitleText.classList.remove('modal-unset-title', 'modal-missing-title-error');
@@ -1295,12 +1914,7 @@ function initTaskModalLogic() {
 
         modalDescriptionText.replaceWith(textAreaElement);
 
-        function autoResize() {
-            textAreaElement.style.height = 'auto';
-            textAreaElement.style.height = textAreaElement.scrollHeight + 'px';
-        }
-
-        autoResize();
+        autoResize(textAreaElement);
         textAreaElement.addEventListener('input', autoResize);
 
         textAreaElement.setSelectionRange(originalText.length, originalText.length);
@@ -1424,6 +2038,141 @@ function initTaskModalLogic() {
         });
     });
 
+    function addSubtaskInputRow() {
+        const li = document.createElement('li');
+        li.className = 'modal-subtasks-item new-subtask-item';
+
+        const textAreaElement = document.createElement('textarea');
+        textAreaElement.className = 'modal-subtask-input edit-textarea';
+        textAreaElement.placeholder = 'Subtask title';
+        textAreaElement.maxLength = 255;
+        textAreaElement.rows = 1;
+
+        li.appendChild(textAreaElement);
+        modalSubtasksList.appendChild(li);
+
+        autoResize(textAreaElement);
+        modalSubtasksList.scrollTop = modalSubtasksList.scrollHeight;
+
+        textAreaElement.addEventListener('input', () => {
+            autoResize(textAreaElement);
+            modalSubtasksList.scrollTop = modalSubtasksList.scrollHeight;
+        });
+
+        activeEdit = true;
+        textAreaElement.focus();
+
+        let isProcessing = false;
+
+        async function commit() {
+            const title = textAreaElement.value.trim();
+
+            if (title === '') {
+                li.remove();
+                activeEdit = false;
+                if (noSubtasksDefaultMessageActive)
+                    document.getElementById('no-subtasks-msg').style.display = 'flex';
+                return;
+            }
+
+            const result = await createTaskRequest({title: title, parent_id: currentTask.id});
+
+            if (result.success) {
+                document.dispatchEvent(new CustomEvent('app:itemCreated', {detail: result.task}));
+                li.remove();
+                refreshModalVisual();
+                addSubtaskInputRow();
+            } else {
+                showErrorToast('Something went wrong. Please try again.');
+                li.remove();
+                activeEdit = false;
+            }
+        }
+
+        textAreaElement.addEventListener('keydown', async (e) => {
+            if (e.key === 'Escape') {
+                if (isProcessing) return;
+                isProcessing = true;
+                li.remove();
+                setTimeout(() => {
+                    activeEdit = false;
+                }, 0);
+                if (noSubtasksDefaultMessageActive)
+                    document.getElementById('no-subtasks-msg').style.display = 'flex';
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (isProcessing) return;
+                isProcessing = true;
+                await commit();
+            }
+        });
+
+        textAreaElement.addEventListener('blur', async () => {
+            suppressBackdropClose = true;
+            if (isProcessing) return;
+            isProcessing = true;
+            await commit();
+        });
+    }
+
+    modalAddSubtaskBtn.addEventListener('click', () => {
+        if (isCreatingTask || !currentTask.id) {
+            showErrorToast('Save this task before adding subtasks.');
+            return;
+        }
+
+        if (modalSubtasksList.querySelector('.new-subtask-item')) {
+            modalSubtasksList.querySelector('.new-subtask-item').focus();
+            return;
+        }
+
+        if (noSubtasksDefaultMessageActive)
+            document.getElementById('no-subtasks-msg').style.display = 'none';
+
+        addSubtaskInputRow();
+    });
+
+    modalSubtasksList.addEventListener('click', async (e) => {
+        if (e.target.closest('.modal-subtask-label')) {
+            hideFloatingTooltip();
+        }
+
+        const clickedCheckbox = e.target.closest('.modal-subtask-checkbox');
+        const clickedLabel = e.target.closest('.modal-subtask-label');
+
+        if (clickedCheckbox) {
+            const subtaskElement = clickedCheckbox.closest('.modal-subtasks-item');
+            const subtaskId = subtaskElement.getAttribute('data-modal-subtask-id');
+            const isCompleted = clickedCheckbox.checked;
+
+            const {success, cascadeSuccess} = await completeTaskWithCascade(subtaskId, isCompleted);
+
+            if (success) {
+                if (!cascadeSuccess) showErrorToast('Some subtasks could not be updated.');
+                refreshModalVisual();
+            } else {
+                showErrorToast('Something went wrong. Please try again.');
+                clickedCheckbox.checked = !isCompleted;
+            }
+        }
+
+        if (clickedLabel) {
+            const subtaskElement = clickedLabel.closest('.modal-subtasks-item');
+            const subtaskId = subtaskElement.getAttribute('data-modal-subtask-id');
+            const subtaskTask = currentTasks.find(task => task.id === Number(subtaskId));
+            if (!subtaskTask) return;
+
+            document.dispatchEvent(new CustomEvent('app:openTaskModal', {
+                detail: {
+                    task: subtaskTask,
+                    ancestorIds: [...ancestorIds, currentTask.id],
+                    depth: currentTaskDepth + 1,
+                },
+            }));
+        }
+    });
+
     modalArchiveBtn.addEventListener('click', async () => {
         const newValue = !currentTask.is_archived;
         const success = await updateCurrentTask({is_archived: newValue});
@@ -1463,11 +2212,15 @@ function initSidebarLogic() {
         currActiveBtn?.classList.remove('active');
         clickedBtn.classList.add('active');
 
+        const viewType = clickedBtn.dataset.type;
         const clickedBtnId = clickedBtn.id;
         const filterId = clickedBtnId.split('-').pop();
 
         document.dispatchEvent(new CustomEvent('app:sidebarChanged', {
-            detail: {filterId: filterId}
+            detail: {
+                viewType: viewType,
+                filterId: filterId
+            }
         }));
     });
 }
@@ -1475,7 +2228,7 @@ function initSidebarLogic() {
 function initPageHeaderLogic() {
     document.addEventListener('app:sidebarChanged', (e) => {
         const filterId = e.detail.filterId;
-        document.getElementById('curr-title').textContent = pageTitles[filterId] || 'Tasks';
+        document.getElementById('curr-title').textContent = pageTitles[filterId] || `${filterId[0].toUpperCase() + filterId.slice(1)} Tasks`;
         document.getElementById('additional-info').textContent = new Date().toLocaleDateString([], {
             weekday: 'short',
             month: 'short',
@@ -1493,7 +2246,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     initRegisterLogic();
     initSuccessfulLoginLogic();
     initLogoutLogic();
-    initNewTaskCreationLogic();
     initTaskManagementLogic();
     initTaskModalLogic();
     initSidebarLogic();
@@ -1501,3 +2253,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await fetchAndRenderUser();
 });
+
+// TODO REMOVE BETA TESTING
+// TODO DELETE
+// document.getElementById('task-details-modal').style.display = 'flex';
