@@ -15,18 +15,26 @@
         <h1>Welcome Back!</h1>
         <p>Sign in to manage your tasks</p>
         <form class="auth-form" id="login-form">
-            <p id="invalid-cred-msg">Your email or password may be incorrect. Check your details and try again.</p>
+            <span class="invalid-data-msg" id="invalid-cred-msg">
+                Your email or password may be incorrect. Check your details and try again.
+            </span>
             <div class="input-wrapper">
-                <i data-lucide="mail" class="input-icon"></i>
-                <input type="email" name="username" autocomplete="username" id="login-email"
-                       class="auth-input" placeholder="Email" required>
+                <div class="input-control">
+                    <i data-lucide="mail" class="input-icon"></i>
+                    <input type="email" name="username" autocomplete="username" id="login-email"
+                           class="auth-input" placeholder="Email" required>
+                </div>
             </div>
             <div class="input-wrapper">
-                <i data-lucide="lock" class="input-icon"></i>
-                <input type="password" name="password" autocomplete="current-password" id="login-password"
-                       class="auth-input" placeholder="Password" required>
-                <i data-lucide="eye" class="password-visibility-btn" id="login-password-show-btn"></i>
-                <i data-lucide="eye-off" class="password-visibility-btn" id="login-password-hide-btn"></i>
+                <div class="input-control">
+                    <i data-lucide="lock" class="input-icon"></i>
+                    <!--TODO ADD MIN LENGTH = 8-->
+                    <input type="password" name="password" autocomplete="current-password"
+                           class="auth-input" id="login-password" placeholder="Password"
+                           maxlength="128" required>
+                    <i data-lucide="eye-off" class="password-visibility-btn" id="login-show-password-btn"></i>
+                    <i data-lucide="eye" class="password-visibility-btn" id="login-hide-password-btn"></i>
+                </div>
             </div>
             <button type="submit" id="login-btn">Log In</button>
         </form>
@@ -41,36 +49,53 @@
         <form class="auth-form" id="register-form">
             <div class="name-row">
                 <div class="input-wrapper">
-                    <i data-lucide="user" class="input-icon"></i>
-                    <input type="text" name="first_name" id="register-first-name" class="auth-input"
-                           placeholder="First Name" required>
+                    <div class="input-control">
+                        <i data-lucide="user" class="input-icon"></i>
+                        <input type="text" name="first_name" id="register-first-name" class="auth-input"
+                               placeholder="First Name" required>
+                    </div>
                 </div>
                 <div class="input-wrapper">
-                    <i data-lucide="user" class="input-icon"></i>
-                    <input type="text" name="last_name" id="register-last-name" class="auth-input"
-                           placeholder="Last Name" required>
+                    <div class="input-control">
+                        <i data-lucide="user" class="input-icon"></i>
+                        <input type="text" name="last_name" id="register-last-name" class="auth-input"
+                               placeholder="Last Name" required>
+                    </div>
                 </div>
             </div>
             <div class="input-wrapper">
-                <i data-lucide="mail" class="input-icon"></i>
-                <input type="email" name="email" id="register-email" class="auth-input" placeholder="Email" required>
+                <div class="input-control">
+                    <i data-lucide="mail" class="input-icon"></i>
+                    <input type="email" name="email" id="register-email" class="auth-input" placeholder="Email"
+                           required>
+                </div>
             </div>
-            <p id="email-in-use-msg">The email is already in use. Please use another one.</p>
+            <span class="invalid-data-msg" id="email-in-use-msg">
+                The email is already in use. Please use another one.
+            </span>
             <div class="input-wrapper">
-                <i data-lucide="lock" class="input-icon"></i>
-                <input type="password" name="password" id="register-password" class="auth-input"
-                       placeholder="Create Password" required>
-                <i data-lucide="eye" class="password-visibility-btn" id="register-password-show-btn"></i>
-                <i data-lucide="eye-off" class="password-visibility-btn" id="register-password-hide-btn"></i>
+                <div class="input-control">
+                    <i data-lucide="lock" class="input-icon"></i>
+                    <input type="password" name="password" id="register-password" class="auth-input"
+                           placeholder="Create Password" required>
+                    <i data-lucide="eye-off" class="password-visibility-btn" id="register-show-password-btn"></i>
+                    <i data-lucide="eye" class="password-visibility-btn" id="register-hide-password-btn"></i>
+                </div>
             </div>
             <div class="input-wrapper">
-                <i data-lucide="lock-keyhole" class="input-icon"></i>
-                <input type="password" name="confirm-register-password" id="confirm-register-password"
-                       class="auth-input" placeholder="Confirm Password" required>
-                <i data-lucide="eye" class="password-visibility-btn" id="register-confirm-password-show-btn"></i>
-                <i data-lucide="eye-off" class="password-visibility-btn" id="register-confirm-password-hide-btn"></i>
+                <div class="input-control">
+                    <i data-lucide="lock-keyhole" class="input-icon"></i>
+                    <input type="password" name="confirm-register-password" id="confirm-register-password"
+                           class="auth-input" placeholder="Confirm Password" required>
+                    <i data-lucide="eye-off" class="password-visibility-btn"
+                       id="register-confirm-show-password-btn"></i>
+                    <i data-lucide="eye" class="password-visibility-btn"
+                       id="register-confirm-hide-password-btn"></i>
+                </div>
             </div>
-            <p id="password-not-matching-msg">Please confirm your password.</p>
+            <span class="invalid-data-msg" id="password-not-matching-msg">
+                Please confirm your password.
+            </span>
             <button type="submit" id="register-btn">Register</button>
         </form>
         <p>Already have an account?

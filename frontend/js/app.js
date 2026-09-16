@@ -161,12 +161,21 @@ function switchView(targetID) {
     }
 }
 
+function resetFormErrors(form) {
+    form.querySelectorAll('.input-wrapper.has-error').forEach(wrapper => {
+        wrapper.classList.remove('has-error');
+        wrapper.querySelector('.field-error-msg')?.remove();
+    });
+}
+
 function showLoginPageSection(sectionId) {
+    const currentSection = document.getElementById(sectionId);
     document.querySelectorAll('.login-page-element')
         .forEach(el => {
             el.style.display = 'none';
         });
-    document.getElementById(sectionId).style.display = 'flex';
+    currentSection.style.display = 'flex';
+    resetFormErrors(currentSection);
 }
 
 let toastTimeout;
@@ -432,12 +441,109 @@ function attachFloatingTooltips(container, wrapperSelector, textSelector, axis =
     }, true);
 }
 
+function getFieldErrorMessage(input) {
+    if (input.validity.valueMissing) {
+        return 'This field is required.';
+    }
+    if (input.validity.typeMismatch && input.type === 'email') {
+        return 'Please enter a valid email address';
+    }
+    if (input.validity.tooShort) {
+        return `Must be at least ${input.minLength} characters.`;
+    }
+    return input.validationMessage || 'Please check this field.';
+}
+
+function showFieldError(input) {
+    const wrapper = input.closest('.input-wrapper');
+    if (!wrapper) return;
+
+    wrapper.classList.add('has-error');
+
+    let errorEl = wrapper.querySelector('.field-error-msg');
+    if (!errorEl) {
+        errorEl = document.createElement('span');
+        errorEl.className = 'field-error-msg';
+        errorEl.innerHTML = '<i data-lucide="circle-alert" class="field-error-icon"></i><span></span>';
+        wrapper.appendChild(errorEl);
+        lucide.createIcons();
+    }
+
+    errorEl.querySelector('span').textContent = getFieldErrorMessage(input);
+}
+
+function clearFieldError(input) {
+    const wrapper = input.closest('.input-wrapper');
+    if (!wrapper) return;
+
+    wrapper.classList.remove('has-error');
+    wrapper.querySelector('.field-error-msg')?.remove();
+}
+
+function initCustomValidation(form) {
+    form.querySelectorAll('[required]').forEach(input => {
+        input.addEventListener('invalid', (e) => {
+            e.preventDefault();
+            showFieldError(input);
+        });
+        input.addEventListener('input', () => {
+            if (input.validity.valid) clearFieldError(input);
+            else showFieldError(input);
+        });
+    });
+}
+
+function initPasswordVisibilityToggle(inputEl, showBtn, hideBtn) {
+    let isPasswordVisible = false;
+
+    showBtn.style.display = 'none';
+    hideBtn.style.display = 'none';
+
+    function update() {
+        const inputFocused = document.activeElement === inputEl;
+        showBtn.style.display = inputFocused && !isPasswordVisible ? 'flex' : 'none';
+        hideBtn.style.display = inputFocused && isPasswordVisible ? 'flex' : 'none';
+    }
+
+    inputEl.addEventListener('focus', update);
+
+    inputEl.addEventListener('blur', () => {
+        showBtn.style.display = 'none';
+        hideBtn.style.display = 'none';
+    });
+
+    showBtn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+    });
+
+    hideBtn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+    });
+
+    showBtn.addEventListener('click', () => {
+        isPasswordVisible = true;
+        inputEl.type = 'text';
+        update();
+    });
+
+    hideBtn.addEventListener('click', () => {
+        isPasswordVisible = false;
+        inputEl.type = 'password';
+        update();
+    });
+}
+
 function initLoginLogic() {
     const loginEmail = document.getElementById('login-email');
     const loginPassword = document.getElementById('login-password');
     const loginForm = document.getElementById('login-form');
+    const loginShowPasswordBtn = document.getElementById('login-show-password-btn');
+    const loginHidePasswordBtn = document.getElementById('login-hide-password-btn');
     const invalidCredentialsMessage = document.getElementById('invalid-cred-msg');
     const showRegisterBtn = document.getElementById('show-register-btn');
+
+    initCustomValidation(loginForm);
+    initPasswordVisibilityToggle(loginPassword, loginShowPasswordBtn, loginHidePasswordBtn);
 
     loginEmail.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -450,8 +556,8 @@ function initLoginLogic() {
         e.preventDefault();
 
         invalidCredentialsMessage.style.display = 'none';
-        loginEmail.classList.remove('input-error');
-        loginPassword.classList.remove('input-error');
+        loginEmail.classList.remove('has-error');
+        loginPassword.classList.remove('has-error');
 
         const formData = new FormData(loginForm);
         const data = new URLSearchParams(formData);
@@ -473,8 +579,8 @@ function initLoginLogic() {
                 await fetchAndRenderUser();
             } else {
                 invalidCredentialsMessage.style.display = 'flex';
-                loginEmail.classList.add('input-error');
-                loginPassword.classList.add('input-error');
+                loginEmail.classList.add('has-error');
+                loginPassword.classList.add('has-error');
             }
         } catch (error) {
             console.log('Login failed:', error);
@@ -492,23 +598,30 @@ function initRegisterLogic() {
     const registerLastName = document.getElementById('register-last-name');
     const registerEmail = document.getElementById('register-email');
     const registerPassword = document.getElementById('register-password');
-    const confirmRegPassword = document.getElementById('confirm-register-password');
+    const registerShowPasswordBtn = document.getElementById('register-show-password-btn');
+    const registerHidePasswordBtn = document.getElementById('register-hide-password-btn');
+    const confirmRegisterPassword = document.getElementById('confirm-register-password');
+    const confirmShowPasswordBtn = document.getElementById('register-confirm-show-password-btn');
+    const confirmHidePasswordBtn = document.getElementById('register-confirm-hide-password-btn');
     const registerForm = document.getElementById('register-form');
-    const emailInUseIcon = document.getElementById('email-in-use-icon');
     const emailInUseMsg = document.getElementById('email-in-use-msg');
-    const show_login_btn = document.getElementById('show-login-btn');
+    const showLoginBtn = document.getElementById('show-login-btn');
     const passwordNotMatchingMsg = document.getElementById('password-not-matching-msg');
 
-    function confirmRegisterPassword() {
+    initCustomValidation(registerForm);
+    initPasswordVisibilityToggle(registerPassword, registerShowPasswordBtn, registerHidePasswordBtn);
+    initPasswordVisibilityToggle(confirmRegisterPassword, confirmShowPasswordBtn, confirmHidePasswordBtn);
+
+    function confirmRegisterPasswordsMatch() {
         const password = registerPassword.value;
-        const confirm_password = confirmRegPassword.value;
+        const confirm_password = confirmRegisterPassword.value;
 
         if (confirm_password !== password) {
-            confirmRegPassword.classList.add('input-error');
+            confirmRegisterPassword.classList.add('has-error');
             passwordNotMatchingMsg.style.display = 'flex';
             return false;
         } else {
-            confirmRegPassword.classList.remove('input-error');
+            confirmRegisterPassword.classList.remove('has-error');
             passwordNotMatchingMsg.style.display = 'none';
             return true;
         }
@@ -520,40 +633,44 @@ function initRegisterLogic() {
             registerLastName.focus();
         }
     });
+
     registerLastName.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
             registerEmail.focus();
         }
     });
+
     registerEmail.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
             registerPassword.focus();
         }
     });
+
     registerPassword.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            confirmRegPassword.focus();
+            confirmRegisterPassword.focus();
         }
     });
-    confirmRegPassword.addEventListener('keydown', (e) => {
+
+    confirmRegisterPassword.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            if (confirmRegisterPassword() === true)
+            if (confirmRegisterPasswordsMatch() === true)
                 registerForm.requestSubmit();
         }
     });
-    confirmRegPassword.addEventListener('blur', () => {
-        confirmRegisterPassword();
+
+    confirmRegisterPassword.addEventListener('blur', () => {
+        confirmRegisterPasswordsMatch();
     });
 
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        registerEmail.classList.remove('input-error');
-        emailInUseIcon.style.display = 'none';
+        registerEmail.classList.remove('has-error');
         emailInUseMsg.style.display = 'none';
 
         const formData = new FormData(registerForm);
@@ -586,8 +703,7 @@ function initRegisterLogic() {
                     showLoginPageSection('login-section');
                 }, 2000);
             } else if (response.status === 409) {
-                registerEmail.classList.add('input-error');
-                emailInUseIcon.style.display = 'flex';
+                registerEmail.classList.add('has-error');
                 emailInUseMsg.style.display = 'flex';
             } else {
                 console.error('Unexpected server error');
@@ -597,7 +713,7 @@ function initRegisterLogic() {
         }
     });
 
-    show_login_btn.addEventListener('click', (e) => {
+    showLoginBtn.addEventListener('click', (e) => {
         e.preventDefault();
         showLoginPageSection('login-section');
     });

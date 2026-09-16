@@ -136,7 +136,6 @@ body {
     padding: 48px;
     border-radius: 12px;
 
-    color: var(--text-primary);
     background-color: var(--background);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
@@ -147,12 +146,18 @@ body {
 
 .success-banner {
     display: none;
+    align-items: center;
+    justify-content: center;
     gap: 24px;
     padding-top: 56px;
     padding-bottom: 56px;
 }
 
 /* ─── Auth Card — Typography ─────────────────────────────────────────────── */
+
+.success-banner h1 {
+    text-wrap: nowrap;
+}
 
 #confirmation-msg {
     font-size: 17px;
@@ -163,6 +168,7 @@ body {
     padding-top: 16px;
 
     font-size: 12px;
+    text-align: center;
     color: var(--text-secondary);
 }
 
@@ -171,22 +177,65 @@ body {
     color: var(--text-orange);
 }
 
-#invalid-cred-msg,
-#email-in-use-msg,
-#password-not-matching-msg {
+/* ─── Login/Register Page Errors ────────────────────────────────────────────────────────── */
+
+.field-error-msg {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    padding: 6px 13px 8px 14px;
+    border-top: 1px solid color-mix(in srgb, var(--expired-task-color) 20%, transparent);
+
+    font-size: 12px;
+    color: var(--expired-task-color);
+}
+
+.field-error-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.invalid-data-msg {
     display: none;
     color: var(--danger-icon);
     font-weight: 500;
     text-align: center;
+    text-wrap: nowrap;
     line-height: 1.5;
 }
 
 /* ─── Auth Inputs ────────────────────────────────────────────────────────── */
 
 .input-wrapper {
-    position: relative;
+    display: flex;
+    flex-direction: column;
+
     width: 100%;
     flex: 1;
+    margin: 10px 0;
+    border: 1px solid var(--border-input);
+    border-radius: 8px;
+
+    background-color: var(--white);
+    overflow: hidden;
+}
+
+.input-wrapper.has-error {
+    border-color: var(--danger-main);
+    background-color: var(--danger-bg);
+}
+
+.input-wrapper:focus-within {
+    border-color: var(--focus-ring-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-ring-color) 30%, transparent);
+}
+
+.input-control {
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .auth-form {
@@ -200,22 +249,18 @@ body {
 }
 
 .auth-input {
+    justify-content: center;
+
     width: 100%;
     padding: 12px 13px 12px 40px;
-    margin: 10px 0 10px 0;
-    border: 1px solid var(--border-input);
-    border-radius: 8px;
+    margin: 0;
+    border: none;
     outline: none;
 
     font-size: 16px;
     font-weight: 500;
     color: var(--text-heading);
-    background-color: var(--white);
-}
-
-.auth-input:focus {
-    border-color: var(--focus-ring-color);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-ring-color) 30%, transparent);
+    background-color: transparent;
 }
 
 .auth-input::placeholder {
@@ -230,11 +275,6 @@ body {
     -webkit-box-shadow: 0 0 0 30px color-mix(in srgb, var(--white) 97%, black) inset !important;
     -webkit-text-fill-color: var(--text-heading) !important;
     transition: background-color 5000s ease-in-out 0s;
-}
-
-.auth-input.input-error {
-    border-color: var(--danger-main);
-    background-color: var(--danger-bg);
 }
 
 .input-icon {
@@ -257,7 +297,6 @@ body {
     right: 12px;
     transform: translateY(-50%);
 
-    display: flex;
     width: 22px;
     height: 22px;
     padding: 2px;
@@ -267,12 +306,12 @@ body {
     pointer-events: auto;
     cursor: pointer;
 
-    transition: color 0.2s ease-in-out;
+    transition: color 0.2s ease-in-out, all 0.2s ease;
 }
 
 .password-visibility-btn:hover {
     color: var(--text-heading);
-    background-color: rgba(0, 0, 0, 0.12);
+    background-color: rgba(0, 0, 0, 0.08);
 }
 
 #login-password,
@@ -336,8 +375,8 @@ body {
 }
 
 .link-style-btn:hover {
-    color: color-mix(in srgb, var(--text-orange) 85%, black);
-    text-decoration-color: var(--text-orange);
+    color: color-mix(in srgb, var(--text-orange) 80%, black);
+    text-decoration-color: color-mix(in srgb, var(--text-orange) 75%, black);
 }
 
 /* ─── Todo Page Layout ───────────────────────────────────────────────────── */
