@@ -417,21 +417,6 @@ body {
     list-style: none;
 }
 
-.sidebar-label {
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-
-    margin-top: 32px;
-    margin-bottom: 12px;
-
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-}
-
 .sidebar-contents {
     display: flex;
     flex: 1;
@@ -461,6 +446,40 @@ body {
 @supports not selector(::-webkit-scrollbar) {
     scrollbar-width: auto;
     scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.sidebar-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-top: 32px;
+    margin-bottom: 12px;
+
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+
+    cursor: pointer;
+}
+
+.sidebar-chevron-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.sidebar-chevron-icon.collapsed {
+    /*transform: rotate(-90deg);*/
+}
+
+.sidebar-chevron-icon.expanded {
+    transform: rotate(90deg);
+}
+
+.sidebar-label:hover {
+    color: color-mix(in srgb, var(--text-secondary) 80%, white);
 }
 
 /* ─── Sidebar Buttons ────────────────────────────────────────────────────── */
@@ -741,6 +760,7 @@ body {
     width: 100%;
     height: 75px;
     flex-shrink: 0;
+    scroll-margin-bottom: 88px;
     padding: 12px 16px;
     border: 2px solid color-mix(in srgb, var(--border-color) 50%, transparent);
     border-left: 4px solid var(--border-color);
@@ -790,19 +810,6 @@ body {
 
 .task-item.completed .task-due {
     color: color-mix(in srgb, var(--text-secondary) 70%, transparent);
-}
-
-.task-item.collapsing {
-    overflow: hidden;
-    opacity: 0;
-    max-height: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    border-width: 0;
-
-    transition: opacity 0.2s ease, max-height 0.25s ease, margin 0.25s ease, padding 0.25s ease;
 }
 
 .task-body {
@@ -1016,7 +1023,7 @@ body {
 
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.12s ease;
+    transition: opacity 0.12s ease-in-out;
 }
 
 .floating-tooltip-shell.visible {
@@ -1043,7 +1050,7 @@ body {
 
 .floating-tooltip-arrow {
     position: fixed;
-    z-index: 9999;
+    z-index: 9998;
 
     width: 8px;
     height: 8px;
@@ -1052,8 +1059,7 @@ body {
     transform: rotate(45deg);
     opacity: 0;
     visibility: hidden;
-    pointer-events: none;
-    transition: opacity 0.12s ease;
+    transition: opacity 0.15s ease;
 }
 
 .floating-tooltip-arrow.visible {
@@ -1420,24 +1426,10 @@ body {
 }
 
 /* ─── Task Menu ───────────────────────────────────────────────────────── */
-.task-menu:before {
-    content: '';
-    position: absolute;
-    top: -5px;
-    right: 19px;
-    transform: translateX(-50%) rotate(45deg);
-
-    width: 8px;
-    height: 8px;
-    border-top: 1px solid color-mix(in srgb, var(--border-color) 30%, transparent);
-    border-left: 1px solid color-mix(in srgb, var(--border-color) 30%, transparent);
-
-    background-color: var(--white);
-}
 
 .task-menu {
     position: fixed;
-    z-index: 20;
+    z-index: 100;
 
     display: flex;
     flex-direction: column;
@@ -1453,15 +1445,36 @@ body {
 
     background-color: var(--white);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    opacity: 0;
-    pointer-events: none;
 
-    transition: opacity 0.25s ease;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.10s ease-in-out;
 }
 
 .task-menu.visible {
     opacity: 1;
-    pointer-events: auto;
+    visibility: visible;
+}
+
+.task-menu-arrow {
+    position: fixed;
+    z-index: 99;
+
+    width: 8px;
+    height: 8px;
+    border: 1px solid color-mix(in srgb, var(--border-color) 30%, transparent);
+
+    background-color: var(--white);
+    transform: rotate(45deg);
+
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.12s ease;
+}
+
+.task-menu-arrow.visible {
+    opacity: 1;
+    visibility: visible;
 }
 
 .task-menu-item {
@@ -1521,6 +1534,18 @@ body {
     background-color: color-mix(in srgb, var(--border-color) 30%, transparent);
 }
 
+.task-menu-item[data-context="deleted-only"] {
+    display: none;
+}
+
+.task-menu.deleted-view .task-menu-item[data-context="deleted-only"] {
+    display: flex;
+}
+
+.task-menu.deleted-view .task-menu-item[data-context="default-only"] {
+    display: none;
+}
+
 /* ─── Expired Task ────────────────────────────────────────────────────── */
 
 .expired-task {
@@ -1540,7 +1565,8 @@ body {
     pointer-events: none;
 }
 
-.task-item-locked .task-restore-btn {
+.task-item-locked .task-menu-btn,
+.task-item-locked .task-chevron {
     pointer-events: auto;
 }
 
@@ -2572,6 +2598,22 @@ body {
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
+}
+
+/* ─── Element State ─────────────────────────────────────────────────────────── */
+
+.task-item.collapsing,
+.sidebar-btn.collapsing {
+    overflow: hidden;
+    opacity: 0;
+    max-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-width: 0;
+
+    transition: opacity 0.2s ease, max-height 0.25s ease, margin 0.25s ease, padding 0.25s ease;
 }
 
 /* ─── Animations ─────────────────────────────────────────────────────────── */

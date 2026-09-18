@@ -116,16 +116,19 @@
     <div class="sidebar">
         <img src="./img/logo-with-text-alternative.png" alt="Checkmate Logo">
         <div class="sidebar-contents" id="sidebar-contents">
-            <span class="sidebar-label">Menu</span>
+            <span class="sidebar-label" data-category="menu">
+                Menu
+                <i data-lucide="chevron-right" class="sidebar-chevron-icon expanded"></i>
+            </span>
             <ul class="sidebar-list" id="menu-list">
                 <li>
-                    <button class="sidebar-btn active" id="filter-all" data-type="filter">
+                    <button class="sidebar-btn active" id="filter-all" data-category="menu" data-type="filter">
                         <i data-lucide="layout-dashboard" class="btn-icon"></i>
                         All Tasks
                     </button>
                 </li>
                 <li>
-                    <button class="sidebar-btn" id="filter-today" data-type="filter">
+                    <button class="sidebar-btn" id="filter-today" data-category="menu" data-type="filter">
                         <i data-lucide="calendar" class="btn-icon"></i>
                         Today
                         <span class="tasks-counter" id="today-tasks-counter">
@@ -134,13 +137,13 @@
                     </button>
                 </li>
                 <li>
-                    <button class="sidebar-btn" id="filter-upcoming" data-type="filter">
+                    <button class="sidebar-btn" id="filter-upcoming" data-category="menu" data-type="filter">
                         <i data-lucide="calendar-days" class="btn-icon"></i>
                         Upcoming
                     </button>
                 </li>
                 <li>
-                    <button class="sidebar-btn" id="filter-important" data-type="filter">
+                    <button class="sidebar-btn" id="filter-important" data-category="menu" data-type="filter">
                         <i data-lucide="move-down" class="btn-icon"></i>
                         Important
                         <span class="tasks-counter" id="important-tasks-counter">
@@ -149,16 +152,19 @@
                     </button>
                 </li>
             </ul>
-            <span class="sidebar-label">Review</span>
+            <span class="sidebar-label" data-category="review">
+                Review
+                <i data-lucide="chevron-right" class="sidebar-chevron-icon expanded"></i>
+            </span>
             <ul class="sidebar-list" id="review-list">
                 <li>
-                    <button class="sidebar-btn" id="filter-completed" data-type="filter">
+                    <button class="sidebar-btn" id="filter-completed" data-category="review" data-type="filter">
                         <i data-lucide="circle-check-big" class="btn-icon"></i>
                         Completed
                     </button>
                 </li>
                 <li>
-                    <button class="sidebar-btn" id="filter-expired" data-type="filter">
+                    <button class="sidebar-btn" id="filter-expired" data-category="review" data-type="filter">
                         <i data-lucide="clock" class="btn-icon"></i>
                         Expired
                         <span class="tasks-counter" id="expired-tasks-counter">
@@ -167,22 +173,25 @@
                     </button>
                 </li>
                 <li>
-                    <button class="sidebar-btn" id="filter-archived" data-type="filter">
+                    <button class="sidebar-btn" id="filter-archived" data-category="review" data-type="filter">
                         <i data-lucide="archive" class="btn-icon"></i>
                         Archived
                     </button>
                 </li>
                 <li>
-                    <button class="sidebar-btn" id="filter-deleted" data-type="filter">
+                    <button class="sidebar-btn" id="filter-deleted" data-category="review" data-type="filter">
                         <i data-lucide="trash-2" class="btn-icon"></i>
                         Deleted
                     </button>
                 </li>
             </ul>
-            <span class="sidebar-label">Projects</span>
+            <span class="sidebar-label" data-category="projects">
+                Projects
+                <i data-lucide="chevron-right" class="sidebar-chevron-icon expanded"></i>
+            </span>
             <ul class="sidebar-list" id="projects-list">
                 <li>
-                    <button class="sidebar-btn" id="filter-urgent" data-type="project">
+                    <button class="sidebar-btn" id="filter-urgent" data-category="projects" data-type="project">
                         <i data-lucide="folder" class="btn-icon"></i>
                         Urgent
                     </button>
@@ -551,20 +560,25 @@
     </div>
 </div>
 <div class="task-menu" id="task-menu">
-    <button type="button" class="task-menu-item" data-action="important">
+    <button type="button" class="task-menu-item" data-action="important" data-context="default-only">
         <i data-lucide="star" class="task-icon" id="menu-important-icon"></i>
         <span id="menu-important-label">Mark Important</span>
     </button>
-    <button type="button" class="task-menu-item" data-action="archive">
+    <button type="button" class="task-menu-item" data-action="archive" data-context="default-only">
         <i data-lucide="folder" class="task-icon" id="menu-archive-icon"></i>
         <span id="menu-archive-label">Archive</span>
     </button>
+    <button type="button" class="task-menu-item" data-action="restore" data-context="deleted-only">
+        <i data-lucide="rotate-ccw" class="task-icon"></i>
+        Restore
+    </button>
     <hr class="task-menu-divider">
-    <button type="button" class="task-menu-item task-menu-item-danger" data-action="delete">
+    <button type="button" class="task-menu-item task-menu-item-danger" data-action="delete" id="menu-delete-btn">
         <i data-lucide="trash-2" class="task-icon"></i>
-        Delete
+        <span id="menu-delete-label">Delete</span>
     </button>
 </div>
+<div class="task-menu-arrow" id="task-menu-arrow"></div>
 <div class="toast" id="error-toast">
     <i data-lucide="triangle-alert" class="task-icon"></i>
     <span id="toast-message"></span>

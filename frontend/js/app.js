@@ -4,12 +4,12 @@ let redirectTimer;
 let currentTasks = [];
 const MAX_SUBTASK_DEPTH = 2;
 
-async function sendTaskRequest(taskId, method, payloadObject) {
+async function sendTaskRequest(taskId, method, payloadObject, suffix = '') {
     const token = localStorage.getItem('access_token');
     const data = payloadObject ? JSON.stringify(payloadObject) : null;
 
     try {
-        const response = await fetch(API_BASE_URL + '/items/' + taskId, {
+        const response = await fetch(API_BASE_URL + '/items/' + taskId + suffix, {
             method: method,
             headers: {
                 'Content-Type': 'application/json',
@@ -289,7 +289,7 @@ const filters = {
     expired: (task) => isExpired(task) && !task.is_deleted && !task.is_archived && !task.is_done,
     completed: (task) => task.is_done && !task.is_archived && !task.is_deleted,
     archived: (task) => task.is_archived && !task.is_deleted,
-    deleted: (task) => !task.is_archived && task.is_deleted,
+    deleted: (task) => task.is_deleted && !task.is_archived,
 };
 
 const pageTitles = {
@@ -308,19 +308,11 @@ function getDepth(task, tasksById) {
     return depth;
 }
 
-const floatingTooltipShell = document.getElementById('floating-tooltip-shell');
-const floatingTooltip = document.getElementById('floating-tooltip');
-const floatingTooltipArrow = document.getElementById('floating-tooltip-arrow');
+function positionFloatingElement(anchorEl, shellEl, arrowEl, {axis = 'vertical', offsetX = 0, minSpace = 100} = {}) {
+    if (!anchorEl) return;
 
-let tooltipTarget = null;
-let hideTimeout = null;
-
-function positionFloatingTooltip(textEl, axis = 'vertical') {
-    if (!textEl) return;
-
-    const rect = textEl.getBoundingClientRect();
+    const rect = anchorEl.getBoundingClientRect();
     const margin = 4;
-    const minSpace = 100;
 
     const spaceAbove = rect.top - margin;
     const spaceBelow = window.innerHeight - rect.bottom - margin;
@@ -334,40 +326,40 @@ function positionFloatingTooltip(textEl, axis = 'vertical') {
         placement = spaceBelow >= spaceAbove ? 'below' : 'above';
     }
 
-    floatingTooltipShell.style.maxWidth = '';
-    floatingTooltipShell.style.maxHeight = '';
+    shellEl.style.maxWidth = '';
+    shellEl.style.maxHeight = '';
 
     if (placement === 'above' || placement === 'below') {
         const available = Math.max(80, placement === 'below' ? spaceBelow : spaceAbove);
-        floatingTooltipShell.style.maxHeight = `${Math.min(available, window.innerHeight * 0.4)}px`;
+        shellEl.style.maxHeight = `${Math.min(available, window.innerHeight * 0.4)}px`;
     } else {
         const availableWidth = placement === 'right' ? spaceRight : spaceLeft;
-        floatingTooltipShell.style.maxWidth = `${Math.min(Math.max(availableWidth, 120), 320)}px`;
-        floatingTooltipShell.style.maxHeight = `${window.innerHeight * 0.4}px`;
+        shellEl.style.maxWidth = `${Math.min(Math.max(availableWidth, 120), 320)}px`;
+        shellEl.style.maxHeight = `${window.innerHeight * 0.4}px`;
     }
 
-    const tipRect = floatingTooltipShell.getBoundingClientRect();
+    const shellRect = shellEl.getBoundingClientRect();
 
     let top, left;
     if (placement === 'below') {
         top = rect.bottom + margin;
-        left = rect.left + (rect.width - tipRect.width) / 2;
+        left = rect.left + (rect.width - shellRect.width) / 2 + offsetX;
     } else if (placement === 'above') {
-        top = Math.max(margin, rect.top - tipRect.height - margin);
-        left = rect.left + (rect.width - tipRect.width) / 2;
+        top = Math.max(margin, rect.top - shellRect.height - margin);
+        left = rect.left + (rect.width - shellRect.width) / 2 + offsetX;
     } else if (placement === 'right') {
         left = rect.right + margin;
-        top = rect.top + (rect.height - tipRect.height) / 2;
+        top = rect.top + (rect.height - shellRect.height) / 2;
     } else if (placement === 'left') {
-        left = Math.max(margin, rect.left - tipRect.width - margin);
-        top = rect.top + (rect.height - tipRect.height) / 2;
+        left = Math.max(margin, rect.left - shellRect.width - margin);
+        top = rect.top + (rect.height - shellRect.height) / 2;
     }
 
-    left = Math.max(margin, Math.min(left, window.innerWidth - -tipRect.width - margin));
-    top = Math.max(margin, Math.min(top, window.innerHeight - -tipRect.height - margin));
+    left = Math.max(margin, Math.min(left, window.innerWidth - shellRect.width - margin));
+    top = Math.max(margin, Math.min(top, window.innerHeight - shellRect.height - margin));
 
-    floatingTooltipShell.style.top = `${top}px`;
-    floatingTooltipShell.style.left = `${left}px`;
+    shellEl.style.top = `${top}px`;
+    shellEl.style.left = `${left}px`;
 
     const arrowSize = 8;
     const cornerInset = 6;
@@ -375,16 +367,28 @@ function positionFloatingTooltip(textEl, axis = 'vertical') {
 
     if (placement === 'below' || placement === 'above') {
         arrowLeft = rect.left + rect.width / 2 - arrowSize / 2;
-        arrowLeft = Math.max(left + cornerInset, Math.min(arrowLeft, left + tipRect.width - arrowSize - cornerInset));
-        arrowTop = placement === 'below' ? top - arrowSize / 2 : top + tipRect.height - arrowSize / 2;
+        arrowLeft = Math.max(left + cornerInset, Math.min(arrowLeft, left + shellRect.width - arrowSize - cornerInset));
+        arrowTop = placement === 'below' ? top - arrowSize / 2 : top + shellRect.height - arrowSize / 2;
     } else {
         arrowTop = rect.top + rect.height / 2 - arrowSize / 2;
-        arrowTop = Math.max(top + cornerInset, Math.min(arrowTop, top + tipRect.height - arrowSize - cornerInset));
-        arrowLeft = placement === 'right' ? left - arrowSize / 2 : left + tipRect.width - arrowSize / 2;
+        arrowTop = Math.max(top + cornerInset, Math.min(arrowTop, top + shellRect.height - arrowSize - cornerInset));
+        arrowLeft = placement === 'right' ? left - arrowSize / 2 : left + shellRect.width - arrowSize / 2;
     }
 
-    floatingTooltipArrow.style.left = `${arrowLeft}px`;
-    floatingTooltipArrow.style.top = `${arrowTop}px`;
+    arrowEl.style.left = `${arrowLeft}px`;
+    arrowEl.style.top = `${arrowTop}px`;
+}
+
+
+const floatingTooltipShell = document.getElementById('floating-tooltip-shell');
+const floatingTooltip = document.getElementById('floating-tooltip');
+const floatingTooltipArrow = document.getElementById('floating-tooltip-arrow');
+
+let tooltipTarget = null;
+let hideTimeout = null;
+
+function positionFloatingTooltip(textEl, axis = 'vertical') {
+    positionFloatingElement(textEl, floatingTooltipShell, floatingTooltipArrow, {axis});
 }
 
 function showFloatingTooltip(wrapper, textEl, text, axis) {
@@ -531,6 +535,65 @@ function initPasswordVisibilityToggle(inputEl, showBtn, hideBtn) {
         inputEl.type = 'password';
         update();
     });
+}
+
+const STAGGER_MS = 20;
+const MAX_CASCADE_MS = 180;
+const MIN_CASCADE_MS = 4;
+const TRANSITION_MS = 250;
+
+function getStagger(itemCount) {
+    if (itemCount <= 1) return 0;
+    const natural = (itemCount - 1) * STAGGER_MS;
+    if (natural <= MAX_CASCADE_MS) return STAGGER_MS;
+    return Math.max(MAX_CASCADE_MS / (itemCount - 1), MIN_CASCADE_MS);
+}
+
+function animateItems(items, mode, onComplete) {
+    items = Array.from(items);
+    if (items.length === 0) {
+        onComplete?.();
+        return;
+    }
+
+    const stagger = getStagger(items.length);
+
+    if (mode === 'show') {
+        items.forEach((el, index) => {
+            setTimeout(() => {
+                el.style.display = 'flex';
+                void el.offsetHeight;
+                el.classList.remove('collapsing');
+
+                if (index === items.length - 1) {
+                    const onEnd = (e) => {
+                        if (e.target !== el || e.propertyName !== 'max-height') return;
+                        el.removeEventListener('transionend', onEnd);
+                        onComplete?.();
+                    };
+                    el.addEventListener('transionend', onEnd);
+                    setTimeout(() => {
+                        el.removeEventListener('transionend', onEnd);
+                        onComplete?.();
+                    }, TRANSITION_MS + 50);
+                }
+            }, index * stagger);
+        });
+    } else {
+        items.forEach((el, index) => {
+            setTimeout(() => {
+                el.classList.add('collapsing');
+
+                const onEnd = (e) => {
+                    if (e.target !== el || e.propertyName === 'max-height') return;
+                    el.style.display = 'none';
+                    el.classList.remove('collapsing');
+                    el.removeEventListener('transitionend', onEnd);
+                };
+                el.addEventListener('transitionend', onEnd);
+            }, index * stagger);
+        });
+    }
 }
 
 function initLoginLogic() {
@@ -747,6 +810,8 @@ function initLogoutLogic() {
 function initTaskManagementLogic() {
     const tasksList = document.getElementById('tasks-list');
     const taskMenu = document.getElementById('task-menu');
+    const taskMenuArrow = document.getElementById('task-menu-arrow');
+    const menuDeleteBtn = document.getElementById('menu-delete-btn');
     const newTaskBtn = document.getElementById('new-task-btn');
 
     let currentViewType = 'filter';
@@ -851,13 +916,21 @@ function initTaskManagementLogic() {
                 </div>
             `
 
-            const actionButtonHtml = currentFilterId === "deleted"
-                ? `<button type="button" class="task-restore-btn" id="restore-${task.id}">
-                        <i data-lucide="rotate-ccw" class="task-icon"></i>
-                    </button>`
-                : `<button type="button" class="task-menu-btn" id="menu-${task.id}">
-                        <i data-lucide="ellipsis" class="task-menu-icon"></i>
-                    </button>`
+            const expirationDate = new Date(task.deleted_at);
+            expirationDate.setDate(expirationDate.getDate() + 30);
+            const remainingMs = expirationDate - new Date();
+            const deletesIn = Math.max(0, Math.ceil(remainingMs / (1000 * 60 * 60 * 24)));
+
+            const dueDateHtml = currentFilterId === 'deleted'
+                ? `
+                    <div class="due-date-wrapper">
+                        <i data-lucide="clock" class="task-icon"></i>
+                        <span class="task-due" id="due-${task.id}">
+                            ${deletesIn === 1 ? 'Deletes today' : `Deletes in ${deletesIn}d`}
+                        </span>
+                    </div>
+                  `
+                : hasDueDate ? hasDueDateHtml : hasNoDueDateHtml
 
             const depth = getDepth(task, tasksById);
             const isExpanded = expandedTaskIds.has(task.id);
@@ -871,26 +944,22 @@ function initTaskManagementLogic() {
                         <i data-lucide="chevron-right" class="chevron-icon"></i>
                    </button>`
                 : ''}
-                    <input type="checkbox" class="task-checkbox" id="task-${task.id}" ${task.is_done ? "checked" : ''}>
+                    <input type="checkbox" class="task-checkbox" id="task-${task.id}" ${task.is_done ? "checked" : ''} ${task.is_deleted ? 'style="opacity: 0.3";' : ''}>
                     <div class="task-body" id="body-${task.id}">
                         <span class="task-title-wrapper">
                             <span class="task-title">${task.title}</span>
-                            <!-- <span class="tooltip-outer above">  
-                                <span class="tooltip-bubble">${task.title}</span>
-                            </span> -->
                         </span>
                         ${hasDescription ? `
                         <span class="task-desc-wrapper">
                             <span class="task-desc">${task.description}</span>
-                            <!-- <span class="tooltip-outer below">
-                                <span class="tooltip-bubble">${task.description}</span>
-                            </span> -->
                         </span>
                         ` : ''}
                     </div>
                     <div class="task-meta">
-                        ${hasDueDate ? hasDueDateHtml : hasNoDueDateHtml}
-                        ${actionButtonHtml}
+                        ${dueDateHtml}
+                        <button type="button" class="task-menu-btn" id="menu-${task.id}">
+                            <i data-lucide="ellipsis" class="task-menu-icon"></i>
+                        </button>
                     </div>
                 </div>
             `;
@@ -1114,6 +1183,18 @@ function initTaskManagementLogic() {
         return descendants;
     }
 
+    function getDescendantTaskIds(taskId) {
+        const ids = [];
+        const children = currentTasks.filter(t => t.parent_id === taskId);
+
+        for (const child of children) {
+            ids.push(child.id);
+            ids.push(...getDescendantTaskIds(child.id));
+        }
+
+        return ids;
+    }
+
     document.addEventListener('app:authSuccess', async () => {
         currentTasks = await fetchUserTasks();
         refreshUI();
@@ -1131,36 +1212,23 @@ function initTaskManagementLogic() {
         currentViewType = e.detail.viewType;
         currentFilterId = e.detail.filterId;
         refreshUI();
-        tasksList.scrollTop = tasksList.top;
+        tasksList.scrollTop = 0;
     });
 
     function collapseTask(taskEl) {
-        const descendants = getDescendantRows(taskEl);
-
-        descendants.forEach((el, index) => {
-            setTimeout(() => {
-                el.classList.add('collapsing');
-            }, index * 20);
+        getDescendantRows(taskEl).forEach(el => {
+            el.style.display = 'none';
         });
-
-        const lastDelay = (descendants.length - 1) * 40;
-        setTimeout(() => {
-            descendants.forEach(el => {
-                el.style.display = 'none';
-                el.classList.remove('collapsing');
-            });
-        }, lastDelay + 40);
     }
 
-    function expandTask(taskEl) {
+    function expandTask(taskEl, {scrollToEnd = false} = {}) {
         const depth = Number(taskEl.dataset.depth);
         let sibling = taskEl.nextElementSibling;
-
         let skipDeeperThan = 9999;
+        let lastShown = null;
 
         while (sibling && sibling.classList.contains('task-item')) {
             const siblingDepth = Number(sibling.dataset.depth);
-
             if (siblingDepth <= depth) break;
 
             if (siblingDepth > skipDeeperThan) {
@@ -1169,18 +1237,15 @@ function initTaskManagementLogic() {
             }
 
             sibling.style.display = 'flex';
-            requestAnimationFrame(() => {
-                sibling.classList.remove('collapsing');
-            });
+            lastShown = sibling;
 
             const siblingId = Number(sibling.getAttribute('data-id'));
-            if (!expandedTaskIds.has(siblingId)) {
-                skipDeeperThan = siblingDepth;
-            } else {
-                skipDeeperThan = 9999;
-            }
-
+            skipDeeperThan = expandedTaskIds.has(siblingId) ? 9999 : siblingDepth;
             sibling = sibling.nextElementSibling;
+        }
+
+        if (scrollToEnd) {
+            lastShown?.scrollIntoView({block: 'nearest'});
         }
     }
 
@@ -1190,8 +1255,8 @@ function initTaskManagementLogic() {
         const clickedCheckbox = e.target.closest('.task-checkbox');
         const clickedDateTime = e.target.closest('.due-date-wrapper');
         const clickedMenuBtn = e.target.closest('.task-menu-btn');
-        const clickedRestore = e.target.closest('.task-restore-btn');
-        const clickedGhostBtn = e.target.closest('.ghost-add-btn');
+        const clickedGhostRow = e.target.closest('.ghost-row:not(.ghost-row-input)');
+        const clickedGhostInput = e.target.closest('.ghost-row-input');
 
         if (clickedChevron) {
             const taskItemElement = clickedChevron.closest('.task-item');
@@ -1204,7 +1269,7 @@ function initTaskManagementLogic() {
                 clickedChevron.classList.add('collapsed');
                 expandedTaskIds.delete(taskId);
             } else {
-                expandTask(taskItemElement);
+                expandTask(taskItemElement, {scrollToEnd: true});
                 clickedChevron.classList.add('expanded');
                 clickedChevron.classList.remove('collapsed');
                 expandedTaskIds.add(taskId);
@@ -1298,34 +1363,10 @@ function initTaskManagementLogic() {
             }
         }
 
-        if (clickedRestore) {
-            const taskItemElement = clickedRestore.closest('.task-item');
-            const taskId = taskItemElement.getAttribute('data-id');
-
-            const payloadObject = {
-                is_deleted: false,
-            }
-
-            const result = await sendTaskRequest(taskId, 'PUT', payloadObject);
-
-            if (result.success) {
-                taskItemElement.classList.add('removing');
-                setTimeout(() => {
-                    refreshUI();
-                }, 150);
-            } else if (result.status === 404) {
-                currentTasks = currentTasks.filter(task => task.id !== Number(taskId));
-                refreshUI();
-                showErrorToast('This task has already been permanently deleted');
-            } else {
-                showErrorToast('Something went wrong. Please try again.');
-            }
-        }
-
-        if (clickedGhostBtn) {
-            const ghostRow = clickedGhostBtn.closest('.ghost-row');
-            const parentId = Number(ghostRow.dataset.parentId);
-            const depth = Number(ghostRow.dataset.depth);
+        if (clickedGhostRow) {
+            const parentId = Number(clickedGhostRow.dataset.parentId);
+            const depth = Number(clickedGhostRow.dataset.depth);
+            const ghostBtn = clickedGhostRow.querySelector('.ghost-add-btn');
 
             const inputEl = document.createElement('input');
             inputEl.type = 'text';
@@ -1333,8 +1374,8 @@ function initTaskManagementLogic() {
             inputEl.placeholder = 'Subtask title';
             inputEl.maxLength = 255;
 
-            ghostRow.classList.add('ghost-row-input');
-            clickedGhostBtn.replaceWith(inputEl);
+            clickedGhostRow.classList.add('ghost-row-input');
+            ghostBtn.replaceWith(inputEl);
             inputEl.focus();
 
             let isProcessing = false;
@@ -1343,8 +1384,8 @@ function initTaskManagementLogic() {
                 const title = inputEl.value.trim();
 
                 if (title === '') {
-                    inputEl.replaceWith(clickedGhostBtn);
-                    ghostRow.classList.remove('ghost-row-input');
+                    inputEl.replaceWith(ghostBtn);
+                    clickedGhostRow.classList.remove('ghost-row-input');
                     return;
                 }
 
@@ -1353,31 +1394,33 @@ function initTaskManagementLogic() {
                 if (result.success) {
                     currentTasks.push(result.task);
                     expandedTaskIds.add(parentId);
+
                     refreshUI();
 
                     requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            const newGhostBtn = tasksList.querySelector(
-                                `.ghost-row[data-parent-id="${parentId}"] .ghost-add-btn`
-                            );
-                            if (newGhostBtn) {
-                                newGhostBtn.click();
-                            }
-                        });
+                        const newGhostBtn = tasksList.querySelector(
+                            `.ghost-row[data-parent-id="${parentId}"]`
+                        );
+                        if (newGhostBtn) {
+                            newGhostBtn.style.display = 'flex';
+                            newGhostBtn.classList.remove('collapsing');
+                            newGhostBtn.scrollIntoView({block: 'nearest'});
+                            newGhostBtn.querySelector('.ghost-add-btn')?.click();
+                        }
                     });
                 } else {
                     showErrorToast('Something went wrong. Please try again.');
-                    inputEl.replaceWith(clickedGhostBtn);
+                    inputEl.replaceWith(ghostBtn);
                 }
 
-                ghostRow.classList.remove('ghost-row-input');
+                clickedGhostRow.classList.remove('ghost-row-input');
             }
 
             inputEl.addEventListener('keydown', async (e) => {
                 if (e.key === 'Escape') {
                     isProcessing = true;
-                    inputEl.replaceWith(clickedGhostBtn);
-                    ghostRow.classList.remove('ghost-row-input');
+                    inputEl.replaceWith(ghostBtn);
+                    clickedGhostRow.classList.remove('ghost-row-input');
                 }
                 if (e.key === 'Enter') {
                     if (isProcessing) return;
@@ -1393,7 +1436,7 @@ function initTaskManagementLogic() {
             });
         }
 
-        const hasSpecificAction = clickedChevron || clickedCheckbox || clickedDateTime || clickedMenuBtn || clickedRestore || clickedGhostBtn;
+        const hasSpecificAction = clickedChevron || clickedCheckbox || clickedDateTime || clickedMenuBtn || clickedGhostRow || clickedGhostInput;
 
         if (!hasSpecificAction && clickedItem && !clickedItem.classList.contains('new-task-item')) {
             if (clickedItem.classList.contains('forced-ancestor')) {
@@ -1421,36 +1464,40 @@ function initTaskManagementLogic() {
         }));
     });
 
+    function positionTaskMenu(triggerBtn) {
+        positionFloatingElement(triggerBtn, taskMenu, taskMenuArrow, {offsetX: -64});
+    }
+
     function openMenu(triggerBtn, taskId) {
         try {
             const targetTask = currentTasks.find(task => task.id === Number(taskId));
+            const isDeletedView = currentFilterId === 'deleted';
 
-            const importantIcon = targetTask.is_important ? 'star-off' : 'star';
-            document.getElementById('menu-important-icon').outerHTML =
-                `<i data-lucide="${importantIcon}" class="task-icon" id="menu-important-icon"></i>`;
-            document.getElementById('menu-important-label').textContent =
-                targetTask.is_important ? 'Remove Importance' : 'Mark Important';
+            taskMenu.classList.toggle('deleted-view', isDeletedView);
+            menuDeleteBtn.dataset.action = isDeletedView ? 'delete-forever' : 'delete';
+            document.getElementById('menu-delete-label').textContent =
+                isDeletedView ? 'Delete forever' : 'Delete';
 
-            const archiveIcon = targetTask.is_archived ? 'archive-restore' : 'archive';
-            document.getElementById('menu-archive-icon').outerHTML =
-                `<i data-lucide="${archiveIcon}" class="task-icon" id="menu-archive-icon"></i>`;
-            document.getElementById('menu-archive-label').textContent =
-                targetTask.is_archived ? 'Unarchive' : 'Archive';
+            if (!isDeletedView) {
+                const importantIcon = targetTask.is_important ? 'star-off' : 'star';
+                document.getElementById('menu-important-icon').outerHTML =
+                    `<i data-lucide="${importantIcon}" class="task-icon" id="menu-important-icon"></i>`;
+                document.getElementById('menu-important-label').textContent =
+                    targetTask.is_important ? 'Remove Importance' : 'Mark Important';
+
+                const archiveIcon = targetTask.is_archived ? 'archive-restore' : 'archive';
+                document.getElementById('menu-archive-icon').outerHTML =
+                    `<i data-lucide="${archiveIcon}" class="task-icon" id="menu-archive-icon"></i>`;
+                document.getElementById('menu-archive-label').textContent =
+                    targetTask.is_archived ? 'Unarchive' : 'Archive';
+            }
 
             lucide.createIcons();
 
-            const rect = triggerBtn.getBoundingClientRect();
-            const containerRect = tasksList.getBoundingClientRect();
-            const buttonCenterX = rect.left + rect.width / 2;
+            positionTaskMenu(triggerBtn, taskId);
 
-            let left = buttonCenterX - taskMenu.offsetWidth / 2;
-            const minLeft = containerRect.left + 8;
-            const maxLeft = containerRect.right - taskMenu.offsetWidth - 8;
-            left = Math.min(Math.max(left, minLeft), maxLeft);
-
-            taskMenu.style.top = `${rect.bottom + 4}px`;
-            taskMenu.style.left = `${left}px`;
             taskMenu.classList.add('visible');
+            taskMenuArrow.classList.add('visible');
             activeMenuTaskId = taskId;
         } catch (error) {
             showErrorToast('Something went wrong. Please try again.');
@@ -1460,6 +1507,7 @@ function initTaskManagementLogic() {
 
     function closeMenu() {
         taskMenu.classList.remove('visible');
+        taskMenuArrow.classList.remove('visible');
         activeMenuTaskId = null;
     }
 
@@ -1477,17 +1525,22 @@ function initTaskManagementLogic() {
             return;
         }
 
-        if (action === 'delete') {
-            const result = await sendTaskRequest(taskId, 'DELETE');
+        async function deleteTask(isPermanent) {
+            const result = await sendTaskRequest(taskId, 'DELETE', null, isPermanent ? '/permanent' : '');
 
             if (result.success) {
-                const targetTask = currentTasks.find(task => task.id === Number(taskId));
-                if (targetTask) {
-                    targetTask.is_deleted = true;
+                if (isPermanent) {
+                    const idsToRemove = new Set([Number(taskId), ...getDescendantTaskIds(Number(taskId))]);
+                    currentTasks = currentTasks.filter(task => !idsToRemove.has(task.id));
+                } else {
+                    const targetTask = currentTasks.find(task => task.id === Number(taskId));
+                    if (targetTask) {
+                        targetTask.is_deleted = true;
+                        targetTask.deleted_at = new Date().toISOString();
+                    }
                 }
 
                 const taskItemElement = document.querySelector(`.task-item[data-id="${taskId}"]`);
-
                 if (taskItemElement) {
                     taskItemElement.classList.add('removing');
                     setTimeout(() => {
@@ -1501,6 +1554,17 @@ function initTaskManagementLogic() {
             }
 
             closeMenu();
+        }
+
+        if (action === 'delete') {
+            const isPermanent = false;
+            await deleteTask(isPermanent);
+            return;
+        }
+
+        if (action === 'delete-forever') {
+            const isPermanent = true;
+            await deleteTask(isPermanent);
             return;
         }
 
@@ -1510,13 +1574,19 @@ function initTaskManagementLogic() {
             case 'important': {
                 payloadObject = {
                     is_important: !targetTask.is_important,
-                }
+                };
                 break;
             }
             case 'archive': {
                 payloadObject = {
                     is_archived: !targetTask.is_archived,
-                }
+                };
+                break;
+            }
+            case 'restore': {
+                payloadObject = {
+                    is_deleted: false
+                };
                 break;
             }
             default:
@@ -1529,7 +1599,7 @@ function initTaskManagementLogic() {
         if (result.success) {
             const taskItemElement = document.querySelector(`.task-item[data-id="${taskId}"]`);
 
-            if (taskItemElement && action === 'archive') {
+            if (taskItemElement && (action === 'archive' && action === 'restore')) {
                 taskItemElement.classList.add('removing');
                 setTimeout(() => {
                     refreshUI();
@@ -1543,6 +1613,12 @@ function initTaskManagementLogic() {
 
         closeMenu();
     });
+
+    window.addEventListener('scroll', () => {
+        if (activeMenuTaskId !== null) {
+            closeMenu();
+        }
+    }, true);
 
     document.addEventListener('click', (e) => {
         if (activeMenuTaskId === null) return;
@@ -2317,27 +2393,52 @@ function initTaskModalLogic() {
 
 function initSidebarLogic() {
     const sidebarContents = document.getElementById('sidebar-contents');
+
+    function collapseCategory(items) {
+        animateItems(items, 'hide');
+    }
+
+    function expandCategory(items) {
+        animateItems(items, 'show');
+    }
+
     sidebarContents.addEventListener('click', (e) => {
         const clickedBtn = e.target.closest('.sidebar-btn');
+        const clickedLabel = e.target.closest('.sidebar-label');
 
-        if (clickedBtn === null || clickedBtn === undefined) {
-            return;
+        if (clickedBtn) {
+            const currActiveBtn = document.querySelector('.sidebar-btn.active');
+            currActiveBtn?.classList.remove('active');
+            clickedBtn.classList.add('active');
+
+            const viewType = clickedBtn.dataset.type;
+            const clickedBtnId = clickedBtn.id;
+            const filterId = clickedBtnId.split('-').pop();
+
+            document.dispatchEvent(new CustomEvent('app:sidebarChanged', {
+                detail: {
+                    viewType: viewType,
+                    filterId: filterId
+                }
+            }));
         }
 
-        const currActiveBtn = document.querySelector('.sidebar-btn.active');
-        currActiveBtn?.classList.remove('active');
-        clickedBtn.classList.add('active');
+        if (clickedLabel) {
+            const clickedChevron = clickedLabel.querySelector('.sidebar-chevron-icon');
+            const currCategory = clickedLabel.dataset.category;
+            const categoryItems = document.querySelectorAll(`.sidebar-btn[data-category="${currCategory}"]`);
 
-        const viewType = clickedBtn.dataset.type;
-        const clickedBtnId = clickedBtn.id;
-        const filterId = clickedBtnId.split('-').pop();
-
-        document.dispatchEvent(new CustomEvent('app:sidebarChanged', {
-            detail: {
-                viewType: viewType,
-                filterId: filterId
+            const isCollapsed = clickedChevron.classList.contains('collapsed');
+            if (isCollapsed) {
+                expandCategory(categoryItems);
+                clickedChevron.classList.remove('collapsed');
+                clickedChevron.classList.add('expanded');
+            } else {
+                collapseCategory(categoryItems);
+                clickedChevron.classList.add('collapsed');
+                clickedChevron.classList.remove('expanded');
             }
-        }));
+        }
     });
 }
 
@@ -2372,4 +2473,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // TODO REMOVE BETA TESTING
 // TODO DELETE
-// document.getElementById('task-details-modal').style.display = 'flex';

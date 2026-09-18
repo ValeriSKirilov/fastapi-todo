@@ -86,7 +86,7 @@ def permanent_delete(
     item = crud.delete_item_permanently(db, item_id, current_user.id)
     if not item:
         raise HTTPException(
-            status_cade=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Item not found"
         )
 

@@ -19,6 +19,7 @@ class ItemResponse(ItemBase):
     id: int
     is_deleted: bool = False
     is_archived: bool = False
+    deleted_at: datetime | None = None
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -29,5 +30,6 @@ class ItemUpdate(BaseModel):
     is_deleted: bool | None = None
     is_important: bool | None = None
     is_archived: bool | None = None
+    deleted_at: datetime | None = None
     due_date: datetime | None = None
     parent_id: int | None = None
