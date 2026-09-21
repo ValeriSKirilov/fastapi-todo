@@ -21,8 +21,9 @@
             <div class="input-wrapper">
                 <div class="input-control">
                     <i data-lucide="mail" class="input-icon"></i>
-                    <input type="email" name="username" autocomplete="username" id="login-email"
-                           class="auth-input" placeholder="Email" required>
+                    <input type="text" name="username" inputmode="email" autocomplete="email"
+                           class="auth-input" id="login-email" placeholder="Email"
+                           maxlength="128" data-validate-as="email" required>
                 </div>
             </div>
             <div class="input-wrapper">
@@ -31,7 +32,7 @@
                     <!--TODO ADD MIN LENGTH = 8-->
                     <input type="password" name="password" autocomplete="current-password"
                            class="auth-input" id="login-password" placeholder="Password"
-                           maxlength="128" required>
+                           maxlength="72" required>
                     <i data-lucide="eye-off" class="password-visibility-btn" id="login-show-password-btn"></i>
                     <i data-lucide="eye" class="password-visibility-btn" id="login-hide-password-btn"></i>
                 </div>
@@ -66,8 +67,9 @@
             <div class="input-wrapper">
                 <div class="input-control">
                     <i data-lucide="mail" class="input-icon"></i>
-                    <input type="email" name="email" id="register-email" class="auth-input" placeholder="Email"
-                           required>
+                    <input type="text" name="email" inputmode="email"
+                           class="auth-input" id="register-email" placeholder="Email"
+                           maxlength="128" data-validate-as="email" required>
                 </div>
             </div>
             <span class="invalid-data-msg" id="email-in-use-msg">
@@ -76,8 +78,9 @@
             <div class="input-wrapper">
                 <div class="input-control">
                     <i data-lucide="lock" class="input-icon"></i>
-                    <input type="password" name="password" id="register-password" class="auth-input"
-                           placeholder="Create Password" required>
+                    <input type="password" name="password"
+                           class="auth-input" id="register-password" placeholder="Create Password"
+                           minlength="8" maxlength="72" required>
                     <i data-lucide="eye-off" class="password-visibility-btn" id="register-show-password-btn"></i>
                     <i data-lucide="eye" class="password-visibility-btn" id="register-hide-password-btn"></i>
                 </div>
@@ -85,8 +88,9 @@
             <div class="input-wrapper">
                 <div class="input-control">
                     <i data-lucide="lock-keyhole" class="input-icon"></i>
-                    <input type="password" name="confirm-register-password" id="confirm-register-password"
-                           class="auth-input" placeholder="Confirm Password" required>
+                    <input type="password" name="confirm-register-password"
+                           class="auth-input" id="confirm-register-password" placeholder="Confirm Password"
+                           minlength="8" maxlength="72" required>
                     <i data-lucide="eye-off" class="password-visibility-btn"
                        id="register-confirm-show-password-btn"></i>
                     <i data-lucide="eye" class="password-visibility-btn"

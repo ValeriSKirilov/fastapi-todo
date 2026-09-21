@@ -241,8 +241,25 @@ async function fetchAndRenderUser() {
     }
 }
 
+function getRelativeDayLabel(rawDateTime) {
+    const startOfDue = new Date(rawDateTime.getFullYear(), rawDateTime.getMonth(), rawDateTime.getDate());
+    const now = new Date();
+    const startOfNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const daysDiff = Math.round((startOfNow - startOfDue) / (1000 * 60 * 60 * 24));
+
+    if (daysDiff >= -6 && daysDiff <= -2) return rawDateTime.toLocaleDateString([], {weekday: 'short'});
+    if (daysDiff === -1) return 'Tomorrow';
+    if (daysDiff === 0) return 'Today';
+    if (daysDiff === 1) return 'Yesterday';
+    if (daysDiff >= 2 && daysDiff <= 6) return `${daysDiff} days ago`;
+    return null;
+}
+
 function reformatDateTime(rawDateTime) {
-    const dateToDisplay = rawDateTime.toLocaleDateString([], {
+    const relativeLabel = getRelativeDayLabel(rawDateTime);
+
+    const dateToDisplay = relativeLabel ?? rawDateTime.toLocaleDateString([], {
         weekday: 'short',
         month: 'short',
         day: 'numeric',
@@ -445,11 +462,15 @@ function attachFloatingTooltips(container, wrapperSelector, textSelector, axis =
     }, true);
 }
 
+function validateEmailFormat(email) {
+    return /^(?!.*\.\.)(?!.*\.@)(?!.*@\.)[^@\s"()\[\];:,<>]+@[^@\s"()\[\];:,<>]+\.[^@\s"()\[\];:,<>]{2,}$/.test(email);
+}
+
 function getFieldErrorMessage(input) {
     if (input.validity.valueMissing) {
         return 'This field is required.';
     }
-    if (input.validity.typeMismatch && input.type === 'email') {
+    if (input.validity.customError && input.validationMessage === 'invalid-email') {
         return 'Please enter a valid email address';
     }
     if (input.validity.tooShort) {
@@ -486,11 +507,19 @@ function clearFieldError(input) {
 
 function initCustomValidation(form) {
     form.querySelectorAll('[required]').forEach(input => {
+        const applyEmailCheck = () => {
+            if (input.dataset.validateAs !== 'email') return;
+            const valid = input.value === '' || validateEmailFormat(input.value);
+            input.setCustomValidity(valid ? '' : 'invalid-email');
+        };
+
         input.addEventListener('invalid', (e) => {
             e.preventDefault();
+            applyEmailCheck();
             showFieldError(input);
         });
         input.addEventListener('input', () => {
+            applyEmailCheck();
             if (input.validity.valid) clearFieldError(input);
             else showFieldError(input);
         });
@@ -1274,6 +1303,10 @@ function initTaskManagementLogic() {
                 clickedChevron.classList.remove('collapsed');
                 expandedTaskIds.add(taskId);
             }
+
+            if (getDescendantTaskIds(Number(taskId)).length === 0 && !isExpanded) {
+                tasksList.querySelector(`.ghost-row[data-parent-id="${Number(taskId)}"]`).click();
+            }
         }
 
         if (clickedCheckbox) {
@@ -1830,8 +1863,10 @@ function initTaskModalLogic() {
         const hasDueDate = currentTask.due_date !== null && currentTask.due_date !== undefined;
         const overdue = isExpired(currentTask);
 
-        modalDueDateControl.classList.toggle('modal-widget-unset-value', !hasDueDate);
-        modalDueDateControl.classList.toggle('task-overdue', overdue);
+        if (!isCreatingTask) {
+            modalDueDateControl.classList.toggle('modal-widget-unset-value', !hasDueDate);
+            modalDueDateControl.classList.toggle('task-overdue', overdue);
+        }
         modalDueDateText.textContent = hasDueDate ? reformatDateTime(new Date(currentTask.due_date)) : 'Add Due Date';
         modalOverdueBadge.classList.toggle('active', overdue);
 
@@ -1901,6 +1936,7 @@ function initTaskModalLogic() {
         modalMissingTitleMsg.style.display = 'none';
         taskDetailsModal.classList.remove('hiding');
         taskDetailsModal.style.display = 'flex';
+        modalOverdueBadge.classList.remove('active');
         modalDueDateControl.classList.remove('modal-widget-unset-value');
         modalDueDateControl.classList.remove('task-overdue');
         modalAddSubtaskBtn.style.display = currentTaskDepth < MAX_SUBTASK_DEPTH ? 'flex' : 'none';

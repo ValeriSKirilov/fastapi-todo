@@ -199,11 +199,15 @@ body {
 
 .invalid-data-msg {
     display: none;
+
     color: var(--danger-icon);
     font-weight: 500;
     text-align: center;
-    text-wrap: nowrap;
     line-height: 1.5;
+}
+
+#email-in-use-msg {
+    text-align: left;
 }
 
 /* ─── Auth Inputs ────────────────────────────────────────────────────────── */
@@ -1156,7 +1160,7 @@ body {
 }
 
 .task-checkbox:hover {
-    background-color: color-mix(in srgb, var(--navy) 50%, transparent);
+    background-color: color-mix(in srgb, var(--navy) 30%, transparent);
 }
 
 .task-checkbox:active {
@@ -1194,6 +1198,7 @@ body {
     gap: 8px;
 
     min-width: 195px;
+    padding: 4px;
 
     color: var(--text-secondary);
 }
@@ -1557,6 +1562,11 @@ body {
 .task-item.expired-task .due-date-wrapper,
 .task-item.expired-task .task-due {
     color: inherit;
+}
+
+.task-item.expired-task .due-date-wrapper:hover {
+    background-color: rgba(0, 0, 0, 0.055);
+    border-radius: 9999px;
 }
 
 /* ─── Deleted Task Assets ────────────────────────────────────────────────────── */
@@ -2500,6 +2510,8 @@ body {
 
     padding: 8px 12px;
     border-radius: 8px;
+
+    cursor: pointer;
 }
 
 #modal-cancel-btn {
