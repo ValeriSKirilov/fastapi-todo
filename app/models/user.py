@@ -13,4 +13,5 @@ class User(Base):
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
 
-    items = relationship("Item", back_populates="owner")
+    items = relationship("Item", back_populates="owner", passive_deletes=True)
+    projects = relationship("Project", back_populates="owner", passive_deletes=True)

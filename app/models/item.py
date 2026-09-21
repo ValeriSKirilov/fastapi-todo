@@ -12,7 +12,7 @@ class Item(Base):
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
     is_done = Column(Boolean, default=False)
-    owner_id = Column(Integer, ForeignKey("users.id"), index=True)
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     deleted_at = Column(DateTime(timezone=True), nullable=True)
@@ -21,7 +21,9 @@ class Item(Base):
     is_archived = Column(Boolean, default=False)
     due_date = Column(DateTime(timezone=True), nullable=True)
     parent_id = Column(Integer, ForeignKey("items.id"), index=True, nullable=True)
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="SET NULL"), index=True, nullable=True)
 
     owner = relationship("User", back_populates="items")
     parent = relationship("Item", back_populates="children", remote_side=[id])
     children = relationship("Item", back_populates="parent")
+    project = relationship("Project", back_populates="items")

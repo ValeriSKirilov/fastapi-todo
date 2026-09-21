@@ -2,11 +2,13 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.encoders import jsonable_encoder
 
 from .routers import item
 from .routers import auth
 from .routers import user
 from .routers import internal
+from .routers import project
 from .config import settings
 
 app = FastAPI()
@@ -26,7 +28,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
     return JSONResponse(
         status_code=400,
-        content={"message": exc.errors()},
+        content={"message": jsonable_encoder(exc.errors())},
     )
 
 
@@ -54,6 +56,7 @@ app.include_router(item.router)
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(internal.router)
+app.include_router(project.router)
 
 
 @app.get("/")

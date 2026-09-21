@@ -2,10 +2,15 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 
 from ..models.item import Item
+from ..models.project import Project
 from ..schemas.item import ItemCreate, ItemUpdate
 
 
 class InvalidParentError(Exception):
+    pass
+
+
+class InvalidProjectError(Exception):
     pass
 
 
@@ -17,7 +22,7 @@ def _would_create_cycle(db: Session, item_id: int, new_parent_id: int) -> bool:
         if current_id == item_id:
             return True
         if current_id in visited:
-            break;
+            break
         visited.add(current_id)
 
         current = db.query(Item).filter(Item.id == current_id).first()
@@ -38,9 +43,24 @@ def _get_all_descendants(db: Session, item_id: int) -> list[Item]:
 
         for child in children:
             descendants.append(child)
-            to_process.append(child)
+            to_process.append(child.id)
 
-        return descendants
+    return descendants
+
+
+def _validate_parent(db: Session, item_id: int | None, parent_id: int, user_id: int):
+    parent_item = db.query(Item).filter(Item.id == parent_id).first()
+    if parent_item is None or parent_item.owner_id != user_id:
+        raise InvalidParentError("Parent task not found or not owned by user")
+
+    if item_id is not None and _would_create_cycle(db, item_id, parent_id):
+        raise InvalidParentError("This would create a cycle")
+
+
+def _validate_project(db: Session, project_id: int, user_id: int):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if project is None or project.owner_id != user_id:
+        raise InvalidProjectError("Project not found or not owned by user")
 
 
 def get_items(db: Session, user_id: int, limit: int | None = None):
@@ -53,9 +73,10 @@ def get_item(db: Session, item_id: int, user_id: int):
 
 def create_item(db: Session, item: ItemCreate, user_id: int):
     if item.parent_id is not None:
-        parent_item = db.query(Item).filter(Item.id == item.parent_id).first()
-        if parent_item is None or parent_item.owner_id != user_id:
-            raise InvalidParentError("Parent task not found or not owned by user")
+        _validate_parent(db, None, item.parent_id, user_id)
+
+    if item.project_id is not None:
+        _validate_project(db, item.project_id, user_id)
 
     db_item = Item(**item.model_dump(), owner_id=user_id)
     db.add(db_item)
@@ -96,12 +117,10 @@ def delete_item_permanently(db: Session, item_id: int, user_id: int):
 
 def update_item(db: Session, item_id: int, item: ItemUpdate, user_id: int):
     if item.parent_id is not None:
-        parent_item = db.query(Item).filter(Item.id == item.parent_id).first()
-        if parent_item is None or parent_item.owner_id != user_id:
-            raise InvalidParentError("Parent task not found or not owned by user")
+        _validate_parent(db, item_id, item.parent_id, user_id)
 
-        if _would_create_cycle(db, item_id, item.parent_id):
-            raise InvalidParentError("This would create a cycle")
+    if item.project_id is not None:
+        _validate_project(db, item.project_id, user_id)
 
     db_item = db.query(Item).filter(Item.id == item_id, Item.owner_id == user_id).first()
 

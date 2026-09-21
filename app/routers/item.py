@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 
-from ..schemas.item import ItemResponse, ItemCreate, ItemUpdate
+from ..schemas.item import ItemCreate, ItemResponse, ItemUpdate
 from ..database import get_db
 
 from ..crud import item as crud
@@ -21,7 +21,7 @@ router = APIRouter(
 def list_items(
         limit: int = None,
         db: Session = Depends(get_db),
-        current_user: User = Depends(get_current_user)
+        current_user: User = Depends(get_current_user),
 ):
     if limit is None or limit > 0:
         return crud.get_items(db, current_user.id, limit)
@@ -36,7 +36,7 @@ def list_items(
 def get_item(
         item_id: int,
         db: Session = Depends(get_db),
-        current_user: User = Depends(get_current_user)
+        current_user: User = Depends(get_current_user),
 ):
     item = crud.get_item(db, item_id, current_user.id)
     if item:
@@ -48,15 +48,20 @@ def get_item(
         )
 
 
-@router.post("", response_model=ItemResponse)
+@router.post("", response_model=ItemResponse, status_code=status.HTTP_201_CREATED)
 def create_item(
         item: ItemCreate,
         db: Session = Depends(get_db),
-        current_user: User = Depends(get_current_user)
+        current_user: User = Depends(get_current_user),
 ):
     try:
         return crud.create_item(db, item, current_user.id)
     except crud.InvalidParentError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except crud.InvalidProjectError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
@@ -67,7 +72,7 @@ def create_item(
 def remove_item(
         item_id: int,
         db: Session = Depends(get_db),
-        current_user: User = Depends(get_current_user)
+        current_user: User = Depends(get_current_user),
 ):
     item = crud.delete_item(db, item_id, current_user.id)
     if not item:
@@ -81,7 +86,7 @@ def remove_item(
 def permanent_delete(
         item_id: int,
         db: Session = Depends(get_db),
-        current_user: User = Depends(get_current_user)
+        current_user: User = Depends(get_current_user),
 ):
     item = crud.delete_item_permanently(db, item_id, current_user.id)
     if not item:
@@ -96,11 +101,16 @@ def update_item(
         item_id: int,
         new_item: ItemUpdate,
         db: Session = Depends(get_db),
-        current_user: User = Depends(get_current_user)
+        current_user: User = Depends(get_current_user),
 ):
     try:
         item = crud.update_item(db, item_id, new_item, current_user.id)
     except crud.InvalidParentError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except crud.InvalidProjectError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
