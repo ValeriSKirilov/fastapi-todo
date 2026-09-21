@@ -92,9 +92,9 @@ def test_register_password_too_short():
 
 
 def test_register_password_too_long():
-    long_ass = "a" * 73
+    long_pass = "a" * 73
     response = client.post("/users/register",
-                           json={"email": "longPass@test.com", "password": long_ass, "first_name": "Test",
+                           json={"email": "longPass@test.com", "password": long_pass, "first_name": "Test",
                                  "last_name": "User"})
     assert response.status_code == 400
 
