@@ -12,9 +12,7 @@ DATABASE_URL = "sqlite:///:memory:"
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={
-        "check_same_thread": False,
-    },
+    connect_args={"check_same_thread": False, },
     poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(autoflush=False, bind=engine)
@@ -43,16 +41,62 @@ def get_tokens():
 
 
 def test_register_new_user():
-    response = client.post("/users/register", json={"email": "a@test.com", "password": "qwerty", "first_name": "Test",
+    response = client.post("/users/register", json={"email": "a@test.com", "password": "qwertyui", "first_name": "Test",
                                                     "last_name": "User"})
     assert response.status_code == 201
 
 
 def test_register_duplicate_user():
     response = client.post("/users/register",
-                           json={"email": "test@test.com", "password": "pass123", "first_name": "Test",
+                           json={"email": "test@test.com", "password": "pass12345", "first_name": "Test",
                                  "last_name": "User"})
     assert response.status_code == 409
+
+
+def test_register_email_too_long():
+    long_email = "a@a.aa" + "a" * 250
+    response = client.post("/users/register",
+                           json={"email": long_email, "password": "pass123", "first_name": "Test", "last_name": "User"})
+    assert response.status_code == 400
+
+
+def test_register_invalid_email_format():
+    response = client.post("/users/register",
+                           json={"email": "john:.. ;doe.@.<gma[(il)].\"c\">", "password": "pass123",
+                                 "first_name": "Test", "last_name": "User"})
+    assert response.status_code == 400
+
+
+def test_register_first_name_too_long():
+    long_first_name = "a" * 256
+    response = client.post("/users/register",
+                           json={"email": "longFirstName@test.com", "password": "pass123",
+                                 "first_name": long_first_name,
+                                 "last_name": "User"})
+    assert response.status_code == 400
+
+
+def test_register_last_name_too_long():
+    long_last_name = "a" * 256
+    response = client.post("/users/register",
+                           json={"email": "longLastName@test.com", "password": "pass123", "first_name": long_last_name,
+                                 "last_name": "User"})
+    assert response.status_code == 400
+
+
+def test_register_password_too_short():
+    response = client.post("/users/register",
+                           json={"email": "shortPass@test.com", "password": "1", "first_name": "Test",
+                                 "last_name": "User"})
+    assert response.status_code == 400
+
+
+def test_register_password_too_long():
+    long_ass = "a" * 73
+    response = client.post("/users/register",
+                           json={"email": "longPass@test.com", "password": long_ass, "first_name": "Test",
+                                 "last_name": "User"})
+    assert response.status_code == 400
 
 
 def test_correct_login():
