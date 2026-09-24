@@ -2,14 +2,15 @@ import {API_BASE_URL} from './config.js';
 
 let redirectTimer;
 let currentTasks = [];
+let currentProjects = [];
 const MAX_SUBTASK_DEPTH = 2;
 
-async function sendTaskRequest(taskId, method, payloadObject, suffix = '') {
+async function updateItem(resource, itemId, method, payloadObject, itemsCollection, suffix = '') {
     const token = localStorage.getItem('access_token');
     const data = payloadObject ? JSON.stringify(payloadObject) : null;
 
     try {
-        const response = await fetch(API_BASE_URL + '/items/' + taskId + suffix, {
+        const response = await fetch(API_BASE_URL + `/${resource}/` + itemId + suffix, {
             method: method,
             headers: {
                 'Content-Type': 'application/json',
@@ -19,9 +20,9 @@ async function sendTaskRequest(taskId, method, payloadObject, suffix = '') {
         });
 
         if (response.ok) {
-            const targetTask = currentTasks.find(task => task.id === Number(taskId));
-            if (targetTask) {
-                Object.assign(targetTask, payloadObject);
+            const targetItem = itemsCollection.find(item => item.id === Number(itemId));
+            if (targetItem) {
+                Object.assign(targetItem, payloadObject);
                 return {success: true, status: response.status};
             } else {
                 return {success: false, status: response.status};
@@ -36,11 +37,11 @@ async function sendTaskRequest(taskId, method, payloadObject, suffix = '') {
     }
 }
 
-async function createTaskRequest(payload) {
+async function createItem(resource, payload) {
     const token = localStorage.getItem('access_token');
 
     try {
-        const response = await fetch(API_BASE_URL + '/items', {
+        const response = await fetch(API_BASE_URL + `/${resource}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -50,8 +51,8 @@ async function createTaskRequest(payload) {
         });
 
         if (response.ok) {
-            const newTask = await response.json();
-            return {success: true, task: newTask, status: response.status};
+            const newItem = await response.json();
+            return {success: true, item: newItem, status: response.status};
         } else {
             console.log('New item creation failed', response.status);
             return {success: false, status: response.status};
@@ -91,7 +92,7 @@ async function cascadeSubtaskCompletion(taskId, isDone, tasksArray) {
     }
 
     const results = await Promise.all(
-        descendants.map(task => sendTaskRequest(task.id, 'PUT', {is_done: isDone}))
+        descendants.map(task => updateItem('items', task.id, 'PUT', {is_done: isDone}, currentTasks))
     );
 
     descendants.forEach((task, index) => {
@@ -103,7 +104,7 @@ async function cascadeSubtaskCompletion(taskId, isDone, tasksArray) {
 }
 
 async function completeTaskWithCascade(taskId, isDone) {
-    const result = await sendTaskRequest(taskId, 'PUT', {is_done: isDone});
+    const result = await updateItem('items', taskId, 'PUT', {is_done: isDone}, currentTasks);
     if (!result.success) {
         return {success: false};
     }
@@ -139,10 +140,10 @@ async function deleteTaskPermanently(taskId) {
 }
 
 function markTruncatedText(root = document) {
-    const textElements = root.querySelectorAll('.task-title, .task-desc, .modal-subtask-label');
+    const textElements = root.querySelectorAll('.task-title, .task-desc, .modal-subtask-label, .project-name, #modal-project-text, .task-menu-item-label');
     textElements.forEach(el => {
-        const isTruncated = el.scrollWidth > el.clientWidth;
-        el.closest('.task-title-wrapper, .task-desc-wrapper, .modal-subtask-label-wrapper')
+        const isTruncated = el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight;
+        el.closest('.task-title-wrapper, .task-desc-wrapper, .modal-subtask-label-wrapper, .sidebar-btn, #modal-project-control, .task-menu-item')
             .classList.toggle('has-tooltip', isTruncated);
     });
 }
@@ -325,29 +326,37 @@ function getDepth(task, tasksById) {
     return depth;
 }
 
-function positionFloatingElement(anchorEl, shellEl, arrowEl, {axis = 'vertical', offsetX = 0, minSpace = 100} = {}) {
+function positionFloatingElement(anchorEl, shellEl, arrowEl, {
+    axis = 'vertical',
+    offsetX = 0,
+    minSpace = 100,
+    maxHeight
+} = {}) {
     if (!anchorEl) return;
 
     const rect = anchorEl.getBoundingClientRect();
-    const margin = 4;
+    const margin = axis === 'horizontal' ? 10 : 4;
 
     const spaceAbove = rect.top - margin;
     const spaceBelow = window.innerHeight - rect.bottom - margin;
     const spaceLeft = rect.left - margin;
     const spaceRight = window.innerWidth - rect.right - margin;
 
+    const minMenuSpace = 100;
     let placement;
+
     if (axis === 'horizontal' && Math.max(spaceLeft, spaceRight) >= minSpace) {
         placement = spaceRight >= spaceLeft ? 'right' : 'left';
     } else {
-        placement = spaceBelow >= spaceAbove ? 'below' : 'above';
+        placement = spaceBelow >= minMenuSpace ? 'below' : 'above';
     }
 
     shellEl.style.maxWidth = '';
     shellEl.style.maxHeight = '';
 
     if (placement === 'above' || placement === 'below') {
-        const available = Math.max(80, placement === 'below' ? spaceBelow : spaceAbove);
+        const spaceLimit = placement === 'below' ? spaceBelow : spaceAbove;
+        const available = Math.max(80, maxHeight ? Math.min(spaceLimit, maxHeight) : spaceLimit);
         shellEl.style.maxHeight = `${Math.min(available, window.innerHeight * 0.4)}px`;
     } else {
         const availableWidth = placement === 'right' ? spaceRight : spaceLeft;
@@ -365,10 +374,10 @@ function positionFloatingElement(anchorEl, shellEl, arrowEl, {axis = 'vertical',
         top = Math.max(margin, rect.top - shellRect.height - margin);
         left = rect.left + (rect.width - shellRect.width) / 2 + offsetX;
     } else if (placement === 'right') {
-        left = rect.right + margin;
+        left = rect.right + margin + offsetX;
         top = rect.top + (rect.height - shellRect.height) / 2;
     } else if (placement === 'left') {
-        left = Math.max(margin, rect.left - shellRect.width - margin);
+        left = Math.max(margin, rect.left - shellRect.width - margin) + offsetX;
         top = rect.top + (rect.height - shellRect.height) / 2;
     }
 
@@ -396,31 +405,45 @@ function positionFloatingElement(anchorEl, shellEl, arrowEl, {axis = 'vertical',
     arrowEl.style.top = `${arrowTop}px`;
 }
 
-
 const floatingTooltipShell = document.getElementById('floating-tooltip-shell');
 const floatingTooltip = document.getElementById('floating-tooltip');
 const floatingTooltipArrow = document.getElementById('floating-tooltip-arrow');
 
 let tooltipTarget = null;
 let hideTimeout = null;
+let activeTooltipTheme = null;
 
-function positionFloatingTooltip(textEl, axis = 'vertical') {
-    positionFloatingElement(textEl, floatingTooltipShell, floatingTooltipArrow, {axis});
+function positionFloatingTooltip(textEl, axis = 'vertical', offsetX) {
+    positionFloatingElement(textEl, floatingTooltipShell, floatingTooltipArrow, {axis, offsetX});
 }
 
-function showFloatingTooltip(wrapper, textEl, text, axis) {
+function showFloatingTooltip(wrapper, textEl, text, axis, themeClass, offsetX) {
     clearTimeout(hideTimeout);
     tooltipTarget = wrapper;
+    if (activeTooltipTheme === null) {
+        activeTooltipTheme = themeClass;
+    }
     floatingTooltip.textContent = text;
     floatingTooltipShell.classList.add('visible');
     floatingTooltipArrow.classList.add('visible');
-    positionFloatingTooltip(textEl, axis);
+
+    if (themeClass !== null && themeClass !== undefined) {
+        floatingTooltipShell.classList.add(themeClass);
+        floatingTooltipArrow.classList.add(themeClass);
+    }
+
+    positionFloatingTooltip(textEl, axis, offsetX);
 }
 
 function hideFloatingTooltip() {
     tooltipTarget = null;
     floatingTooltipShell.classList.remove('visible');
     floatingTooltipArrow.classList.remove('visible');
+    floatingTooltipShell.classList.remove(activeTooltipTheme);
+    floatingTooltipArrow.classList.remove(activeTooltipTheme);
+    if (activeTooltipTheme !== null && activeTooltipTheme !== undefined) {
+        activeTooltipTheme = null;
+    }
 }
 
 function scheduleHide() {
@@ -431,7 +454,7 @@ function scheduleHide() {
 floatingTooltip.addEventListener('mouseenter', () => clearTimeout(hideTimeout));
 floatingTooltip.addEventListener('mouseleave', scheduleHide);
 
-function attachFloatingTooltips(container, wrapperSelector, textSelector, axis = 'vertical') {
+function attachFloatingTooltips(container, wrapperSelector, textSelector, axis = 'vertical', themeClass = null, offsetX = 0) {
     container.addEventListener('mouseover', (e) => {
         const wrapper = e.target.closest(`${wrapperSelector}.has-tooltip`);
         if (!wrapper || wrapper === tooltipTarget) return;
@@ -439,7 +462,7 @@ function attachFloatingTooltips(container, wrapperSelector, textSelector, axis =
         const textEl = wrapper.querySelector(textSelector);
         if (!textEl) return;
 
-        showFloatingTooltip(wrapper, textEl, textEl.textContent, axis);
+        showFloatingTooltip(wrapper, textEl, textEl.textContent, axis, themeClass, offsetX);
     });
 
     container.addEventListener('mouseout', (e) => {
@@ -854,6 +877,33 @@ function initTaskManagementLogic() {
     attachFloatingTooltips(tasksList, '.task-title-wrapper', '.task-title');
     attachFloatingTooltips(tasksList, '.task-desc-wrapper', '.task-desc');
 
+    async function fetchUserProjects() {
+        const token = localStorage.getItem('access_token');
+
+        if (token) {
+            try {
+                const response = await fetch(API_BASE_URL + '/projects', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    return await response.json();
+                } else {
+                    console.log('Unexpected server error');
+                    return [];
+                }
+            } catch (error) {
+                console.log('Unable to get user\'s projects: ' + error);
+            }
+        } else {
+            console.log('Unauthorized');
+            return [];
+        }
+    }
+
     async function fetchUserTasks() {
         const token = localStorage.getItem('access_token');
 
@@ -931,7 +981,7 @@ function initTaskManagementLogic() {
                     ${isExpired(task) ? "<i data-lucide='circle-alert' class='task-icon'></i>" : ''}
                     <i data-lucide="calendar" class="task-icon"></i>
                     <span class="task-due" id="due-${task.id}">
-                        Due ${currentFilterId === "today" ? dueDate.split(',').pop().trim() : dueDate}
+                        Due ${currentFilterId === "today" ? dueDate?.split(',').pop().trim() : dueDate}
                     </span>
                 </div>
             `
@@ -1091,16 +1141,19 @@ function initTaskManagementLogic() {
         return walk(topLevel);
     }
 
-    function computeVisibleTaskSet(allTasks, tasksById, filterId) {
-        const predicate = filters[filterId];
+    function computeVisibleTaskSet(allTasks, tasksById, viewType, filterId) {
+        const predicate = viewType === 'project'
+            ? (task) => task.project_id === Number(filterId)
+            : filters[filterId];
+
         if (!predicate) {
             return new Map();
         }
 
         const isBaseVisible = (task) => {
             if (filterId !== 'deleted' && task.is_deleted) return false;
-            if (filterId !== 'archived' && task.is_archived) return false;
-            return true;
+            return !(filterId !== 'archived' && task.is_archived);
+
         };
 
         const childrenByParent = new Map();
@@ -1186,7 +1239,7 @@ function initTaskManagementLogic() {
     function refreshUI() {
         tasksById = new Map(currentTasks.map(task => [task.id, task]));
 
-        const visibleSet = computeVisibleTaskSet(currentTasks, tasksById, currentFilterId);
+        const visibleSet = computeVisibleTaskSet(currentTasks, tasksById, currentViewType, currentFilterId);
         const visibleTasks = Array.from(visibleSet.values()).map(entry => ({
             ...entry.task,
             isForcedAncestor: entry.isForcedAncestor,
@@ -1226,6 +1279,10 @@ function initTaskManagementLogic() {
 
     document.addEventListener('app:authSuccess', async () => {
         currentTasks = await fetchUserTasks();
+        currentProjects = await fetchUserProjects();
+
+        document.dispatchEvent(new CustomEvent('app:projectsChanged'));
+
         refreshUI();
         updateSidebarCounts();
     });
@@ -1368,7 +1425,7 @@ function initTaskManagementLogic() {
                     due_date: newDateTime
                 }
 
-                const result = await sendTaskRequest(taskId, 'PUT', payloadObject);
+                const result = await updateItem('items', taskId, 'PUT', payloadObject, currentTasks);
 
                 if (result.success) {
                     refreshUI();
@@ -1398,7 +1455,6 @@ function initTaskManagementLogic() {
 
         if (clickedGhostRow) {
             const parentId = Number(clickedGhostRow.dataset.parentId);
-            const depth = Number(clickedGhostRow.dataset.depth);
             const ghostBtn = clickedGhostRow.querySelector('.ghost-add-btn');
 
             const inputEl = document.createElement('input');
@@ -1422,10 +1478,10 @@ function initTaskManagementLogic() {
                     return;
                 }
 
-                const result = await createTaskRequest({title: title, parent_id: parentId});
+                const result = await createItem('items', {title: title, parent_id: parentId});
 
                 if (result.success) {
-                    currentTasks.push(result.task);
+                    currentTasks.push(result.item);
                     expandedTaskIds.add(parentId);
 
                     refreshUI();
@@ -1559,7 +1615,7 @@ function initTaskManagementLogic() {
         }
 
         async function deleteTask(isPermanent) {
-            const result = await sendTaskRequest(taskId, 'DELETE', null, isPermanent ? '/permanent' : '');
+            const result = await updateItem('items', taskId, 'DELETE', null, isPermanent ? '/permanent' : '', currentTasks);
 
             if (result.success) {
                 if (isPermanent) {
@@ -1627,7 +1683,7 @@ function initTaskManagementLogic() {
                 return;
         }
 
-        const result = await sendTaskRequest(taskId, 'PUT', payloadObject);
+        const result = await updateItem('items', taskId, 'PUT', payloadObject, currentTasks);
 
         if (result.success) {
             const taskItemElement = document.querySelector(`.task-item[data-id="${taskId}"]`);
@@ -1696,6 +1752,8 @@ function initTaskModalLogic() {
 
     const modalProjectControl = document.getElementById('modal-project-control');
     const modalProjectText = document.getElementById('modal-project-text');
+    const projectSelectMenu = document.getElementById('project-select-menu');
+    const projectSelectMenuArrow = document.getElementById('project-select-menu-arrow');
 
     const modalCompletedSubtasksCounter = document.getElementById('modal-completed-subtasks-counter');
     const modalAddSubtaskBtn = document.getElementById('modal-add-subtask-btn');
@@ -1741,6 +1799,9 @@ function initTaskModalLogic() {
 
     attachFloatingTooltips(modalSubtasksList, '.modal-subtask-label-wrapper', '.modal-subtask-label', 'horizontal');
 
+    attachFloatingTooltips(modalProjectControl.parentElement, '#modal-project-control', '#modal-project-text', 'horizontal');
+    attachFloatingTooltips(projectSelectMenu, '.task-menu-item', '.task-menu-item-label', 'horizontal');
+
     async function updateCurrentTask(payloadObject) {
         if (isCreatingTask && !currentTask.id) {
             if (!currentTask.title && !payloadObject.title) {
@@ -1749,11 +1810,11 @@ function initTaskModalLogic() {
                 return false;
             }
 
-            const result = await createTaskRequest(payloadObject);
+            const result = await createItem('items', payloadObject);
 
             if (result.success) {
-                currentTask.id = result.task.id;
-                Object.assign(currentTask, result.task);
+                currentTask.id = result.item.id;
+                Object.assign(currentTask, result.item);
                 document.dispatchEvent(new CustomEvent('app:itemCreated', {detail: currentTask}));
                 return true;
             } else {
@@ -1762,7 +1823,7 @@ function initTaskModalLogic() {
             }
         }
 
-        const result = await sendTaskRequest(currentTask.id, 'PUT', payloadObject);
+        const result = await updateItem('items', currentTask.id, 'PUT', payloadObject, currentTasks);
 
         if (result.success) {
             if (Object.prototype.hasOwnProperty.call(payloadObject, 'is_done')) {
@@ -1794,7 +1855,7 @@ function initTaskModalLogic() {
     }
 
     async function deleteCurrentTask() {
-        const result = await sendTaskRequest(currentTask.id, 'DELETE');
+        const result = await updateItem('items', currentTask.id, 'DELETE', currentTasks);
 
         if (result.success) {
             currentTask.is_deleted = true;
@@ -1875,6 +1936,16 @@ function initTaskModalLogic() {
             `<i data-lucide="${dueDateIcon}" class="modal-widget-icon" id="modal-due-date-icon"></i>`;
         lucide.createIcons();
 
+        const hasProject = currentTask.project_id !== null && currentTask.project_id !== undefined;
+        const project = hasProject ? currentProjects.find(p => p.id === Number(currentTask.project_id)) : null;
+
+        if (!isCreatingTask) {
+            modalProjectControl.classList.toggle('modal-widget-unset-value', !project);
+        }
+
+        modalProjectText.classList.toggle('modal-unset-value-text', !project);
+        modalProjectText.textContent = project ? project.name : 'Add to project...';
+
         const {directSubtasks: subtasks, all: allSubtasks, completed: completedSubtasks} = getSubtasksCount();
         modalCompletedSubtasksCounter.textContent = completedSubtasks + '/' + allSubtasks + ' Completed';
 
@@ -1908,6 +1979,7 @@ function initTaskModalLogic() {
 
         requestAnimationFrame(() => {
             markTruncatedText(modalSubtasksList);
+            markTruncatedText(modalProjectControl.parentElement);
         });
     }
 
@@ -2266,6 +2338,178 @@ function initTaskModalLogic() {
         });
     });
 
+    function renderProjectSelectMenu() {
+        const selectedId = currentTask.project_id;
+
+        const noProjectHTML = `
+            <button type="button" class="task-menu-item ${!selectedId ? 'active' : ''}" data-action="select-project" data-project-id="">
+                <i data-lucide="minus" class="task-icon"></i>
+                Clear project
+            </button>
+        `
+
+        const projectItemsHTML = currentProjects.map(project => `
+            <button type="button" class="task-menu-item ${Number(selectedId) === project.id ? 'active' : ''}" data-action="select-project" data-project-id="${project.id}">
+                <i data-lucide="folder" class="task-icon"></i>
+                <span class="task-menu-item-label">${project.name}</span>
+            </button>
+        `).join('');
+
+        projectSelectMenu.innerHTML = `
+            ${noProjectHTML}
+            <div class="task-menu-divider"></div>
+            ${projectItemsHTML}
+            <div class="task-menu-divider"></div>
+            <div class="sidebar-add-item" id="modal-add-project-item">
+                <button type="button" class="sidebar-add-btn" id="modal-add-project-btn">
+                    <i data-lucide="plus" class="btn-icon"></i>
+                    Add project
+                </button>
+            </div>
+        `;
+
+        lucide.createIcons();
+    }
+
+    function openProjectSelectMenu() {
+        renderProjectSelectMenu();
+
+        const controlRect = modalProjectControl.getBoundingClientRect();
+        projectSelectMenu.style.width = `${controlRect.width}px`;
+
+        const PROJECT_MENU_ROW_HEIGHT = 36;
+        const PROJECT_MENU_VISIBLE_ROWS = 5;
+        const PROJECT_MENU_CHROME_HEIGHT = 40;
+
+        positionFloatingElement(modalProjectControl, projectSelectMenu, projectSelectMenuArrow, {
+            maxHeight: PROJECT_MENU_ROW_HEIGHT * PROJECT_MENU_VISIBLE_ROWS + PROJECT_MENU_CHROME_HEIGHT
+        });
+
+        projectSelectMenu.scrollTop = 0;
+
+        projectSelectMenu.classList.add('visible');
+        projectSelectMenuArrow.classList.add('visible');
+        modalProjectControl.classList.add('menu-open');
+        activeEdit = true;
+
+        requestAnimationFrame(() => {
+            markTruncatedText(projectSelectMenu);
+        });
+    }
+
+    function closeProjectSelectMenu() {
+        projectSelectMenu.classList.remove('visible');
+        projectSelectMenuArrow.classList.remove('visible');
+        modalProjectControl.classList.remove('menu-open');
+        activeEdit = false;
+    }
+
+    modalProjectControl.addEventListener('click', () => {
+        const isOpen = projectSelectMenu.classList.contains('visible');
+
+        if (!isOpen && activeEdit) return;
+        if (isOpen) {
+            closeProjectSelectMenu();
+        } else {
+            openProjectSelectMenu();
+        }
+    });
+
+    projectSelectMenu.addEventListener('click', async (e) => {
+        const clickedItem = e.target.closest('.task-menu-item[data-action="select-project"]');
+        const clickedAddBtn = e.target.closest('#modal-add-project-btn');
+
+        if (clickedItem) {
+            const raw = clickedItem.dataset.projectId;
+            const newProjectId = raw === '' ? null : Number(raw);
+
+            closeProjectSelectMenu();
+            await updateCurrentTask({project_id: newProjectId});
+            refreshModalVisual();
+            return;
+        }
+
+        if (clickedAddBtn) {
+            const inputEl = document.createElement('input');
+            inputEl.type = 'text';
+            inputEl.className = 'sidebar-add-input';
+            inputEl.placeholder = 'Project name';
+            inputEl.maxLength = 255;
+
+            clickedAddBtn.replaceWith(inputEl);
+            inputEl.focus();
+
+            let isProcessing = false;
+
+            async function commit() {
+                const name = inputEl.value.trim();
+
+                if (name === '') {
+                    inputEl.replaceWith(clickedAddBtn);
+                    return;
+                }
+
+                const result = await createItem('projects', {name: name});
+
+                if (result.success) {
+                    currentProjects.push(result.item);
+                    document.dispatchEvent(new CustomEvent('app:projectsChanged'));
+
+                    closeProjectSelectMenu();
+                    await updateCurrentTask({project_id: result.item.id});
+                    refreshModalVisual();
+                } else {
+                    showErrorToast('Something went wrong. Please try again.');
+                    inputEl.replaceWith(clickedAddBtn);
+                }
+            }
+
+            inputEl.addEventListener('keydown', async (e) => {
+                if (e.key === 'Escape') {
+                    e.stopPropagation();
+                    if (isProcessing) return;
+                    isProcessing = true;
+                    inputEl.replaceWith(clickedAddBtn);
+                }
+                if (e.key === 'Enter') {
+                    e.stopPropagation();
+                    if (isProcessing) return;
+                    isProcessing = true;
+                    await commit();
+                }
+            });
+
+            inputEl.addEventListener('blur', async () => {
+                if (isProcessing) return;
+                isProcessing = true;
+                await commit();
+            });
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!projectSelectMenu.classList.contains('visible')) return;
+
+        const path = e.composedPath();
+        const clickedItem = path.some(el =>
+            el === projectSelectMenu || el === modalProjectControl
+        );
+
+        if (!clickedItem) closeProjectSelectMenu();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && projectSelectMenu.classList.contains('visible')) {
+            closeProjectSelectMenu();
+        }
+    });
+
+    window.addEventListener('scroll', (e) => {
+        if (!projectSelectMenu.classList.contains('visible')) return;
+        if (e.target === projectSelectMenu || projectSelectMenu.contains(e.target)) return;
+        closeProjectSelectMenu();
+    }, true);
+
     function addSubtaskInputRow() {
         const li = document.createElement('li');
         li.className = 'modal-subtasks-item new-subtask-item';
@@ -2303,10 +2547,10 @@ function initTaskModalLogic() {
                 return;
             }
 
-            const result = await createTaskRequest({title: title, parent_id: currentTask.id});
+            const result = await createItem('items', {title: title, parent_id: currentTask.id});
 
             if (result.success) {
-                document.dispatchEvent(new CustomEvent('app:itemCreated', {detail: result.task}));
+                document.dispatchEvent(new CustomEvent('app:itemCreated', {detail: result.item}));
                 li.remove();
                 refreshModalVisual();
                 addSubtaskInputRow();
@@ -2429,6 +2673,63 @@ function initTaskModalLogic() {
 
 function initSidebarLogic() {
     const sidebarContents = document.getElementById('sidebar-contents');
+    const projectsList = document.getElementById('projects-list');
+    const projectMenu = document.getElementById('project-menu');
+    const projectMenuArrow = document.getElementById('project-menu-arrow');
+
+    let activeMenuProjectId = null;
+
+    attachFloatingTooltips(projectsList, '.sidebar-btn', '.project-name', 'horizontal', null, 30);
+
+    document.addEventListener('app:projectsChanged', () => {
+        renderProjects();
+    });
+
+    function renderProjects() {
+        const activeProjectId = document.querySelector('.sidebar-btn.active[data-project-id]')?.dataset.projectId;
+
+        projectsList.querySelectorAll('li').forEach(li => li.remove());
+
+        if (currentProjects.length === 0) {
+            projectsList.insertAdjacentHTML('beforeend', `
+                <li class="sidebar-empty-message">No projects yet</li>
+            `);
+            return;
+        }
+
+        const projectsHTML = currentProjects.map(project => `
+            <li>
+                <div class="sidebar-btn" id="filter-project-${project.id}" data-category="projects" data-type="project" data-project-id="${project.id}" role="button" tabindex="0">
+                    <i data-lucide="folder" class="btn-icon"></i>
+                    <span class="project-name" id="project-name-${project.id}">${project.name}</span>
+                    <button type="button" class="sidebar-project-menu-btn">
+                        <i data-lucide="ellipsis-vertical" class="project-menu-icon"></i>
+                    </button>
+                </div>
+            </li>
+        `).join('');
+
+        projectsList.insertAdjacentHTML('beforeend', projectsHTML);
+
+        if (activeProjectId) {
+            document.getElementById(`filter-project-${activeProjectId}`)?.classList.add('active');
+        }
+
+        projectsList.insertAdjacentHTML('beforeend', `
+            <li class="sidebar-add-item">
+                <button type="button" class="sidebar-add-btn" id="add-project-btn">
+                    <i data-lucide="plus" class="btn-icon"></i>
+                    Add project
+                </button>
+            </li>
+        `);
+
+        lucide.createIcons();
+
+        requestAnimationFrame(() => {
+            markTruncatedText(projectsList);
+        });
+    }
 
     function collapseCategory(items) {
         animateItems(items, 'hide');
@@ -2441,6 +2742,86 @@ function initSidebarLogic() {
     sidebarContents.addEventListener('click', (e) => {
         const clickedBtn = e.target.closest('.sidebar-btn');
         const clickedLabel = e.target.closest('.sidebar-label');
+        const clickedAddBtn = e.target.closest('.sidebar-add-btn')
+        const clickedProjectMenuBtn = e.target.closest('.sidebar-project-menu-btn');
+
+        if (clickedProjectMenuBtn) {
+            const projectId = clickedProjectMenuBtn.closest('.sidebar-btn').dataset.projectId;
+            if (activeMenuProjectId === projectId) {
+                closeProjectMenu();
+            } else {
+                openProjectMenu(clickedProjectMenuBtn, projectId);
+            }
+            return;
+        }
+
+        if (clickedAddBtn) {
+            const inputEl = document.createElement('input');
+            inputEl.type = 'text';
+            inputEl.className = 'sidebar-add-input';
+            inputEl.id = 'add-project-input';
+            inputEl.placeholder = 'Project name';
+            inputEl.maxLength = 255;
+
+            clickedAddBtn.replaceWith(inputEl);
+            inputEl.focus();
+
+            let isProcessing = false;
+
+            async function commit() {
+                const name = inputEl.value.trim();
+
+                if (name === '') {
+                    inputEl.replaceWith(clickedAddBtn);
+                    return;
+                }
+
+                const result = await createItem('projects', {name: name});
+
+                if (result.success) {
+                    currentProjects.push(result.item);
+                    document.dispatchEvent(new CustomEvent('app:projectsChanged'));
+
+                    requestAnimationFrame(() => {
+                        const newBtn = document.getElementById(`filter-project-${result.item.id}`);
+                        if (newBtn) {
+                            document.querySelector('.sidebar-btn.active')?.classList.remove('active');
+                            newBtn.classList.add('active');
+
+                            document.querySelector('.sidebar-add-btn')?.scrollIntoView({block: 'nearest'});
+                        }
+                    });
+
+                    document.dispatchEvent(new CustomEvent('app:sidebarChanged', {
+                        detail: {viewType: 'project', filterId: result.item.id}
+                    }));
+                } else {
+                    showErrorToast('Something went wrong. Please try again.');
+                    inputEl.replaceWith(clickedAddBtn);
+                }
+            }
+
+            inputEl.addEventListener('keydown', async (e) => {
+                if (e.key === 'Escape') {
+                    if (isProcessing) return;
+                    isProcessing = true;
+                    inputEl.replaceWith(clickedAddBtn);
+                }
+                if (e.key === 'Enter') {
+                    if (isProcessing) return;
+                    isProcessing = true;
+                    await commit();
+                }
+            });
+
+            inputEl.addEventListener('blur', async () => {
+                if (isProcessing) return;
+                isProcessing = true;
+                await commit();
+            });
+
+            return;
+        }
 
         if (clickedBtn) {
             const currActiveBtn = document.querySelector('.sidebar-btn.active');
@@ -2448,14 +2829,10 @@ function initSidebarLogic() {
             clickedBtn.classList.add('active');
 
             const viewType = clickedBtn.dataset.type;
-            const clickedBtnId = clickedBtn.id;
-            const filterId = clickedBtnId.split('-').pop();
+            const filterId = clickedBtn.dataset.projectId ?? clickedBtn.id.split('-').pop();
 
             document.dispatchEvent(new CustomEvent('app:sidebarChanged', {
-                detail: {
-                    viewType: viewType,
-                    filterId: filterId
-                }
+                detail: {viewType, filterId}
             }));
         }
 
@@ -2476,12 +2853,158 @@ function initSidebarLogic() {
             }
         }
     });
+
+    function openProjectMenu(triggerBtn, projectId) {
+        positionFloatingElement(triggerBtn, projectMenu, projectMenuArrow, {offsetX: -64});
+        projectMenu.classList.add('visible');
+        projectMenuArrow.classList.add('visible');
+        activeMenuProjectId = projectId;
+    }
+
+    function closeProjectMenu() {
+        projectMenu.classList.remove('visible');
+        projectMenuArrow.classList.remove('visible');
+        activeMenuProjectId = null;
+    }
+
+    projectMenu.addEventListener('click', async (e) => {
+        const clickedItem = e.target.closest('.task-menu-item');
+        if (!clickedItem || activeMenuProjectId === null) return;
+
+        const action = clickedItem.dataset.action;
+        const projectId = activeMenuProjectId;
+        const targetProject = currentProjects.find(p => p.id === Number(projectId));
+
+        if (!targetProject) {
+            showErrorToast('Something went wrong. Please try again.');
+            closeProjectMenu();
+            return;
+        }
+
+        if (action === 'delete') {
+            const wasActive = document.getElementById(`filter-project-${projectId}`)?.classList.contains('active');
+            const result = await updateItem('projects', projectId, 'DELETE', null, currentProjects);
+
+            if (result.success) {
+                currentProjects = currentProjects.filter(p => p.id !== Number(projectId));
+                document.dispatchEvent(new CustomEvent('app:projectsChanged'));
+
+                if (wasActive) {
+                    document.getElementById('filter-all')?.classList.add('active');
+                    document.dispatchEvent(new CustomEvent('app:sidebarChanged', {
+                        detail: {viewType: 'filter', filterId: 'all'}
+                    }));
+                    sidebarContents.scrollTop = 0;
+                }
+            } else {
+                showErrorToast('Something went wrong. Please try again.');
+            }
+
+            closeProjectMenu();
+            return;
+        }
+
+        if (action === 'rename') {
+            closeProjectMenu();
+
+            const nameSpan = document.getElementById(`project-name-${projectId}`);
+            const originalName = targetProject.name;
+
+            const inputEl = document.createElement('input');
+            inputEl.type = 'text';
+            inputEl.className = 'project-rename-input';
+            inputEl.value = originalName;
+            inputEl.maxLength = 255;
+
+            nameSpan.replaceWith(inputEl);
+            inputEl.focus();
+            inputEl.select();
+
+            let isProcessing = false;
+
+            async function commit() {
+                const newName = inputEl.value.trim();
+
+                if (newName === '' || newName === originalName) {
+                    inputEl.replaceWith(nameSpan);
+                    return;
+                }
+
+                const result = await updateItem('projects', projectId, 'PUT', {name: newName}, currentProjects);
+
+                if (result.success) {
+                    document.dispatchEvent(new CustomEvent('app:projectsChanged'));
+
+                    const wasActive = document.getElementById(`filter-project-${projectId}`)?.classList.contains('active');
+                    if (wasActive) {
+                        setTimeout(() => {
+                            document.dispatchEvent(new CustomEvent('app:sidebarChanged', {
+                                detail: {viewType: 'project', filterId: projectId}
+                            }));
+                        }, 0)
+                    }
+                } else {
+                    showErrorToast('Something went wrong. Please try again.');
+                    inputEl.replaceWith(nameSpan);
+                }
+            }
+
+            inputEl.addEventListener('keydown', async (e) => {
+                if (e.key === 'Escape') {
+                    if (isProcessing) return;
+                    isProcessing = true;
+                    inputEl.replaceWith(nameSpan);
+                }
+                if (e.key === 'Enter') {
+                    if (isProcessing) return;
+                    isProcessing = true;
+                    await commit();
+                }
+            });
+
+            inputEl.addEventListener('blur', async () => {
+                if (isProcessing) return;
+                isProcessing = true;
+                await commit();
+            });
+        }
+    });
+
+    window.addEventListener('scroll', () => {
+        if (activeMenuProjectId !== null) {
+            closeProjectMenu();
+        }
+    }, true);
+
+    document.addEventListener('click', (e) => {
+        if (activeMenuProjectId === null) return;
+
+        const path = e.composedPath();
+        const clickedInsideMenuOrBtn = path.some(el =>
+            el.classList && (el.classList.contains('task-menu') || el.classList.contains('sidebar-project-menu-btn'))
+        );
+
+        if (!clickedInsideMenuOrBtn) {
+            closeProjectMenu();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && activeMenuProjectId !== null) {
+            closeProjectMenu();
+        }
+    });
 }
 
 function initPageHeaderLogic() {
     document.addEventListener('app:sidebarChanged', (e) => {
         const filterId = e.detail.filterId;
-        document.getElementById('curr-title').textContent = pageTitles[filterId] || `${filterId[0].toUpperCase() + filterId.slice(1)} Tasks`;
+        const viewType = e.detail.viewType;
+
+        document.getElementById('curr-title').textContent = viewType === 'project'
+            ? `Project: ${currentProjects.find(project => project.id === Number(filterId)).name}`
+            : pageTitles[filterId] || `${filterId[0].toUpperCase() + filterId.slice(1)} Tasks`;
+
         document.getElementById('additional-info').textContent = new Date().toLocaleDateString([], {
             weekday: 'short',
             month: 'short',

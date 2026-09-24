@@ -398,6 +398,7 @@ body {
 .sidebar {
     display: flex;
     flex-direction: column;
+    gap: 16px;
 
     width: var(--sidebar-width);
     height: 100vh;
@@ -428,6 +429,7 @@ body {
 
     overflow-y: auto;
     padding-right: 10px;
+    padding-bottom: 8px;
 }
 
 .sidebar-contents::-webkit-scrollbar {
@@ -469,6 +471,10 @@ body {
     cursor: pointer;
 }
 
+.first-sidebar-label {
+    margin-top: 0;
+}
+
 .sidebar-chevron-icon {
     width: 18px;
     height: 18px;
@@ -494,15 +500,16 @@ body {
     gap: 8px;
 
     width: 100%;
+    height: 36px;
+    box-sizing: border-box;
     padding: 8px;
     margin-top: 8px;
     margin-left: 2px;
     border: none;
     border-radius: 8px;
-    flex: 0;
 
     font-size: 15px;
-    color: var(--white);
+    color: color-mix(in srgb, var(--white) 90%, black);
     background-color: transparent;
     cursor: pointer;
 
@@ -510,7 +517,12 @@ body {
 }
 
 .sidebar-btn:hover {
+    color: var(--white);
     background-color: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-btn:hover .btn-icon {
+    color: var(--white);
 }
 
 .sidebar-btn:active {
@@ -534,6 +546,111 @@ body {
 
     color: var(--text-secondary);
     pointer-events: none;
+}
+
+.project-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ─── Project Menu Button ─────────────────────────────────────────────────────────── */
+
+.sidebar-project-menu-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    margin-left: auto;
+    padding: 2px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 8px;
+    outline: none;
+
+    color: var(--white);
+    background: none;
+}
+
+.project-menu-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.sidebar-btn:hover .sidebar-project-menu-btn {
+    display: flex;
+}
+
+.sidebar-project-menu-btn:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-project-menu-btn:active {
+    transform: scale(0.97);
+}
+
+.project-rename-input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+
+    color: var(--white);
+    font-size: 15px;
+    font-weight: 500;
+    background: none;
+}
+
+/* ─── Project Add Button ─────────────────────────────────────────────────────────── */
+
+.sidebar-add-item {
+    margin-top: 8px;
+    margin-left: 2px;
+
+    transition: background-color 0.15s ease-in-out;
+}
+
+.sidebar-add-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 8px;
+    outline: none;
+
+    scroll-margin-bottom: 12px;
+
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 500;
+    background: none;
+    cursor: pointer;
+}
+
+.sidebar-add-btn:hover {
+    color: var(--white);
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-add-btn:hover .btn-icon {
+    color: var(--white);
+}
+
+.sidebar-add-input {
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+    border: none;
+    outline: none;
+
+    color: var(--white);
+    font-size: 15px;
+    font-weight: 500;
+    background: none;
 }
 
 /* ─── Sidebar Buttons Counters ─────────────────────────────────────────────────────────── */
@@ -664,6 +781,14 @@ body {
     gap: 12px;
 
     color: var(--text-primary);
+}
+
+#curr-title {
+    max-width: 50vw;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .page-title p {
@@ -916,105 +1041,6 @@ body {
     color: color-mix(in srgb, var(--gold-important) 75%, black);
 }
 
-/* ─── General Tooltips ────────────────────────────────────────────────── */
-
-/*.tooltip-outer {*/
-/*    display: none;*/
-/*    position: absolute;*/
-/*    left: 50%;*/
-/*    z-index: 10;*/
-/*    transform: translateX(-50%);*/
-
-/*    max-width: 400px;*/
-/*    max-height: 108px;*/
-/*    border-radius: 8px;*/
-/*}*/
-
-/*.tooltip-outer:before {*/
-/*    content: '';*/
-/*    position: absolute;*/
-/*    left: 50%;*/
-/*    transform: translateX(-50%) rotate(45deg);*/
-
-/*    width: 8px;*/
-/*    height: 8px;*/
-
-/*    background-color: var(--navy);*/
-/*}*/
-
-/*.has-tooltip:hover .tooltip-outer {*/
-/*    display: block;*/
-/*}*/
-
-/*.tooltip-bubble {*/
-/*    display: block;*/
-
-/*    width: max-content;*/
-/*    max-width: 400px;*/
-/*    max-height: 100px;*/
-/*    overflow-y: auto;*/
-/*    padding: 8px 6px 8px 12px;*/
-/*    border-radius: 8px;*/
-
-/*    color: var(--white);*/
-/*    font-size: 11px;*/
-/*    line-height: 1.5;*/
-/*    text-align: left;*/
-/*    white-space: normal;*/
-
-/*    overflow-wrap: break-word;*/
-/*    word-wrap: break-word;*/
-
-/*    background-color: var(--navy);*/
-/*    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);*/
-/*}*/
-
-/*.tooltip-bubble::-webkit-scrollbar {*/
-/*    width: 8px;*/
-/*}*/
-
-/*.tooltip-bubble::-webkit-scrollbar-track {*/
-/*    background-color: var(--navy);*/
-/*}*/
-
-/*.tooltip-bubble::-webkit-scrollbar-thumb {*/
-/*    background-color: var(--white);*/
-/*    background-clip: padding-box;*/
-/*    border: 3px solid var(--navy);*/
-/*    border-radius: 6px;*/
-/*}*/
-
-/*.tooltip-bubble::-webkit-scrollbar-thumb:hover {*/
-/*    background-color: rgb(255, 255, 255, 0.85);*/
-/*}*/
-
-/*@supports not selector(::-webkit-scrollbar) {*/
-/*    .tooltip-bubble {*/
-/*        scrollbar-width: thin;*/
-/*        scrollbar-color: var(--white) transparent;*/
-/*    }*/
-/*}*/
-
-/* ─── Tooltip Placement Variants ────────────────────────────────────────────────── */
-
-/*.tooltip-outer.above {*/
-/*    bottom: 100%;*/
-/*    padding-bottom: 8px;*/
-/*}*/
-
-/*.tooltip-outer.above:before {*/
-/*    bottom: 4px;*/
-/*}*/
-
-/*.tooltip-outer.below {*/
-/*    top: 100%;*/
-/*    padding-top: 8px;*/
-/*}*/
-
-/*.tooltip-outer.below:before {*/
-/*    top: 4px;*/
-/*}*/
-
 /* ─── General Tooltip ────────────────────────────────────────────────── */
 
 .floating-tooltip-shell {
@@ -1069,6 +1095,12 @@ body {
 .floating-tooltip-arrow.visible {
     opacity: 1;
     visibility: visible;
+}
+
+.tooltip-light-theme .floating-tooltip,
+.tooltip-light-theme.floating-tooltip-arrow {
+    background-color: var(--white);
+    color: var(--navy);
 }
 
 /* ─── Task Inline Editing ────────────────────────────────────────────────── */
@@ -1439,7 +1471,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: start;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 6px;
 
     min-width: 160px;
@@ -1449,7 +1481,9 @@ body {
     border-radius: 8px;
 
     background-color: var(--white);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    overflow-y: auto;
+    overflow-x: hidden;
 
     opacity: 0;
     visibility: hidden;
@@ -1532,6 +1566,7 @@ body {
 }
 
 .task-menu-divider {
+    flex-shrink: 0;
     width: 100%;
     height: 1px;
     border: none;
@@ -2088,6 +2123,7 @@ body {
     justify-content: flex-start;
     gap: 8px;
 
+    width: 100%;
     min-height: 45px;
     padding: 6px 12px;
     border: 1px solid var(--border-input);
@@ -2104,6 +2140,10 @@ body {
     background-color: color-mix(in srgb, var(--surface-secondary) 25%, white);
 }
 
+.modal-projects-display .modal-widget-icon {
+    flex-shrink: 0;
+}
+
 .modal-widget-icon {
     width: 18px;
     height: 18px;
@@ -2118,23 +2158,113 @@ body {
     white-space: nowrap;
 }
 
-.modal-projects-display .modal-widget-icon {
-    align-self: flex-start;
-}
-
-.modal-widget-unset-value.modal-projects-display .modal-widget-icon {
-    margin-top: 6px;
-}
-
 #modal-project-text {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     flex: 1;
+    min-width: 0;
 
     text-align: start;
     white-space: normal;
     word-break: break-word;
+    overflow: hidden;
+}
+
+/* ─── Modal Projects ─────────────────────────────────────────────────────────── */
+
+.modal-project-control .modal-widget-icon:last-child {
+    transition: transform 0.15s ease;
+}
+
+.modal-project-control.menu-open .modal-widget-icon:last-child {
+    transform: rotate(90deg);
+}
+
+.project-select-menu {
+    min-width: 0;
+    max-width: none;
+}
+
+.project-select-menu::-webkit-scrollbar {
+    width: 10px;
+}
+
+.project-select-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.project-select-menu::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--border-input) 60%, transparent);
+    border-radius: 10px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+}
+
+.project-select-menu::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--border-input) 85%, transparent);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+    .project-select-menu {
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--border-input) 60%, transparent) transparent;
+    }
+}
+
+.project-select-menu .task-menu-item {
+    align-items: center;
+    gap: 8px;
+
+    height: auto;
+    min-height: 36px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.project-select-menu .task-menu-item:hover {
+    background-color: color-mix(in srgb, var(--surface-secondary) 35%, transparent);
+}
+
+.project-select-menu .task-menu-item.active {
+    color: var(--text-primary);
+    background-color: color-mix(in srgb, var(--surface-secondary) 55%, transparent);
+    font-weight: 500;
+}
+
+.project-select-menu .task-menu-item .task-icon {
+    flex-shrink: 0;
+}
+
+.project-select-menu .task-menu-item-label {
+    flex: 1;
+    min-width: 0;
+
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.project-select-menu .sidebar-add-item {
+    width: 100%;
+    margin: 0;
+}
+
+.project-select-menu .sidebar-add-btn {
+    height: 28px;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.project-select-menu .sidebar-add-btn:hover {
+    color: var(--text-label);
+    background-color: color-mix(in srgb, var(--text-label) 8%, transparent);
+}
+
+.project-select-menu .sidebar-add-btn:hover .btn-icon {
+    color: var(--text-label);
 }
 
 /* ─── Modal Subtasks ─────────────────────────────────────────────────────────── */
@@ -2253,10 +2383,7 @@ body {
     text-decoration: line-through;
 }
 
-.modal-subtasks-item.completed .modal-subtask-checkbox {
-    opacity: 0.5;
-}
-
+.modal-subtasks-item.completed .modal-subtask-checkbox,
 .modal-subtasks-item.completed .modal-subtask-label {
     opacity: 0.5;
 }
