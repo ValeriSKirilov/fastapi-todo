@@ -1017,11 +1017,14 @@ function initTaskManagementLogic() {
             const defaultDisplay = (depth > 0 && !task.forceVisible) ? 'style="display: none;"' : '';
 
             allTasksHTML += `
-                <div class="task-item ${task.is_done ? "completed" : ''} ${isExpired(task) ? "expired-task" : ''} ${currentFilterId === "deleted" ? "task-item-locked" : ''} ${task.is_important ? "important" : ''} ${depth > 0 ? "is-subtask" : ''} ${item.isForcedAncestor ? "forced-ancestor" : ''}" data-id="${task.id}" data-depth="${depth}" ${defaultDisplay}>
-                ${depth < MAX_SUBTASK_DEPTH
+                <div class="task-item ${task.is_done ? "completed" : ''} ${isExpired(task) ? "expired-task" : ''} ${currentFilterId === "deleted" ? "task-item-locked" : ''} ${task.is_important ? "important" : ''} ${depth > 0 ? "is-subtask" : ''} ${item.isForcedAncestor ? "forced-ancestor" : ''}" data-id="${task.id}" data-depth="${depth}" data-parent-id="${task.parent_id ?? ''}" ${defaultDisplay}>
+                    <button type="button" class="drag-handle" aria-label="Drag to reorder">
+                        <i data-lucide="grip-vertical" class="task-icon"></i>
+                    </button>
+                    ${depth < MAX_SUBTASK_DEPTH
                 ? `<button type="button" class="task-chevron ${isExpanded ? 'expanded' : ''}" id="task-chevron-${task.id}">
                         <i data-lucide="chevron-right" class="chevron-icon"></i>
-                   </button>`
+                    </button>`
                 : ''}
                     <input type="checkbox" class="task-checkbox" id="task-${task.id}" ${task.is_done ? "checked" : ''} ${task.is_deleted ? 'style="opacity: 0.3";' : ''}>
                     <div class="task-body" id="body-${task.id}">
@@ -1732,6 +1735,63 @@ function initTaskManagementLogic() {
         refreshUI();
         updateSidebarCounts();
     });
+
+    function computeNewDepthAndParent(prevEl) {
+        if (!prevEl) {
+            return {depth: 0, parentId: null};
+        }
+
+        if (prevEl.classList.contains('ghost-row')) {
+            const groupParentId = Number(prevEl.dataset.parentId);
+            const groupParent = tasksById.get(groupParentId);
+            const groupParentDepth = groupParent ? getDepth(groupParent, tasksById) : 0;
+            return {
+                depth: groupParentDepth,
+                parentId: groupParent ? (groupParent.parent_id ?? null) : null,
+            }
+        }
+
+        const prevTaskId = Number(prevEl.dataset.id);
+        const prevTask = tasksById.get(prevTaskId);
+        const prevDepth = getDepth(prevTask, tasksById);
+        const prevIsExpanded = expandedTaskIds.has(prevTaskId);
+
+        if (prevIsExpanded) {
+            return {depth: prevDepth + 1, parentId: prevTaskId};
+        }
+
+        return {depth: prevDepth, parentId: prevTask.parent_id ?? null};
+    }
+
+    function handleTaskReorder(e) {
+        const draggedEl = e.item;
+        const taskId = Number(draggedEl.dataset.id);
+        const task = tasksById.get(taskId);
+        if (!task) return;
+
+        const {depth: newDepth, parentId: newParentId} = computeNewDepthAndParent(draggedEl.previousElementSibling);
+
+        task.parent_id = newParentId;
+
+        refreshUI();
+
+        // draggedEl.dataset.depth = newDepth;
+        // draggedEl.dataset.parentId = newParentId ?? '';
+        // draggedEl.style.setProperty('--subtask-depth', newDepth);
+        // draggedEl.classList.toggle('is-subtask', newDepth > 0);
+    }
+
+    function initTaskSorting() {
+        Sortable.create(tasksList, {
+            handle: '.drag-handle',
+            filter: '.ghost-row, #no-tasks-message',
+            preventOnFilter: false,
+            animation: 150,
+            onEnd: handleTaskReorder
+        });
+    }
+
+    initTaskSorting();
 }
 
 function initTaskModalLogic() {
@@ -2037,7 +2097,6 @@ function initTaskModalLogic() {
             noSubtasksDefaultMessageActive = true;
 
             lucide.createIcons();
-            // TODO SUBTASKS CREATION
 
             modalTitleText.click();
         } else {
@@ -2051,8 +2110,6 @@ function initTaskModalLogic() {
             modalDescriptionText.textContent = hasDescription ? currentTask.description : 'Add a more detailed description...';
 
             refreshModalVisual();
-
-            // TODO PROJECT AND SUBTASKS CREATION
 
             const archiveIcon = currentTask.is_archived ? 'archive-restore' : 'archive';
             const archiveLabel = currentTask.is_archived ? 'Unarchive' : 'Move to Archive';
@@ -3029,6 +3086,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await fetchAndRenderUser();
 });
-
-// TODO REMOVE BETA TESTING
-// TODO DELETE

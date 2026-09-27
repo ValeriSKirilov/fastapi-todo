@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Numeric, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
@@ -22,6 +22,7 @@ class Item(Base):
     due_date = Column(DateTime(timezone=True), nullable=True)
     parent_id = Column(Integer, ForeignKey("items.id"), index=True, nullable=True)
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="SET NULL"), index=True, nullable=True)
+    position = Column(Numeric, nullable=False)
 
     owner = relationship("User", back_populates="items")
     parent = relationship("Item", back_populates="children", remote_side=[id])

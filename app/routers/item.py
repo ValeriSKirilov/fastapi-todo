@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 
-from ..schemas.item import ItemCreate, ItemResponse, ItemUpdate
+from ..schemas.item import ItemCreate, ItemResponse, ItemUpdate, ItemReorder
 from ..database import get_db
 
 from ..crud import item as crud
@@ -111,6 +111,35 @@ def update_item(
             detail=str(e)
         )
     except crud.InvalidProjectError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+    if item:
+        return item
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Item not found"
+        )
+
+
+@router.patch("/{item_id}/reorder", response_model=ItemResponse)
+def reorder_item(
+        item_id: int,
+        new_item: ItemReorder,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user),
+):
+    try:
+        item = crud.reorder_item(db, item_id, new_item, current_user.id)
+    except crud.InvalidParentError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except crud.InvalidNeighborError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)

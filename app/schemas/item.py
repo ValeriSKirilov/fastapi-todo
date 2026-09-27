@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
+from decimal import Decimal
 
 _title_max_len = 255
 _desc_max_len = 10000
@@ -24,6 +25,7 @@ class ItemResponse(ItemBase):
     is_deleted: bool = False
     is_archived: bool = False
     deleted_at: datetime | None = None
+    position: Decimal
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -38,3 +40,9 @@ class ItemUpdate(BaseModel):
     due_date: datetime | None = None
     parent_id: int | None = None
     project_id: int | None = None
+
+
+class ItemReorder(BaseModel):
+    parent_id: int | None = None
+    before_id: int | None = None
+    after_id: int | None = None

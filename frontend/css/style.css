@@ -852,7 +852,7 @@ body {
 
     overflow-y: auto;
     margin-bottom: 10px;
-    padding: 4px 14px 4px 28px;
+    padding: 4px 14px 4px 38px;
 }
 
 .tasks-container::-webkit-scrollbar {
@@ -1128,6 +1128,28 @@ body {
 
 .edit-datetime-input::-webkit-calendar-picker-indicator {
     display: none;
+}
+
+/* ─── Task Drag Handle ──────────────────────────────────────────────────────── */
+
+.drag-handle {
+    position: absolute;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 50%;
+    left: -50px;
+    transform: translateY(-50%);
+    padding: 2px;
+    border: none;
+
+    background-color: transparent;
+    opacity: 1;
+    outline: none;
+    cursor: grab;
+
+    transition: all 0.2s ease;
 }
 
 /* ─── Task Chevron and Checkbox ──────────────────────────────────────────────────────── */
