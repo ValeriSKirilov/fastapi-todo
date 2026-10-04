@@ -209,9 +209,23 @@
                 <i data-lucide="search" class="input-icon"></i>
                 <input type="text" class="search-bar" placeholder="Search" aria-label="Search tasks">
             </div>
-            <div class="user-info">
-                <div class="avatar" id="user-avatar">VK</div>
-                <div class="user-name" id="user-name">Valeri Kirilov</div>
+            <div class="user-info-wrapper">
+                <div class="user-info" id="user-info">
+                    <div class="avatar" id="user-avatar">VK</div>
+                    <div class="user-name" id="user-name">Valeri Kirilov</div>
+                </div>
+                <div class="menu profile-menu" id="profile-menu">
+                    <button type="button" class="menu-item" data-action="logout">
+                        <i data-lucide="power" class="task-icon"></i>
+                        Log Out
+                    </button>
+                    <div class="menu-divider"></div>
+                    <button type="button" class="menu-item menu-item-danger" data-action="delete-account"
+                            id="user-delete-acc-btn">
+                        <i data-lucide="trash-2" class="task-icon"></i>
+                        Delete Account
+                    </button>
+                </div>
             </div>
         </div>
         <div class="main-content">
@@ -220,10 +234,23 @@
                     <h1 id="curr-title">All tasks</h1>
                     <p id="additional-info">Wed Oct 25</p>
                 </div>
-                <button class="logout-btn" id="logout-btn">
-                    Log Out
-                    <i data-lucide="power" class="logout-icon"></i>
-                </button>
+                <div class="sort-tasks-wrapper">
+                    <button type="button" class="sort-btn" id="sort-btn">
+                        <i data-lucide="sliders-horizontal" class="sort-icon"></i>
+                        Sort
+                        <i data-lucide="chevron-right" class="chevron-icon"></i>
+                    </button>
+                    <div class="menu sort-menu" id="sort-menu">
+                        <button type="button" class="menu-item" data-action="smart">
+                            <i data-lucide="sparkles" class="task-icon"></i>
+                            Smart Sort
+                        </button>
+                        <button type="button" class="menu-item" data-action="custom">
+                            <i data-lucide="grip-vertical" class="task-icon"></i>
+                            Custom Order
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="tasks-container" id="tasks-list">
                 <div class="no-tasks-message" id="no-tasks-message">
@@ -438,40 +465,40 @@
         </div>
     </div>
 </div>
-<div class="task-menu project-select-menu" id="project-select-menu"></div>
-<div class="task-menu-arrow" id="project-select-menu-arrow"></div>
-<div class="task-menu" id="task-menu">
-    <button type="button" class="task-menu-item" data-action="important" data-context="default-only">
+<div class="menu project-select-menu" id="project-select-menu"></div>
+<div class="menu-arrow" id="project-select-menu-arrow"></div>
+<div class="menu" id="task-menu">
+    <button type="button" class="menu-item" data-action="important" data-context="default-only">
         <i data-lucide="star" class="task-icon" id="menu-important-icon"></i>
         <span id="menu-important-label">Mark Important</span>
     </button>
-    <button type="button" class="task-menu-item" data-action="archive" data-context="default-only">
+    <button type="button" class="menu-item" data-action="archive" data-context="default-only">
         <i data-lucide="folder" class="task-icon" id="menu-archive-icon"></i>
         <span id="menu-archive-label">Archive</span>
     </button>
-    <button type="button" class="task-menu-item" data-action="restore" data-context="deleted-only">
+    <button type="button" class="menu-item" data-action="restore" data-context="deleted-only">
         <i data-lucide="rotate-ccw" class="task-icon"></i>
         Restore
     </button>
-    <div class="task-menu-divider"></div>
-    <button type="button" class="task-menu-item task-menu-item-danger" data-action="delete" id="menu-delete-btn">
+    <div class="menu-divider"></div>
+    <button type="button" class="menu-item menu-item-danger" data-action="delete" id="menu-delete-btn">
         <i data-lucide="trash-2" class="task-icon"></i>
         <span id="menu-delete-label">Delete</span>
     </button>
 </div>
-<div class="task-menu-arrow" id="task-menu-arrow"></div>
-<div class="task-menu" id="project-menu">
-    <button type="button" class="task-menu-item" data-action="rename">
+<div class="menu-arrow" id="task-menu-arrow"></div>
+<div class="menu" id="project-menu">
+    <button type="button" class="menu-item" data-action="rename">
         <i data-lucide="pencil" class="task-icon"></i>
         Rename
     </button>
-    <div class="task-menu-divider"></div>
-    <button type="button" class="task-menu-item task-menu-item-danger" data-action="delete">
+    <div class="menu-divider"></div>
+    <button type="button" class="menu-item menu-item-danger" data-action="delete">
         <i data-lucide="trash-2" class="task-icon"></i>
         Delete
     </button>
 </div>
-<div class="task-menu-arrow" id="project-menu-arrow"></div>
+<div class="menu-arrow" id="project-menu-arrow"></div>
 <div class="toast" id="error-toast">
     <i data-lucide="triangle-alert" class="task-icon"></i>
     <span id="toast-message"></span>

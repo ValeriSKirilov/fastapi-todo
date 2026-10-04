@@ -22,7 +22,12 @@ async function updateItem(resource, itemId, method, payloadObject, itemsCollecti
         if (response.ok) {
             const targetItem = itemsCollection.find(item => item.id === Number(itemId));
             if (targetItem) {
-                Object.assign(targetItem, payloadObject);
+                if (response.status !== 204) {
+                    const updatedItem = await response.json();
+                    Object.assign(targetItem, updatedItem);
+                } else {
+                    Object.assign(targetItem, payloadObject);
+                }
                 return {success: true, status: response.status};
             } else {
                 return {success: false, status: response.status};
@@ -140,10 +145,10 @@ async function deleteTaskPermanently(taskId) {
 }
 
 function markTruncatedText(root = document) {
-    const textElements = root.querySelectorAll('.task-title, .task-desc, .modal-subtask-label, .project-name, #modal-project-text, .task-menu-item-label');
+    const textElements = root.querySelectorAll('.task-title, .task-desc, .modal-subtask-label, .project-name, #modal-project-text, .menu-item-label');
     textElements.forEach(el => {
         const isTruncated = el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight;
-        el.closest('.task-title-wrapper, .task-desc-wrapper, .modal-subtask-label-wrapper, .sidebar-btn, #modal-project-control, .task-menu-item')
+        el.closest('.task-title-wrapper, .task-desc-wrapper, .modal-subtask-label-wrapper, .sidebar-btn, #modal-project-control, .menu-item')
             .classList.toggle('has-tooltip', isTruncated);
     });
 }
@@ -843,21 +848,148 @@ function initSuccessfulLoginLogic() {
     });
 }
 
-function initLogoutLogic() {
-    const logoutBtn = document.getElementById('logout-btn');
-    const tasksList = document.getElementById('tasks-list');
+function initProfileManagementLogic() {
+    const userInfo = document.getElementById('user-info');
+    const profileMenu = document.getElementById('profile-menu');
 
-    logoutBtn.addEventListener('click', (e) => {
-        e.preventDefault();
+    function openProfileMenu() {
+        profileMenu.classList.add('visible');
+    }
 
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+    function closeProfileMenu() {
+        profileMenu.classList.remove('visible');
+    }
 
-        tasksList.innerHTML = '';
-
-        switchView('login-page');
+    userInfo.addEventListener('click', () => {
+        profileMenu.classList.contains('visible') ? closeProfileMenu() : openProfileMenu();
     });
+
+    profileMenu.addEventListener('click', (e) => {
+        const clickedItem = e.target.closest('.menu-item');
+        if (!clickedItem) return;
+
+        const action = clickedItem.dataset.action;
+        closeProfileMenu();
+
+        if (action === 'logout') {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+
+            const currTasks = document.getElementById('tasks-list').querySelectorAll('.task-item:not(.no-tasks-message)');
+            currTasks.forEach(task => task.remove());
+
+            switchView('login-page');
+        }
+
+        if (action === 'delete-account') {
+
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        const path = e.composedPath();
+        const clickedInside = path.some(el =>
+            el.classList && (el.classList.contains('profile-menu') || el.classList.contains('user-info'))
+        );
+        if (!clickedInside) closeProfileMenu();
+    });
+
+    window.addEventListener('scroll', (e) => {
+        if (!profileMenu.classList.contains('visible')) return;
+        if (e.target === profileMenu || profileMenu.contains(e.target)) return;
+        closeProfileMenu();
+    }, true);
 }
+
+function initSortLogic() {
+    const sortBtn = document.getElementById('sort-btn');
+    const sortMenu = document.getElementById('sort-menu');
+
+    const STORAGE_KEY = 'sort_mode';
+    let currentSortMode = localStorage.getItem(STORAGE_KEY) || 'smart';
+
+    function updateActiveSortMenuItem(mode) {
+        sortMenu.querySelectorAll('.menu-item').forEach(item => {
+            item.classList.toggle('selected', item.dataset.action === mode);
+        });
+    }
+
+    updateActiveSortMenuItem(currentSortMode);
+
+    document.dispatchEvent(new CustomEvent('app:sortModeChanged', {
+        detail: {sortMode: currentSortMode}
+    }));
+
+    function setSortMode(mode) {
+        if (mode === currentSortMode) return;
+
+        currentSortMode = mode;
+        localStorage.setItem(STORAGE_KEY, mode);
+        updateActiveSortMenuItem(mode);
+
+        document.dispatchEvent(new CustomEvent('app:sortModeChanged', {
+            detail: {sortMode: mode}
+        }));
+    }
+
+    function openSortMenu() {
+        sortMenu.classList.add('visible');
+        sortBtn.classList.add('open');
+    }
+
+    function closeSortMenu() {
+        sortMenu.classList.remove('visible');
+        sortBtn.classList.remove('open');
+    }
+
+    sortBtn.addEventListener('click', () => {
+        sortMenu.classList.contains('visible') ? closeSortMenu() : openSortMenu();
+    });
+
+    sortMenu.addEventListener('click', (e) => {
+        const clickedItem = e.target.closest('.menu-item');
+        if (!clickedItem) return;
+
+        setSortMode(clickedItem.dataset.action);
+        closeSortMenu();
+    });
+
+    document.addEventListener('click', (e) => {
+        const path = e.composedPath();
+        const clickedInside = path.some(el =>
+            el.classList && (el.classList.contains('sort-menu') || el.classList.contains('sort-btn'))
+        );
+        if (!clickedInside) closeSortMenu();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sortMenu.classList.contains('visible')) {
+            closeSortMenu();
+        }
+    });
+
+    window.addEventListener('scroll', (e) => {
+        if (!sortMenu.classList.contains('visible')) return;
+        if (e.target === sortMenu || sortMenu.contains(e.target)) return;
+        closeSortMenu();
+    }, true);
+}
+
+// function initLogoutLogic() {
+//     const logoutBtn = document.getElementById('logout-btn');
+//     const tasksList = document.getElementById('tasks-list');
+//
+//     logoutBtn.addEventListener('click', (e) => {
+//         e.preventDefault();
+//
+//         localStorage.removeItem('access_token');
+//         localStorage.removeItem('refresh_token');
+//
+//         tasksList.innerHTML = '';
+//
+//         switchView('login-page');
+//     });
+// }
 
 function initTaskManagementLogic() {
     const tasksList = document.getElementById('tasks-list');
@@ -873,6 +1005,8 @@ function initTaskManagementLogic() {
     let tasksById = new Map();
 
     let expandedTaskIds = new Set();
+
+    let currentSortMode = localStorage.getItem('sort_mode') || 'smart';
 
     attachFloatingTooltips(tasksList, '.task-title-wrapper', '.task-title');
     attachFloatingTooltips(tasksList, '.task-desc-wrapper', '.task-desc');
@@ -1017,11 +1151,11 @@ function initTaskManagementLogic() {
             const defaultDisplay = (depth > 0 && !task.forceVisible) ? 'style="display: none;"' : '';
 
             allTasksHTML += `
-                <div class="task-item ${task.is_done ? "completed" : ''} ${isExpired(task) ? "expired-task" : ''} ${currentFilterId === "deleted" ? "task-item-locked" : ''} ${task.is_important ? "important" : ''} ${depth > 0 ? "is-subtask" : ''} ${item.isForcedAncestor ? "forced-ancestor" : ''}" data-id="${task.id}" data-depth="${depth}" data-parent-id="${task.parent_id ?? ''}" ${defaultDisplay}>
+                <div class="task-item ${task.is_done ? "completed" : ''} ${isExpired(task) ? "expired-task" : ''} ${currentFilterId === 'deleted' ? "task-item-locked" : ''} ${task.is_important ? "important" : ''} ${depth > 0 ? "is-subtask" : ''} ${item.isForcedAncestor ? "forced-ancestor" : ''}" data-id="${task.id}" data-depth="${depth}" data-parent-id="${task.parent_id ?? ''}" ${defaultDisplay}>
                     <button type="button" class="drag-handle" aria-label="Drag to reorder">
                         <i data-lucide="grip-vertical" class="task-icon"></i>
                     </button>
-                    ${depth < MAX_SUBTASK_DEPTH
+                    ${currentFilterId === 'completed' ? '' : depth < MAX_SUBTASK_DEPTH
                 ? `<button type="button" class="task-chevron ${isExpanded ? 'expanded' : ''}" id="task-chevron-${task.id}">
                         <i data-lucide="chevron-right" class="chevron-icon"></i>
                     </button>`
@@ -1085,23 +1219,45 @@ function initTaskManagementLogic() {
         document.getElementById('expired-tasks-counter').textContent = counts.expired;
     }
 
-    function sortTasks(tasks) {
-        return [...tasks].sort((a, b) => {
-            const aExpired = isExpired(a);
-            const bExpired = isExpired(b);
-            if (aExpired !== bExpired) return aExpired ? -1 : 1;
+    function comparePositions(posA, posB) {
+        const [intA, fracA = ''] = posA.replace('-', '').split('.');
+        const [intB, fracB = ''] = posB.replace('-', '').split('.');
+        const negA = posA.startsWith('-'), negB = posB.startsWith('-');
 
-            if (a.is_important !== b.is_important) return a.is_important ? -1 : 1;
+        if (negA !== negB) return negA ? -1 : 1;
 
-            if (a.due_date === null && b.due_date === null) return 0;
-            if (a.due_date === null) return 1;
-            if (b.due_date === null) return -1;
+        const sign = negA ? -1 : 1;
 
-            return new Date(a.due_date) - new Date(b.due_date);
-        });
+        if (intA.length !== intB.length) return sign * (intA.length - intB.length);
+        if (intA !== intB) return sign * (intA < intB ? -1 : 1);
+
+        const maxFrac = Math.max(fracA.length, fracB.length);
+        return sign * (fracA.padEnd(maxFrac, '0') < fracB.padEnd(maxFrac, '0') ? -1 : fracA === fracB ? 0 : 1);
     }
 
-    function buildRenderOrder(tasks, tasksById) {
+    function defaultSorting(taskA, taskB) {
+        const aExpired = isExpired(taskA);
+        const bExpired = isExpired(taskB);
+        if (aExpired !== bExpired) return aExpired ? -1 : 1;
+
+        if (taskA.is_important !== taskB.is_important) return taskA.is_important ? -1 : 1;
+
+        if (taskA.due_date === null && taskB.due_date === null) return 0;
+        if (taskA.due_date === null) return 1;
+        if (taskB.due_date === null) return -1;
+
+        return new Date(taskA.due_date) - new Date(taskB.due_date);
+    }
+
+    function sortTasks(tasks, mode) {
+        if (mode === 'custom') {
+            return [...tasks].sort((a, b) => comparePositions(a.position, b.position));
+        }
+
+        return [...tasks].sort((a, b) => defaultSorting(a, b));
+    }
+
+    function buildRenderOrder(tasks, tasksById, mode) {
         const childrenByParent = new Map();
         const topLevel = [];
         const taskIds = new Set(tasks.map(t => t.id));
@@ -1120,7 +1276,7 @@ function initTaskManagementLogic() {
 
         function walk(taskList) {
             const ordered = [];
-            for (const task of sortTasks(taskList)) {
+            for (const task of sortTasks(taskList, mode)) {
                 ordered.push(task);
 
                 const children = childrenByParent.get(task.id);
@@ -1155,6 +1311,7 @@ function initTaskManagementLogic() {
 
         const isBaseVisible = (task) => {
             if (filterId !== 'deleted' && task.is_deleted) return false;
+            if (filterId !== 'completed' && task.is_done) return false;
             return !(filterId !== 'archived' && task.is_archived);
 
         };
@@ -1249,7 +1406,7 @@ function initTaskManagementLogic() {
             forceVisible: entry.forceVisible,
         }));
 
-        const orderedTasks = buildRenderOrder(visibleTasks, tasksById);
+        const orderedTasks = buildRenderOrder(visibleTasks, tasksById, currentSortMode);
         renderTasks(orderedTasks, tasksById);
     }
 
@@ -1273,8 +1430,10 @@ function initTaskManagementLogic() {
         const children = currentTasks.filter(t => t.parent_id === taskId);
 
         for (const child of children) {
-            ids.push(child.id);
-            ids.push(...getDescendantTaskIds(child.id));
+            if (!child.is_deleted) {
+                ids.push(child.id);
+                ids.push(...getDescendantTaskIds(child.id));
+            }
         }
 
         return ids;
@@ -1302,6 +1461,13 @@ function initTaskManagementLogic() {
         currentFilterId = e.detail.filterId;
         refreshUI();
         tasksList.scrollTop = 0;
+        updateSortingAvailability();
+    });
+
+    document.addEventListener('app:sortModeChanged', (e) => {
+        currentSortMode = e.detail.sortMode;
+        refreshUI();
+        updateSortingAvailability();
     });
 
     function collapseTask(taskEl) {
@@ -1604,7 +1770,7 @@ function initTaskManagementLogic() {
     }
 
     taskMenu.addEventListener('click', async (e) => {
-        const clickedItem = e.target.closest('.task-menu-item');
+        const clickedItem = e.target.closest('.menu-item');
         if (!clickedItem || activeMenuTaskId === null) return;
 
         const action = clickedItem.dataset.action;
@@ -1717,7 +1883,7 @@ function initTaskManagementLogic() {
 
         const path = e.composedPath();
         const clickedInsideMenuOrBtn = path.some(el =>
-            el.classList && (el.classList.contains('task-menu') || el.classList.contains('task-menu-btn'))
+            el.classList && (el.classList.contains('menu') || el.classList.contains('task-menu-btn'))
         );
 
         if (!clickedInsideMenuOrBtn) {
@@ -1736,53 +1902,82 @@ function initTaskManagementLogic() {
         updateSidebarCounts();
     });
 
-    function computeNewDepthAndParent(prevEl) {
-        if (!prevEl) {
-            return {depth: 0, parentId: null};
-        }
+    function isHidden(el) {
+        return getComputedStyle(el).display === 'none';
+    }
 
-        if (prevEl.classList.contains('ghost-row')) {
-            const groupParentId = Number(prevEl.dataset.parentId);
-            const groupParent = tasksById.get(groupParentId);
-            const groupParentDepth = groupParent ? getDepth(groupParent, tasksById) : 0;
-            return {
-                depth: groupParentDepth,
-                parentId: groupParent ? (groupParent.parent_id ?? null) : null,
+    function nearestVisibleSibling(el, direction) {
+        let sibling = direction === 'prev' ? el.previousElementSibling : el.nextElementSibling;
+        while (sibling && isHidden(sibling)) {
+            sibling = direction === 'prev' ? sibling.previousElementSibling : sibling.nextElementSibling;
+        }
+        return sibling;
+    }
+
+    function computeNewDepthAndParent(draggedEl) {
+        const prevEl = nearestVisibleSibling(draggedEl, 'prev');
+        const nextEl = nearestVisibleSibling(draggedEl, 'next');
+
+        let newParentId = null;
+        let beforeId = null;
+
+        if (prevEl) {
+            if (prevEl.classList.contains('ghost-row')) {
+                const groupParentId = Number(prevEl.dataset.parentId);
+                const groupParent = tasksById.get(groupParentId);
+
+                newParentId = groupParent ? (groupParent.parent_id ?? null) : null;
+                beforeId = groupParentId;
+            } else {
+                const prevTaskId = Number(prevEl.dataset.id);
+                const prevTask = tasksById.get(prevTaskId);
+
+                if (expandedTaskIds.has(prevTaskId)) {
+                    newParentId = prevTaskId;
+                    beforeId = null;
+                } else {
+                    newParentId = prevTask.parent_id ?? null;
+                    beforeId = prevTaskId;
+                }
             }
         }
 
-        const prevTaskId = Number(prevEl.dataset.id);
-        const prevTask = tasksById.get(prevTaskId);
-        const prevDepth = getDepth(prevTask, tasksById);
-        const prevIsExpanded = expandedTaskIds.has(prevTaskId);
-
-        if (prevIsExpanded) {
-            return {depth: prevDepth + 1, parentId: prevTaskId};
+        let afterId = null;
+        if (nextEl && nextEl.classList.contains('task-item') && !nextEl.classList.contains('ghost-row')) {
+            const nextParentId = nextEl.dataset.parentId === '' ? null : Number(nextEl.dataset.parentId);
+            if (nextParentId === newParentId) {
+                afterId = Number(nextEl.dataset.id);
+            }
         }
 
-        return {depth: prevDepth, parentId: prevTask.parent_id ?? null};
+        return {parentId: newParentId, beforeId, afterId};
     }
 
-    function handleTaskReorder(e) {
+    async function handleTaskReorder(e) {
         const draggedEl = e.item;
         const taskId = Number(draggedEl.dataset.id);
         const task = tasksById.get(taskId);
         if (!task) return;
 
-        const {depth: newDepth, parentId: newParentId} = computeNewDepthAndParent(draggedEl.previousElementSibling);
+        const {parentId, beforeId, afterId} = computeNewDepthAndParent(draggedEl);
 
-        task.parent_id = newParentId;
+        const result = await updateItem('items', taskId, 'PATCH', {
+            parent_id: parentId,
+            before_id: beforeId,
+            after_id: afterId,
+        }, currentTasks, '/reorder');
+
+        if (!result.success) {
+            showErrorToast('Something went wrong. Please try again.');
+        }
 
         refreshUI();
-
-        // draggedEl.dataset.depth = newDepth;
-        // draggedEl.dataset.parentId = newParentId ?? '';
-        // draggedEl.style.setProperty('--subtask-depth', newDepth);
-        // draggedEl.classList.toggle('is-subtask', newDepth > 0);
     }
 
+    let taskSortable = null;
+
     function initTaskSorting() {
-        Sortable.create(tasksList, {
+        taskSortable = Sortable.create(tasksList, {
             handle: '.drag-handle',
             filter: '.ghost-row, #no-tasks-message',
             preventOnFilter: false,
@@ -1791,7 +1986,14 @@ function initTaskManagementLogic() {
         });
     }
 
+    function updateSortingAvailability() {
+        const isSortable = currentViewType === 'filter' && currentFilterId === 'all' && currentSortMode === 'custom';
+        taskSortable?.option('disabled', !isSortable);
+        tasksList.classList.toggle('sorting-disabled', !isSortable);
+    }
+
     initTaskSorting();
+    updateSortingAvailability();
 }
 
 function initTaskModalLogic() {
@@ -1860,7 +2062,7 @@ function initTaskModalLogic() {
     attachFloatingTooltips(modalSubtasksList, '.modal-subtask-label-wrapper', '.modal-subtask-label', 'horizontal');
 
     attachFloatingTooltips(modalProjectControl.parentElement, '#modal-project-control', '#modal-project-text', 'horizontal');
-    attachFloatingTooltips(projectSelectMenu, '.task-menu-item', '.task-menu-item-label', 'horizontal');
+    attachFloatingTooltips(projectSelectMenu, '.menu-item', '.menu-item-label', 'horizontal');
 
     async function updateCurrentTask(payloadObject) {
         if (isCreatingTask && !currentTask.id) {
@@ -2399,24 +2601,24 @@ function initTaskModalLogic() {
         const selectedId = currentTask.project_id;
 
         const noProjectHTML = `
-            <button type="button" class="task-menu-item ${!selectedId ? 'active' : ''}" data-action="select-project" data-project-id="">
+            <button type="button" class="menu-item ${!selectedId ? 'active' : ''}" data-action="select-project" data-project-id="">
                 <i data-lucide="minus" class="task-icon"></i>
                 Clear project
             </button>
         `
 
         const projectItemsHTML = currentProjects.map(project => `
-            <button type="button" class="task-menu-item ${Number(selectedId) === project.id ? 'active' : ''}" data-action="select-project" data-project-id="${project.id}">
+            <button type="button" class="menu-item ${Number(selectedId) === project.id ? 'active' : ''}" data-action="select-project" data-project-id="${project.id}">
                 <i data-lucide="folder" class="task-icon"></i>
-                <span class="task-menu-item-label">${project.name}</span>
+                <span class="menu-item-label">${project.name}</span>
             </button>
         `).join('');
 
         projectSelectMenu.innerHTML = `
             ${noProjectHTML}
-            <div class="task-menu-divider"></div>
+            <div class="menu-divider"></div>
             ${projectItemsHTML}
-            <div class="task-menu-divider"></div>
+            <div class="menu-divider"></div>
             <div class="sidebar-add-item" id="modal-add-project-item">
                 <button type="button" class="sidebar-add-btn" id="modal-add-project-btn">
                     <i data-lucide="plus" class="btn-icon"></i>
@@ -2473,7 +2675,7 @@ function initTaskModalLogic() {
     });
 
     projectSelectMenu.addEventListener('click', async (e) => {
-        const clickedItem = e.target.closest('.task-menu-item[data-action="select-project"]');
+        const clickedItem = e.target.closest('.menu-item[data-action="select-project"]');
         const clickedAddBtn = e.target.closest('#modal-add-project-btn');
 
         if (clickedItem) {
@@ -2925,7 +3127,7 @@ function initSidebarLogic() {
     }
 
     projectMenu.addEventListener('click', async (e) => {
-        const clickedItem = e.target.closest('.task-menu-item');
+        const clickedItem = e.target.closest('.menu-item');
         if (!clickedItem || activeMenuProjectId === null) return;
 
         const action = clickedItem.dataset.action;
@@ -3038,7 +3240,7 @@ function initSidebarLogic() {
 
         const path = e.composedPath();
         const clickedInsideMenuOrBtn = path.some(el =>
-            el.classList && (el.classList.contains('task-menu') || el.classList.contains('sidebar-project-menu-btn'))
+            el.classList && (el.classList.contains('menu') || el.classList.contains('sidebar-project-menu-btn'))
         );
 
         if (!clickedInsideMenuOrBtn) {
@@ -3078,7 +3280,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     initLoginLogic();
     initRegisterLogic();
     initSuccessfulLoginLogic();
-    initLogoutLogic();
+    initProfileManagementLogic();
+    initSortLogic();
     initTaskManagementLogic();
     initTaskModalLogic();
     initSidebarLogic();

@@ -185,7 +185,7 @@ body {
     gap: 4px;
 
     padding: 6px 13px 8px 14px;
-    border-top: 1px solid color-mix(in srgb, var(--expired-task-color) 20%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--expired-task-color) 20%, transparent 80%);
 
     font-size: 12px;
     color: var(--expired-task-color);
@@ -233,7 +233,7 @@ body {
 
 .input-wrapper:focus-within {
     border-color: var(--focus-ring-color);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-ring-color) 30%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-ring-color) 30%, transparent 70%);
 }
 
 .input-control {
@@ -276,7 +276,7 @@ body {
 .auth-input:-webkit-autofill:hover,
 .auth-input:-webkit-autofill:focus,
 .auth-input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px color-mix(in srgb, var(--white) 97%, black) inset !important;
+    -webkit-box-shadow: 0 0 0 30px color-mix(in srgb, var(--white) 97%, black 3%) inset !important;
     -webkit-text-fill-color: var(--text-heading) !important;
     transition: background-color 5000s ease-in-out 0s;
 }
@@ -372,7 +372,7 @@ body {
     background-color: transparent;
     text-decoration: underline;
     text-underline-offset: 4px;
-    text-decoration-color: color-mix(in srgb, var(--text-orange) 40%, transparent);
+    text-decoration-color: color-mix(in srgb, var(--text-orange) 40%, transparent 60%);
     cursor: pointer;
 
     transition: text-decoration-color 0.2s ease;
@@ -380,7 +380,7 @@ body {
 
 .link-style-btn:hover {
     color: color-mix(in srgb, var(--text-orange) 80%, black);
-    text-decoration-color: color-mix(in srgb, var(--text-orange) 75%, black);
+    text-decoration-color: color-mix(in srgb, var(--text-orange) 75%, black 25%);
 }
 
 /* ─── Todo Page Layout ───────────────────────────────────────────────────── */
@@ -489,7 +489,7 @@ body {
 }
 
 .sidebar-label:hover {
-    color: color-mix(in srgb, var(--text-secondary) 80%, white);
+    color: color-mix(in srgb, var(--text-secondary) 80%, white 20%);
 }
 
 /* ─── Sidebar Buttons ────────────────────────────────────────────────────── */
@@ -509,7 +509,7 @@ body {
     border-radius: 8px;
 
     font-size: 15px;
-    color: color-mix(in srgb, var(--white) 90%, black);
+    color: color-mix(in srgb, var(--white) 90%, black 10%);
     background-color: transparent;
     cursor: pointer;
 
@@ -532,7 +532,7 @@ body {
 .sidebar-btn.active {
     font-weight: 500;
     color: var(--orange-active);
-    background-color: color-mix(in srgb, var(--orange) 25%, transparent);
+    background-color: color-mix(in srgb, var(--orange) 25%, transparent 75%);
 }
 
 .sidebar-btn.active .btn-icon {
@@ -721,11 +721,19 @@ body {
     color: var(--text-secondary);
 }
 
+/* ─── User Profile ────────────────────────────────────────────────────────────── */
+
+.user-info-wrapper {
+    position: relative;
+    margin-left: auto;
+}
+
 .user-info {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-left: auto;
+
+    cursor: pointer;
 }
 
 .avatar {
@@ -754,6 +762,12 @@ body {
     text-overflow: ellipsis;
 }
 
+.menu.profile-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+}
+
 /* ─── Main Content ───────────────────────────────────────────────────────── */
 
 .main-content {
@@ -771,7 +785,6 @@ body {
 
     width: 100%;
     height: 80px;
-    /*padding: 0 10px;*/
     flex-shrink: 0;
 }
 
@@ -798,48 +811,99 @@ body {
     color: var(--text-secondary);
 }
 
-/* ─── Logout Button ──────────────────────────────────────────────────────── */
+/* ─── Sort Tasks Button ──────────────────────────────────────────────────────── */
 
-.logout-btn {
+.sort-tasks-wrapper {
+    position: relative;
+    margin-left: auto;
+}
+
+.sort-btn {
     position: relative;
 
     display: flex;
     align-items: center;
     gap: 8px;
 
-    width: 105px;
-    height: 30px;
-    margin-left: auto;
-    padding: 8px 14px;
+    height: 38px;
+    padding: 0 16px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
 
-    font-size: 16px;
-    font-weight: 500;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--white);
     background-color: var(--navy);
     white-space: nowrap;
     cursor: pointer;
 
-    transition: background-color 0.15s ease-in-out;
+    box-shadow: 0 1px 3px color-mix(in srgb, var(--navy) 35%, transparent 65%);
+    transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 
-.logout-btn:hover {
-    filter: brightness(1.2);
+.sort-btn:hover {
+    background-color: color-mix(in srgb, var(--navy) 85%, white 15%);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--navy) 40%, transparent 60%);
 }
 
-.logout-btn:active {
+.sort-btn:active {
     transform: scale(0.97);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--navy) 30%, transparent 70%);
 }
 
-.logout-icon {
+.sort-icon {
     width: 16px;
     height: 16px;
     flex-shrink: 0;
 
     color: var(--white);
-    stroke-width: 3.2;
+    stroke-width: 2.25;
     pointer-events: none;
+}
+
+.sort-btn .chevron-icon {
+    width: 14px;
+    height: 14px;
+    margin-left: 2px;
+    flex-shrink: 0;
+
+    color: color-mix(in srgb, var(--white) 70%, transparent 30%);
+    stroke-width: 2.5;
+    transition: transform 0.2s ease;
+}
+
+.sort-btn.open .chevron-icon {
+    transform: rotate(90deg);
+}
+
+/* ─── Sort Tasks Menu ────────────────────────────────────────────────────── */
+
+.menu.sort-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+
+    border-color: color-mix(in srgb, var(--navy) 30%, transparent 70%);
+    background-color: var(--navy);
+}
+
+.sort-menu .menu-item {
+    border-radius: 8px;
+
+    color: var(--white);
+}
+
+.sort-menu .menu-item .task-icon {
+    color: var(--white);
+}
+
+.sort-menu .menu-item:hover {
+    background-color: color-mix(in srgb, var(--white) 15%, transparent 85%);
+}
+
+.sort-menu .menu-item.selected {
+    background-color: color-mix(in srgb, var(--surface-secondary) 25%, transparent 75%);
+    font-weight: 500;
 }
 
 /* ─── Tasks Container ────────────────────────────────────────────────────── */
@@ -852,7 +916,7 @@ body {
 
     overflow-y: auto;
     margin-bottom: 10px;
-    padding: 4px 14px 4px 38px;
+    padding: 4px 14px 4px 40px;
 }
 
 .tasks-container::-webkit-scrollbar {
@@ -877,6 +941,10 @@ body {
     scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
 }
 
+.tasks-container.sorting-disabled .drag-handle {
+    display: none;
+}
+
 /* ─── Task Item ──────────────────────────────────────────────────────────── */
 
 .task-item {
@@ -891,7 +959,7 @@ body {
     flex-shrink: 0;
     scroll-margin-bottom: 88px;
     padding: 12px 16px;
-    border: 2px solid color-mix(in srgb, var(--border-color) 50%, transparent);
+    border: 2px solid color-mix(in srgb, var(--border-color) 50%, transparent 50%);
     border-left: 4px solid var(--border-color);
     border-radius: 12px;
 
@@ -902,16 +970,17 @@ body {
     cursor: pointer;
 }
 
-.task-item:hover .task-chevron {
+.task-item:hover .task-chevron,
+.task-item:hover .drag-handle {
     opacity: 1;
     transition: opacity 0.15s ease-in-out;
 }
 
 .task-item.completed {
     border: none;
-    border-left: 4px solid color-mix(in srgb, var(--border-color) 50%, transparent);
+    border-left: 4px solid color-mix(in srgb, var(--border-color) 50%, transparent 50%);
 
-    background-color: color-mix(in srgb, var(--text-secondary) 15%, transparent);
+    background-color: color-mix(in srgb, var(--text-secondary) 15%, transparent 85%);
     box-shadow: none;
 }
 
@@ -928,17 +997,17 @@ body {
 
 .task-item.completed .task-desc {
     pointer-events: none;
-    color: color-mix(in srgb, var(--text-secondary) 70%, transparent);
+    color: color-mix(in srgb, var(--text-secondary) 70%, transparent 30%);
     text-decoration: line-through;
 }
 
 .task-item.completed .due-date-wrapper {
     pointer-events: none;
-    color: color-mix(in srgb, var(--text-secondary) 70%, transparent);
+    color: color-mix(in srgb, var(--text-secondary) 70%, transparent 30%);
 }
 
 .task-item.completed .task-due {
-    color: color-mix(in srgb, var(--text-secondary) 70%, transparent);
+    color: color-mix(in srgb, var(--text-secondary) 70%, transparent 30%);
 }
 
 .task-body {
@@ -1037,8 +1106,8 @@ body {
     width: 20px;
     height: 20px;
 
-    fill: color-mix(in srgb, var(--gold-important) 75%, black);
-    color: color-mix(in srgb, var(--gold-important) 75%, black);
+    fill: color-mix(in srgb, var(--gold-important) 75%, black 25%);
+    color: color-mix(in srgb, var(--gold-important) 75%, black 25%);
 }
 
 /* ─── General Tooltip ────────────────────────────────────────────────── */
@@ -1130,31 +1199,10 @@ body {
     display: none;
 }
 
-/* ─── Task Drag Handle ──────────────────────────────────────────────────────── */
+/* ─── Drag Handle, Task Chevron and Checkbox ──────────────────────────────────────────────────────── */
 
+.task-chevron,
 .drag-handle {
-    position: absolute;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    top: 50%;
-    left: -50px;
-    transform: translateY(-50%);
-    padding: 2px;
-    border: none;
-
-    background-color: transparent;
-    opacity: 1;
-    outline: none;
-    cursor: grab;
-
-    transition: all 0.2s ease;
-}
-
-/* ─── Task Chevron and Checkbox ──────────────────────────────────────────────────────── */
-
-.task-chevron {
     position: absolute;
 
     display: flex;
@@ -1174,13 +1222,20 @@ body {
     transition: all 0.2s ease;
 }
 
+.drag-handle {
+    left: -50px;
+    cursor: grab;
+
+    color: var(--text-muted);
+}
+
 .task-chevron:hover {
     border-radius: 50%;
     background-color: rgba(0, 0, 0, 0.05);
 }
 
 .task-chevron:hover .chevron-icon {
-    color: color-mix(in srgb, var(--text-muted) 75%, black);
+    color: color-mix(in srgb, var(--text-muted) 75%, black 25%);
 }
 
 .task-chevron.collapsed .chevron-icon {
@@ -1203,7 +1258,7 @@ body {
     width: 18px;
     height: 18px;
     flex-shrink: 0;
-    border: 2px solid color-mix(in srgb, var(--text-secondary) 50%, transparent);
+    border: 2px solid color-mix(in srgb, var(--text-secondary) 50%, transparent 50%);
     border-radius: 4px;
 
     background-color: white;
@@ -1214,7 +1269,7 @@ body {
 }
 
 .task-checkbox:hover {
-    background-color: color-mix(in srgb, var(--navy) 30%, transparent);
+    background-color: color-mix(in srgb, var(--navy) 30%, transparent 70%);
 }
 
 .task-checkbox:active {
@@ -1232,8 +1287,8 @@ body {
 }
 
 .task-item.completed .task-checkbox:checked {
-    border-color: color-mix(in srgb, var(--navy) 40%, transparent);
-    background-color: color-mix(in srgb, var(--navy) 40%, transparent);
+    border-color: color-mix(in srgb, var(--navy) 40%, transparent 60%);
+    background-color: color-mix(in srgb, var(--navy) 40%, transparent 60%);
 }
 
 /* ─── Task Meta (due date + delete) ─────────────────────────────────────── */
@@ -1258,7 +1313,7 @@ body {
 }
 
 .due-date-wrapper:hover {
-    color: color-mix(in srgb, var(--text-primary) 70%, transparent);
+    color: color-mix(in srgb, var(--text-primary) 70%, transparent 30%);
 }
 
 .task-due {
@@ -1271,21 +1326,21 @@ body {
 }
 
 .task-due:hover {
-    color: color-mix(in srgb, var(--text-primary) 70%, transparent);
+    color: color-mix(in srgb, var(--text-primary) 70%, transparent 30%);
 }
 
 .no-due-date {
-    color: color-mix(in srgb, var(--text-secondary) 50%, transparent);
+    color: color-mix(in srgb, var(--text-secondary) 50%, transparent 50%);
     font-style: italic;
 }
 
 .no-due-date-icon {
-    color: color-mix(in srgb, var(--text-secondary) 50%, transparent);
+    color: color-mix(in srgb, var(--text-secondary) 50%, transparent 50%);
     transform: skewX(-12deg);
 }
 
 .no-due-date:hover .task-icon {
-    color: color-mix(in srgb, var(--text-primary) 70%, transparent);
+    color: color-mix(in srgb, var(--text-primary) 70%, transparent 30%);
 }
 
 .task-restore-btn {
@@ -1325,11 +1380,13 @@ body {
 .task-item.forced-ancestor {
     height: 30px;
     border-radius: 6px;
-    border-color: color-mix(in srgb, var(--border-color) 25%, transparent);
-    border-left-color: color-mix(in srgb, var(--border-color) 50%, transparent);
+    border-color: color-mix(in srgb, var(--border-color) 25%, transparent 75%);
+    border-left-color: color-mix(in srgb, var(--border-color) 50%, transparent 50%);
 
-    background-color: color-mix(in srgb, var(--white) 50%, transparent);
+    background-color: color-mix(in srgb, var(--white) 50%, transparent 50%);
     box-shadow: none;
+
+    pointer-events: none;
 }
 
 .task-item.forced-ancestor.expired-task {
@@ -1385,7 +1442,7 @@ body {
 }
 
 .ghost-row:hover {
-    background-color: color-mix(in srgb, var(--surface-secondary) 60%, transparent);
+    background-color: color-mix(in srgb, var(--surface-secondary) 60%, transparent 40%);
     color: var(--text-body);
 }
 
@@ -1419,7 +1476,7 @@ body {
     border: none;
 
     background-color: var(--white);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus-ring-color) 40%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus-ring-color) 40%, transparent 60%);
 }
 
 .ghost-row-input:hover {
@@ -1486,7 +1543,7 @@ body {
 
 /* ─── Task Menu ───────────────────────────────────────────────────────── */
 
-.task-menu {
+.menu {
     position: fixed;
     z-index: 100;
 
@@ -1499,7 +1556,7 @@ body {
     min-width: 160px;
     max-width: 220px;
     padding: 8px;
-    border: 1px solid color-mix(in srgb, var(--border-color) 30%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border-color) 30%, transparent 70%);
     border-radius: 8px;
 
     background-color: var(--white);
@@ -1512,18 +1569,18 @@ body {
     transition: opacity 0.10s ease-in-out;
 }
 
-.task-menu.visible {
+.menu.visible {
     opacity: 1;
     visibility: visible;
 }
 
-.task-menu-arrow {
+.menu-arrow {
     position: fixed;
     z-index: 99;
 
     width: 8px;
     height: 8px;
-    border: 1px solid color-mix(in srgb, var(--border-color) 30%, transparent);
+    border: 1px solid color-mix(in srgb, var(--border-color) 30%, transparent 70%);
 
     background-color: var(--white);
     transform: rotate(45deg);
@@ -1533,12 +1590,12 @@ body {
     transition: opacity 0.12s ease;
 }
 
-.task-menu-arrow.visible {
+.menu-arrow.visible {
     opacity: 1;
     visibility: visible;
 }
 
-.task-menu-item {
+.menu-item {
     display: flex;
     align-items: center;
     justify-content: start;
@@ -1557,54 +1614,54 @@ body {
     transition: background-color 0.15s ease-in-out;
 }
 
-.task-menu-item .task-icon {
+.menu-item .task-icon {
     color: var(--navy);
 }
 
-.task-menu-item:hover {
+.menu-item:hover {
     border: none;
     border-radius: 6px;
 
-    background-color: color-mix(in srgb, var(--border-color) 15%, transparent);
+    background-color: color-mix(in srgb, var(--border-color) 15%, transparent 85%);
 }
 
-.task-menu-item:active {
+.menu-item:active {
     transform: scale(0.97);
 }
 
-.task-menu-item-danger {
+.menu-item-danger {
     color: var(--danger-main);
 }
 
-.task-menu-item-danger .task-icon {
+.menu-item-danger .task-icon {
     color: var(--danger-main);
 }
 
-.task-menu-item-danger:hover {
+.menu-item-danger:hover {
     border: none;
     border-radius: 6px;
 
-    background-color: color-mix(in srgb, var(--danger-main) 10%, transparent);
+    background-color: color-mix(in srgb, var(--danger-main) 10%, transparent 90%);
 }
 
-.task-menu-divider {
+.menu-divider {
     flex-shrink: 0;
     width: 100%;
     height: 1px;
     border: none;
 
-    background-color: color-mix(in srgb, var(--border-color) 30%, transparent);
+    background-color: color-mix(in srgb, var(--border-color) 30%, transparent 70%);
 }
 
-.task-menu-item[data-context="deleted-only"] {
+.menu-item[data-context="deleted-only"] {
     display: none;
 }
 
-.task-menu.deleted-view .task-menu-item[data-context="deleted-only"] {
+.menu.deleted-view .menu-item[data-context="deleted-only"] {
     display: flex;
 }
 
-.task-menu.deleted-view .task-menu-item[data-context="default-only"] {
+.menu.deleted-view .menu-item[data-context="default-only"] {
     display: none;
 }
 
@@ -1632,7 +1689,7 @@ body {
     pointer-events: none;
 }
 
-.task-item-locked .task-menu-btn,
+.task-item-locked .menu-btn,
 .task-item-locked .task-chevron {
     pointer-events: auto;
 }
@@ -1901,7 +1958,7 @@ body {
     min-height: 0;
     overflow: hidden;
 
-    background-color: color-mix(in srgb, var(--surface-secondary) 30%, white);
+    background-color: color-mix(in srgb, var(--surface-secondary) 30%, white 70%);
 }
 
 .modal-body-grid {
@@ -1939,20 +1996,20 @@ body {
 }
 
 .modal-body-left-column::-webkit-scrollbar-thumb {
-    background-color: color-mix(in srgb, var(--text-muted) 40%, transparent);
+    background-color: color-mix(in srgb, var(--text-muted) 40%, transparent 60%);
     background-clip: padding-box;
     border: 5px solid transparent;
     border-radius: 10px;
 }
 
 .modal-body-left-column::-webkit-scrollbar-thumb:hover {
-    background-color: color-mix(in srgb, var(--text-muted) 50%, transparent);
+    background-color: color-mix(in srgb, var(--text-muted) 50%, transparent 50%);
 }
 
 @supports not selector(::-webkit-scrollbar) {
     .modal-body-left-column {
         scrollbar-width: auto;
-        scrollbar-color: color-mix(in srgb, var(--text-muted) 40%, transparent) transparent;
+        scrollbar-color: color-mix(in srgb, var(--text-muted) 40%, transparent 60%) transparent;
     }
 }
 
@@ -1963,9 +2020,9 @@ body {
     max-width: 290px;
     height: 100%;
     padding: 16px 12px;
-    border-left: 1px solid color-mix(in srgb, var(--border-layout) 20%, transparent);
+    border-left: 1px solid color-mix(in srgb, var(--border-layout) 20%, transparent 80%);
 
-    background-color: color-mix(in srgb, var(--surface-tertiary) 60%, white);
+    background-color: color-mix(in srgb, var(--surface-tertiary) 60%, white 40%);
     gap: 24px;
 }
 
@@ -1984,7 +2041,7 @@ body {
 
 .modal-missing-title-error {
     background-color: var(--danger-bg);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger-main) 30%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger-main) 30%, transparent 70%);
 }
 
 #modal-missing-title-msg {
@@ -2019,13 +2076,13 @@ body {
 }
 
 .modal-star-important-btn:hover .modal-star-icon {
-    fill: color-mix(in srgb, var(--gold-important) 95%, black);
-    color: color-mix(in srgb, var(--gold-important) 95%, black);
+    fill: color-mix(in srgb, var(--gold-important) 95%, black 5%);
+    color: color-mix(in srgb, var(--gold-important) 95%, black 5%);
 }
 
 .modal-star-important-btn.active .modal-star-icon {
-    fill: color-mix(in srgb, var(--gold-important) 75%, black);
-    color: color-mix(in srgb, var(--gold-important) 75%, black);
+    fill: color-mix(in srgb, var(--gold-important) 75%, black 25%);
+    color: color-mix(in srgb, var(--gold-important) 75%, black 25%);
 }
 
 .edit-textarea {
@@ -2039,8 +2096,8 @@ body {
     color: var(--text-heading);
     font-family: inherit;
 
-    background-color: color-mix(in srgb, var(--white) 40%, transparent);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus-ring-color) 40%, transparent);
+    background-color: color-mix(in srgb, var(--white) 40%, transparent 60%);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus-ring-color) 40%, transparent 60%);
 
     resize: none;
     overflow-y: auto;
@@ -2102,7 +2159,7 @@ body {
 }
 
 .modal-task-desc:hover {
-    background-color: color-mix(in srgb, black 3%, transparent);
+    background-color: color-mix(in srgb, black 3%, transparent 97%);
 }
 
 .edit-desc-textarea {
@@ -2116,7 +2173,7 @@ body {
 }
 
 .edit-desc-textarea:hover {
-    background-color: color-mix(in srgb, var(--white) 40%, transparent);
+    background-color: color-mix(in srgb, var(--white) 40%, transparent 60%);
 }
 
 .modal-unset-value-text {
@@ -2153,13 +2210,13 @@ body {
 
     font-size: 13px;
     color: var(--text-body);
-    background-color: color-mix(in srgb, var(--surface-secondary) 15%, white);
+    background-color: color-mix(in srgb, var(--surface-secondary) 15%, white 85%);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     cursor: pointer;
 }
 
 .modal-widget-control:hover {
-    background-color: color-mix(in srgb, var(--surface-secondary) 25%, white);
+    background-color: color-mix(in srgb, var(--surface-secondary) 25%, white 75%);
 }
 
 .modal-projects-display .modal-widget-icon {
@@ -2173,7 +2230,7 @@ body {
 
 .modal-widget-unset-value {
     border: 1px dashed var(--border-input);
-    color: color-mix(in srgb, var(--text-body) 70%, white);
+    color: color-mix(in srgb, var(--text-body) 70%, white 30%);
 }
 
 #modal-due-date-text {
@@ -2217,24 +2274,24 @@ body {
 }
 
 .project-select-menu::-webkit-scrollbar-thumb {
-    background-color: color-mix(in srgb, var(--border-input) 60%, transparent);
+    background-color: color-mix(in srgb, var(--border-input) 60%, transparent 40%);
     border-radius: 10px;
     border: 3px solid transparent;
     background-clip: padding-box;
 }
 
 .project-select-menu::-webkit-scrollbar-thumb:hover {
-    background-color: color-mix(in srgb, var(--border-input) 85%, transparent);
+    background-color: color-mix(in srgb, var(--border-input) 85%, transparent 15%);
 }
 
 @supports not selector(::-webkit-scrollbar) {
     .project-select-menu {
         scrollbar-width: thin;
-        scrollbar-color: color-mix(in srgb, var(--border-input) 60%, transparent) transparent;
+        scrollbar-color: color-mix(in srgb, var(--border-input) 60%, transparent 40%) transparent;
     }
 }
 
-.project-select-menu .task-menu-item {
+.project-select-menu .menu-item {
     align-items: center;
     gap: 8px;
 
@@ -2245,21 +2302,21 @@ body {
     overflow: hidden;
 }
 
-.project-select-menu .task-menu-item:hover {
-    background-color: color-mix(in srgb, var(--surface-secondary) 35%, transparent);
+.project-select-menu .menu-item:hover {
+    background-color: color-mix(in srgb, var(--surface-secondary) 35%, transparent 65%);
 }
 
-.project-select-menu .task-menu-item.active {
+.project-select-menu .menu-item.active {
     color: var(--text-primary);
-    background-color: color-mix(in srgb, var(--surface-secondary) 55%, transparent);
+    background-color: color-mix(in srgb, var(--surface-secondary) 55%, transparent 45%);
     font-weight: 500;
 }
 
-.project-select-menu .task-menu-item .task-icon {
+.project-select-menu .menu-item .task-icon {
     flex-shrink: 0;
 }
 
-.project-select-menu .task-menu-item-label {
+.project-select-menu .menu-item-label {
     flex: 1;
     min-width: 0;
 
@@ -2282,7 +2339,7 @@ body {
 
 .project-select-menu .sidebar-add-btn:hover {
     color: var(--text-label);
-    background-color: color-mix(in srgb, var(--text-label) 8%, transparent);
+    background-color: color-mix(in srgb, var(--text-label) 8%, transparent 92%);
 }
 
 .project-select-menu .sidebar-add-btn:hover .btn-icon {
@@ -2318,7 +2375,7 @@ body {
     font-size: 11px;
     font-weight: 500;
     color: var(--text-body);
-    background-color: color-mix(in srgb, var(--text-muted) 12%, transparent);
+    background-color: color-mix(in srgb, var(--text-muted) 12%, transparent 88%);
 }
 
 .modal-add-subtask-btn {
@@ -2359,7 +2416,7 @@ body {
     border-radius: 8px;
     list-style: none;
 
-    background-color: color-mix(in srgb, var(--surface-secondary) 15%, white);
+    background-color: color-mix(in srgb, var(--surface-secondary) 15%, white 85%);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -2372,20 +2429,20 @@ body {
 }
 
 .modal-subtasks-list::-webkit-scrollbar-thumb {
-    background-color: color-mix(in srgb, var(--text-muted) 40%, transparent);
+    background-color: color-mix(in srgb, var(--text-muted) 40%, transparent 60%);
     background-clip: padding-box;
     border: 5px solid transparent;
     border-radius: 10px;
 }
 
 .modal-subtasks-list::-webkit-scrollbar-thumb:hover {
-    background-color: color-mix(in srgb, var(--text-muted) 50%, transparent);
+    background-color: color-mix(in srgb, var(--text-muted) 50%, transparent 50%);
 }
 
 @supports not selector(::-webkit-scrollbar) {
     .modal-subtasks-list {
         scrollbar-width: thin;
-        scrollbar-color: color-mix(in srgb, var(--text-muted) 40%, transparent) transparent;
+        scrollbar-color: color-mix(in srgb, var(--text-muted) 40%, transparent 60%) transparent;
     }
 }
 
@@ -2411,23 +2468,23 @@ body {
 }
 
 .modal-subtasks-item.expired {
-    color: color-mix(in srgb, var(--expired-task-color) 75%, transparent);
+    color: color-mix(in srgb, var(--expired-task-color) 75%, transparent 25%);
 }
 
 .modal-subtasks-item.expired:hover {
-    color: color-mix(in srgb, var(--expired-task-color) 100%, transparent);
+    color: var(--expired-task-color)
 }
 
 .modal-subtasks-item.expired .modal-subtask-checkbox {
-    border: 2px solid color-mix(in srgb, var(--expired-task-color) 75%, transparent);
+    border: 2px solid color-mix(in srgb, var(--expired-task-color) 75%, transparent 25%);
 }
 
 .modal-subtasks-item.expired:hover .modal-subtask-checkbox {
-    border: 2px solid color-mix(in srgb, var(--expired-task-color) 100%, transparent);
+    border: 2px solid var(--expired-task-color)
 }
 
 .modal-subtasks-item:hover {
-    background-color: color-mix(in srgb, var(--text-muted) 8%, transparent);
+    background-color: color-mix(in srgb, var(--text-muted) 8%, transparent 92%);
 }
 
 .modal-subtasks-item.expired .modal-subtask-checkbox:checked {
@@ -2439,7 +2496,7 @@ body {
     height: 14px;
     flex-shrink: 0;
     margin: 0;
-    border: 2px solid color-mix(in srgb, var(--text-secondary) 50%, transparent);
+    border: 2px solid color-mix(in srgb, var(--text-secondary) 50%, transparent 50%);
     border-radius: 2px;
 
     background-color: transparent;
@@ -2451,7 +2508,7 @@ body {
 
 .modal-subtask-checkbox:hover {
     border-color: var(--text-muted);
-    background-color: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+    background-color: color-mix(in srgb, var(--text-secondary) 10%, transparent 90%);
 }
 
 .modal-subtask-checkbox:active {
@@ -2633,7 +2690,7 @@ body {
 
 #modal-archive-btn:hover {
     color: color-mix(in srgb, var(--text-label) 70%, black);
-    background-color: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+    background-color: color-mix(in srgb, var(--text-secondary) 10%, transparent 90%);
 }
 
 #modal-delete-btn {
@@ -2642,7 +2699,7 @@ body {
 
 #modal-delete-btn:hover {
     color: var(--danger-main);
-    background-color: color-mix(in srgb, var(--danger-bg) 75%, transparent);
+    background-color: color-mix(in srgb, var(--danger-bg) 75%, transparent 25%);
 }
 
 .new-task-actions-wrapper {
