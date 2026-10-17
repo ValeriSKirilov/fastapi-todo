@@ -11,15 +11,15 @@ from ..dependencies.auth import get_current_user
 from ..models.user import User
 
 router = APIRouter(
-    prefix="/projects",
-    tags=["projects"],
-    responses={404: {"description": "Not found"}},
+    prefix='/projects',
+    tags=['projects'],
+    responses={404: {'description': 'Not found'}},
 )
 
 
-@router.get("", response_model=List[ProjectResponse])
+@router.get('', response_model=List[ProjectResponse])
 def list_projects(
-        limit: int = None,
+        limit: int | None = None,
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user),
 ):
@@ -28,11 +28,11 @@ def list_projects(
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid index"
+            detail='Invalid index'
         )
 
 
-@router.get("/{project_id}", response_model=ProjectResponse)
+@router.get('/{project_id}', response_model=ProjectResponse)
 def get_project(
         project_id: int,
         db: Session = Depends(get_db),
@@ -44,20 +44,26 @@ def get_project(
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project not found"
+            detail='Project not found'
         )
 
 
-@router.post("", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
+@router.post('', response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 def create_project(
         project: ProjectCreate,
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user),
 ):
-    return crud.create_project(db, project, current_user.id)
+    try:
+        return crud.create_project(db, project, current_user.id)
+    except crud.DuplicateProjectError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
 
 
-@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete('/{project_id}', status_code=status.HTTP_204_NO_CONTENT)
 def remove_project(
         project_id: int,
         db: Session = Depends(get_db),
@@ -67,23 +73,28 @@ def remove_project(
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project not found"
+            detail='Project not found'
         )
 
 
-@router.put("/{project_id}", response_model=ProjectResponse)
+@router.put('/{project_id}', response_model=ProjectResponse)
 def update_project(
         project_id: int,
         new_project: ProjectUpdate,
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user),
 ):
-    project = crud.update_project(db, project_id, new_project, current_user.id)
-
-    if project:
-        return project
-    else:
+    try:
+        project = crud.update_project(db, project_id, new_project, current_user.id)
+        if project is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='Project not found'
+            )
+    except crud.DuplicateProjectError as e:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Project not found"
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
         )
+
+    return project

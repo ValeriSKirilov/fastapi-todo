@@ -9,8 +9,8 @@ from ..models.item import Item
 from ..config import settings
 
 router = APIRouter(
-    prefix="/internal",
-    tags=["internal"],
+    prefix='/internal',
+    tags=['internal'],
 )
 
 
@@ -18,11 +18,11 @@ def verify_internal_key(x_internal_key: str = Header(...)):
     if x_internal_key != settings.INTERNAL_API_KEY:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Invalid internal key",
+            detail='Invalid internal key',
         )
 
 
-@router.post("/purge-deleted")
+@router.post('/purge-deleted')
 def purge_deleted_items(
         db: Session = Depends(get_db),
         _: None = Depends(verify_internal_key),
@@ -34,4 +34,4 @@ def purge_deleted_items(
     )
     db.commit()
 
-    return {"purged_count": results.rowcount}
+    return {'purged_count': results.rowcount}

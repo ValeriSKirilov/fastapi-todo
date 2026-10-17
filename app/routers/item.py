@@ -11,15 +11,15 @@ from ..dependencies.auth import get_current_user
 from ..models.user import User
 
 router = APIRouter(
-    prefix="/items",
-    tags=["items"],
-    responses={404: {"description": "Not found"}},
+    prefix='/items',
+    tags=['items'],
+    responses={404: {'description': 'Not found'}},
 )
 
 
-@router.get("", response_model=List[ItemResponse])
+@router.get('', response_model=List[ItemResponse])
 def list_items(
-        limit: int = None,
+        limit: int | None = None,
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user),
 ):
@@ -28,11 +28,11 @@ def list_items(
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid index"
+            detail='Invalid index'
         )
 
 
-@router.get("/{item_id}", response_model=ItemResponse)
+@router.get('/{item_id}', response_model=ItemResponse)
 def get_item(
         item_id: int,
         db: Session = Depends(get_db),
@@ -44,11 +44,11 @@ def get_item(
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Item not found"
+            detail='Item not found'
         )
 
 
-@router.post("", response_model=ItemResponse, status_code=status.HTTP_201_CREATED)
+@router.post('', response_model=ItemResponse, status_code=status.HTTP_201_CREATED)
 def create_item(
         item: ItemCreate,
         db: Session = Depends(get_db),
@@ -68,7 +68,7 @@ def create_item(
         )
 
 
-@router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete('/{item_id}', status_code=status.HTTP_204_NO_CONTENT)
 def remove_item(
         item_id: int,
         db: Session = Depends(get_db),
@@ -78,11 +78,11 @@ def remove_item(
     if not item:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Item not found"
+            detail='Item not found'
         )
 
 
-@router.delete("/{item_id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete('/{item_id}/permanent', status_code=status.HTTP_204_NO_CONTENT)
 def permanent_delete(
         item_id: int,
         db: Session = Depends(get_db),
@@ -92,11 +92,11 @@ def permanent_delete(
     if not item:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Item not found"
+            detail='Item not found'
         )
 
 
-@router.put("/{item_id}", response_model=ItemResponse)
+@router.put('/{item_id}', response_model=ItemResponse)
 def update_item(
         item_id: int,
         new_item: ItemUpdate,
@@ -121,11 +121,27 @@ def update_item(
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Item not found"
+            detail='Item not found'
         )
 
 
-@router.patch("/{item_id}/reorder", response_model=ItemResponse)
+@router.post('/{item_id}/restore', response_model=ItemResponse)
+def restore_item(
+        item_id: int,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user),
+):
+    item = crud.restore_item(db, item_id, current_user.id)
+    if item:
+        return item
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Item not found'
+        )
+
+
+@router.patch('/{item_id}/reorder', response_model=ItemResponse)
 def reorder_item(
         item_id: int,
         new_item: ItemReorder,
@@ -150,5 +166,5 @@ def reorder_item(
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Item not found"
+            detail='Item not found'
         )

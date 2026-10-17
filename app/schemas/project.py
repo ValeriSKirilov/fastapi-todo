@@ -1,8 +1,11 @@
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Annotated
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+
+Name = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=255)]
 
 
 class ProjectBase(BaseModel):
-    name: str = Field(max_length=255)
+    name: Name
 
 
 class ProjectCreate(ProjectBase):
@@ -15,4 +18,4 @@ class ProjectResponse(ProjectBase):
 
 
 class ProjectUpdate(BaseModel):
-    name: str | None = Field(default=None, max_length=255)
+    name: Name

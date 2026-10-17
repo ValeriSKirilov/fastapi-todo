@@ -8,16 +8,16 @@ from ..config import settings
 
 
 def hash_password(password: str) -> str:
-    plainBytes = password.encode("utf-8")
+    plainBytes = password.encode('utf-8')
     salt = bcrypt.gensalt()
     hash = bcrypt.hashpw(plainBytes, salt)
 
-    return hash.decode("utf-8")
+    return hash.decode('utf-8')
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    plainBytes = plain_password.encode("utf-8")
-    userBytes = hashed_password.encode("utf-8")
+    plainBytes = plain_password.encode('utf-8')
+    userBytes = hashed_password.encode('utf-8')
 
     return bcrypt.checkpw(plainBytes, userBytes)
 
