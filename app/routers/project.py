@@ -11,9 +11,9 @@ from ..dependencies.auth import get_current_user
 from ..models.user import User
 
 router = APIRouter(
-    prefix='/projects',
-    tags=['projects'],
-    responses={404: {'description': 'Not found'}},
+    prefix="/projects",
+    tags=["projects"],
+    responses={404: {"description": "Not found"}},
 )
 
 
@@ -28,11 +28,11 @@ def list_projects(
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Invalid index'
+            detail="Invalid index"
         )
 
 
-@router.get('/{project_id}', response_model=ProjectResponse)
+@router.get("/{project_id}", response_model=ProjectResponse)
 def get_project(
         project_id: int,
         db: Session = Depends(get_db),
@@ -44,7 +44,7 @@ def get_project(
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Project not found'
+            detail="Project not found"
         )
 
 
@@ -63,7 +63,7 @@ def create_project(
         )
 
 
-@router.delete('/{project_id}', status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 def remove_project(
         project_id: int,
         db: Session = Depends(get_db),
@@ -73,11 +73,11 @@ def remove_project(
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Project not found'
+            detail="Project not found"
         )
 
 
-@router.put('/{project_id}', response_model=ProjectResponse)
+@router.put("/{project_id}", response_model=ProjectResponse)
 def update_project(
         project_id: int,
         new_project: ProjectUpdate,
@@ -89,7 +89,7 @@ def update_project(
         if project is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail='Project not found'
+                detail="Project not found"
             )
     except crud.DuplicateProjectError as e:
         raise HTTPException(

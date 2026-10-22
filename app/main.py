@@ -17,28 +17,18 @@ app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=settings.FRONTEND_URL,
     allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*'],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-
-
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    print(f'HTTP {exc.status_code}: {exc.detail}')
-
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={'message': exc.detail}
-    )
 
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    print(f'CRITICAL SYSTEM FAILURE: {exc}')
+    print(f"CRITICAL SYSTEM FAILURE: {exc}")
 
     return JSONResponse(
         status_code=500,
-        content={'message': 'Internal Server Error'}
+        content={"message": "Internal Server Error"}
     )
 
 
@@ -49,6 +39,6 @@ app.include_router(internal.router)
 app.include_router(project.router)
 
 
-@app.get('/')
+@app.get("/")
 def root():
-    return {'message': 'Server is running'}
+    return {"message": "Server is running"}

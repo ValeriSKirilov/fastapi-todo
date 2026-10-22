@@ -28,7 +28,7 @@ def create_project(db: Session, project: ProjectCreate, user_id: int):
         return db_project
     except IntegrityError:
         db.rollback()
-        raise DuplicateProjectError('Duplicate project name')
+        raise DuplicateProjectError("Duplicate project name")
 
 
 def delete_project(db: Session, project_id: int, user_id: int):
@@ -52,6 +52,6 @@ def update_project(db: Session, project_id: int, project: ProjectUpdate, user_id
             db.refresh(db_project)
         except IntegrityError:
             db.rollback()
-            raise DuplicateProjectError('Duplicate project name')
+            raise DuplicateProjectError("Duplicate project name")
 
     return db_project

@@ -37,7 +37,7 @@ def create_user(db: Session, user: UserCreate):
         return db_user
     except IntegrityError:
         db.rollback()
-        raise DuplicateEmailError('Email already registered')
+        raise DuplicateEmailError("Email already registered")
 
 
 def delete_user(db: Session, user_id: int):

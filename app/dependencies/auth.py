@@ -9,12 +9,12 @@ from ..core.security import decode_token
 from ..crud.user import get_user_by_id
 from ..database import get_db
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/auth/login')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail='Could not validate credentials',
-    headers={'WWW-Authenticate': 'Bearer'},
+    detail="Could not validate credentials",
+    headers={"WWW-Authenticate": "Bearer"},
 )
 
 
@@ -24,10 +24,10 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session 
     except InvalidTokenError:
         raise credentials_exception
 
-    if payload.get('type') != 'access':
+    if payload.get("type") != "access":
         raise credentials_exception
 
-    user_id = payload.get('sub')
+    user_id = payload.get("sub")
     if not user_id:
         raise credentials_exception
 

@@ -16,10 +16,13 @@ from app.dependencies.auth import get_current_user
 from app.models.item import Item
 from app.models.user import User
 from app.models.project import Project
+from app.core.security import hash_password
 
 load_dotenv()
 
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite:///:memory:")
+
+hashed_base_password = hash_password("x")
 
 
 @pytest.fixture(scope="session")
@@ -92,7 +95,7 @@ def make_user(session_factory):
     def _make(**fields) -> User:
         data = {
             "email": f"user{next(counter)}@test.com",
-            "hashed_password": "x",
+            "hashed_password": hashed_base_password,
             "first_name": "Test",
             "last_name": "User",
         }

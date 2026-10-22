@@ -7,7 +7,7 @@ from ..models.item import Item
 from ..models.project import Project
 from ..schemas.item import ItemCreate, ItemUpdate, ItemReorder
 
-CASCADE_FIELDS = {'is_done', 'is_archived', 'project_id'}
+CASCADE_FIELDS = {"is_done", "is_archived", "project_id"}
 MAX_SUBTASK_DEPTH = 2
 
 
@@ -25,7 +25,7 @@ class InvalidNeighborError(Exception):
 
 def _would_create_cycle(db: Session, item_id: int, new_parent_id: int) -> bool:
     path_cte = (db.query(Item).filter(Item.id == new_parent_id)
-                .cte(name='path_members_cte', recursive=True))
+                .cte(name="path_members_cte", recursive=True))
     recursive_q = db.query(Item).join(path_cte, Item.id == path_cte.c.parent_id)
     path_cte = path_cte.union_all(recursive_q)
 
@@ -34,7 +34,7 @@ def _would_create_cycle(db: Session, item_id: int, new_parent_id: int) -> bool:
 
 def _get_all_descendants(db: Session, item_id: int) -> list[Item]:
     children_cte = (db.query(Item).filter(Item.parent_id == item_id)
-                    .cte(name='descendants_cte', recursive=True))
+                    .cte(name="descendants_cte", recursive=True))
     recursive_q = db.query(Item).join(children_cte, Item.parent_id == children_cte.c.id)
     children_cte = children_cte.union_all(recursive_q)
 
@@ -43,7 +43,7 @@ def _get_all_descendants(db: Session, item_id: int) -> list[Item]:
 
 def _depth(db: Session, task_id: int) -> int:
     ancestors_cte = (db.query(Item).filter(Item.id == task_id, Item.is_deleted == False, Item.is_archived == False)
-                     .cte(name='ancestors_cte', recursive=True))
+                     .cte(name="ancestors_cte", recursive=True))
     recursive_q = (db.query(Item).join(ancestors_cte, Item.id == ancestors_cte.c.parent_id)
                    .filter(Item.is_deleted == False, Item.is_archived == False))
     ancestors_cte = ancestors_cte.union_all(recursive_q)
@@ -53,7 +53,7 @@ def _depth(db: Session, task_id: int) -> int:
 
 def _height(db: Session, task_id: int) -> int:
     subtree_cte = (db.query(Item).filter(Item.parent_id == task_id, Item.is_deleted == False, Item.is_archived == False)
-                   .cte(name='subtree_cte', recursive=True))
+                   .cte(name="subtree_cte", recursive=True))
     recursive_q = (db.query(Item).join(subtree_cte, Item.parent_id == subtree_cte.c.id)
                    .filter(Item.is_deleted == False, Item.is_archived == False))
     subtree_cte = subtree_cte.union_all(recursive_q)
@@ -69,20 +69,20 @@ def _validate_parent(db: Session, item_id: int | None, parent_id: int, user_id: 
     ).first()
 
     if parent_item is None or parent_item.owner_id != user_id:
-        raise InvalidParentError('Parent task not found or not owned by user')
+        raise InvalidParentError("Parent task not found or not owned by user")
 
     if item_id is not None and _would_create_cycle(db, item_id, parent_id):
-        raise InvalidParentError('This would create a cycle')
+        raise InvalidParentError("This would create a cycle")
 
     item_height = 0 if item_id is None else _height(db, item_id)
     if (_depth(db, parent_id) + 1 + item_height) > MAX_SUBTASK_DEPTH:
-        raise InvalidParentError('This would exceed the maximum depth limit')
+        raise InvalidParentError("This would exceed the maximum depth limit")
 
 
 def _validate_project(db: Session, project_id: int, user_id: int):
     project = db.query(Project).filter(Project.id == project_id).first()
     if project is None or project.owner_id != user_id:
-        raise InvalidProjectError('Project not found or not owned by user')
+        raise InvalidProjectError("Project not found or not owned by user")
 
 
 def _needs_rebalance(position: Decimal) -> bool:
@@ -220,7 +220,7 @@ def _validate_neighbors_are_adjacent(db: Session, before: Item | None, after: It
         return
 
     if before.position > after.position:
-        raise InvalidNeighborError('before_id position must be less than after_id position')
+        raise InvalidNeighborError("before_id position must be less than after_id position")
 
     intervening = (
         db.query(Item)
@@ -237,7 +237,7 @@ def _validate_neighbors_are_adjacent(db: Session, before: Item | None, after: It
         .first()
     )
     if intervening is not None:
-        raise InvalidNeighborError('before_id and after_id are not adjacent')
+        raise InvalidNeighborError("before_id and after_id are not adjacent")
 
 
 def _get_reorder_neighbor(db: Session, neighbor_id: int | None, target_parent_id: int | None, item_id: int,
@@ -245,11 +245,11 @@ def _get_reorder_neighbor(db: Session, neighbor_id: int | None, target_parent_id
     if neighbor_id is None:
         return None
     if neighbor_id == item_id:
-        raise InvalidNeighborError('An item cannot be its own neighbor')
+        raise InvalidNeighborError("An item cannot be its own neighbor")
 
     neighbor = db.query(Item).filter(Item.id == neighbor_id, Item.owner_id == user_id).first()
     if neighbor is None or neighbor.parent_id != target_parent_id:
-        raise InvalidNeighborError('Neighbor item not found in the target group')
+        raise InvalidNeighborError("Neighbor item not found in the target group")
 
     return neighbor
 
