@@ -22,16 +22,6 @@ app.add_middleware(
 )
 
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    print(f'INVALID USER INPUT: {exc}')
-
-    return JSONResponse(
-        status_code=400,
-        content={'message': jsonable_encoder(exc.errors())},
-    )
-
-
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     print(f'HTTP {exc.status_code}: {exc.detail}')

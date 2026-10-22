@@ -38,7 +38,7 @@ def _get_all_descendants(db: Session, item_id: int) -> list[Item]:
     recursive_q = db.query(Item).join(children_cte, Item.parent_id == children_cte.c.id)
     children_cte = children_cte.union_all(recursive_q)
 
-    return db.query(Item).select_entity_from(children_cte).all()
+    return db.query(Item).from_statement(children_cte.select()).all()
 
 
 def _depth(db: Session, task_id: int) -> int:
@@ -74,7 +74,8 @@ def _validate_parent(db: Session, item_id: int | None, parent_id: int, user_id: 
     if item_id is not None and _would_create_cycle(db, item_id, parent_id):
         raise InvalidParentError('This would create a cycle')
 
-    if (_depth(db, parent_id) + 1 + _height(db, item_id)) > MAX_SUBTASK_DEPTH:
+    item_height = 0 if item_id is None else _height(db, item_id)
+    if (_depth(db, parent_id) + 1 + item_height) > MAX_SUBTASK_DEPTH:
         raise InvalidParentError('This would exceed the maximum depth limit')
 
 
