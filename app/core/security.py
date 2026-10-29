@@ -25,10 +25,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_access_token(user_data: dict) -> str:
     payload = {}
 
-    payload['sub'] = str(user_data['id'])
-    payload['exp'] = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    payload['jti'] = str(uuid.uuid4())
-    payload['type'] = 'access'
+    payload["sub"] = str(user_data["id"])
+    payload["exp"] = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    payload["jti"] = str(uuid.uuid4())
+    payload["type"] = "access"
 
     token = jwt.encode(
         payload=payload,
@@ -42,10 +42,10 @@ def create_access_token(user_data: dict) -> str:
 def create_refresh_token(user_data: dict) -> str:
     payload = {}
 
-    payload['sub'] = str(user_data['id'])
-    payload['exp'] = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    payload['jti'] = str(uuid.uuid4())
-    payload['type'] = 'refresh'
+    payload["sub"] = str(user_data["id"])
+    payload["exp"] = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    payload["jti"] = str(uuid.uuid4())
+    payload["type"] = "refresh"
 
     token = jwt.encode(
         payload=payload,

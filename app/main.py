@@ -1,32 +1,25 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.encoders import jsonable_encoder
 
 from .routers import item
 from .routers import auth
 from .routers import user
+from .routers import internal
+from .routers import project
+from .config import settings
 
 app = FastAPI()
 
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    print(f"INVALID USER INPUT: {exc}")
-
-    return JSONResponse(
-        status_code=400,
-        content={"message": exc.errors()},
-    )
-
-
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    print(f"HTTP {exc.status_code}: {exc.detail}")
-
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"message": exc.detail}
-    )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=settings.FRONTEND_URL,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.exception_handler(Exception)
@@ -42,6 +35,8 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.include_router(item.router)
 app.include_router(auth.router)
 app.include_router(user.router)
+app.include_router(internal.router)
+app.include_router(project.router)
 
 
 @app.get("/")

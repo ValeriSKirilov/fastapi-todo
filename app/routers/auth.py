@@ -22,7 +22,8 @@ router = APIRouter(
 
 @router.post("/login", response_model=Token)
 def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(get_db)):
-    user = crud.get_user_by_email(db, form_data.username)
+    email = form_data.username.lower()
+    user = crud.get_user_by_email(db, email)
 
     if not user:
         raise credentials_exception

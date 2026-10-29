@@ -1,250 +1,703 @@
 :root {
-    --background: #faf2df;
+    /* ─── Brand ───────────────────────────────────────────────────────── */
     --navy: #1a2236;
     --orange: #dd803a;
-    --orange-hightlight: #c37941;
-    --text-primary: #1a1a2e;
-    --text-secondary: #7e8595;
+    --orange-highlight: #c37941;
+    --orange-active: #fa7e1b;
     --text-orange: #b88a5e;
 
+    /* ─── Global Neutrals ───────────────────────────────────────────────────────── */
+    --white: #ffffff;
+    --background: #faf2df;
+    --search-bar-color: #f3eee8;
+
+    /* ─── Typography ───────────────────────────────────────────────────────── */
+    --text-primary: #1a1a2e;
+    --text-secondary: #7e8595;
+    --text-heading: #292524;
+    --text-body: #44403c;
+    --text-label: #57534e;
+    --text-muted: #78716c;
+
+    /* ─── Borders & Surfaces ───────────────────────────────────────────────────────── */
+    --border-color: #9ca6b8;
+    --border-layout: #868286;
+    --border-input: #a69b8e;
+    --surface-secondary: #dad2c7;
+    --surface-tertiary: #c4b5a7;
+
+    /* ─── Status ───────────────────────────────────────────────────────── */
+    --danger-main: #e04b4b;
+    --danger-icon: #740f0e;
+    --danger-bg: #faeae7;
+    --expired-task-color: #ac2a2a;
+    --gold-important: #f5a623;
+    --amber-important-border: #d97706;
+
+    /* ─── Focus ring ───────────────────────────────────────────────────────── */
+    --focus-ring-color: #c58f79;
+
+    /* ─── Layout ───────────────────────────────────────────────────────── */
     --sidebar-width: 260px;
-    --sidebar-sides-padding: 20px;
-
     --top-bar-height: 60px;
-    --top-bar-color: white;
+    --top-bar-color: var(--white);
+    --subtask-indentation: 24px;
 
-    --search-bar-color: #f3EEE8;
-
+    /* ─── Typography Defaults ───────────────────────────────────────────────────────── */
     --font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
+
+/* ─── Reset ─────────────────────────────────────────────────────────────── */
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    transition: all 0.2s ease;
 }
+
+input, button, textarea, select {
+    margin: 0;
+    padding: 0;
+
+    font-family: inherit;
+    font-size: inherit;
+    line-height: normal;
+    color: inherit;
+}
+
+/* ─── Base ─────────────────────────────────────────────────────────────── */
 
 body {
     font-family: var(--font-family);
-    background-color: var(--background);
     color: var(--text-primary);
+    background-color: var(--background);
 }
+
+/* ─── Login Page ─────────────────────────────────────────────────────────────── */
 
 .login-page {
     position: relative;
-    display: flex;
+
+    display: none;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+
+    font-size: 14px;
 }
 
 .login-page::before {
     content: '';
     position: absolute;
     inset: 0;
+    z-index: 0;
+
     background-image: url('../img/background.png');
     background-size: cover;
     background-position: center;
     filter: blur(4px);
-    z-index: 0;
-}
-
-.login-page {
-    font-size: 14px;
 }
 
 .login-page img {
     display: block;
-    width: 160px;
+    width: 200px;
     height: auto;
     margin: -30px auto;
 }
 
 .login-page h1 {
-    text-align: center;
-    font-size: 32px;
+    font-size: 36px;
     font-weight: 600;
+    color: var(--text-heading);
 }
 
 .login-page p {
-    text-align: center;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 400;
+    color: var(--text-muted);
 }
 
-.login-form, .register-form {
+/* ─── Auth Cards (login / register / success) ────────────────────────────── */
+
+.login-form,
+.register-form,
+.success-banner {
     position: relative;
     z-index: 1;
-    width: 480px;
-    height: auto;
-    background-color: var(--background);
-    border-radius: 12px;
-    padding: 48px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 16px;
+
+    width: 480px;
+    height: auto;
+    padding: 48px;
+    border-radius: 12px;
+
+    background-color: var(--background);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.register-form {
+    display: none;
+}
+
+.success-banner {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding-top: 56px;
+    padding-bottom: 56px;
+}
+
+/* ─── Auth Card — Typography ─────────────────────────────────────────────── */
+
+.success-banner h1 {
+    text-wrap: nowrap;
+}
+
+#confirmation-msg {
+    font-size: 17px;
+    font-weight: 600;
+}
+
+#redirect-msg {
+    padding-top: 16px;
+
+    font-size: 12px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+#redirect-to-login {
+    font-weight: 800;
+    color: var(--text-orange);
+}
+
+/* ─── Login/Register Page Errors ────────────────────────────────────────────────────────── */
+
+.field-error-msg {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    padding: 6px 13px 8px 14px;
+    border-top: 1px solid color-mix(in srgb, var(--expired-task-color) 20%, transparent 80%);
+
+    font-size: 12px;
+    color: var(--expired-task-color);
+}
+
+.field-error-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.invalid-data-msg {
+    display: none;
+
+    color: var(--danger-icon);
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.5;
+}
+
+#email-in-use-msg {
+    text-align: left;
+}
+
+/* ─── Auth Inputs ────────────────────────────────────────────────────────── */
+
+.input-wrapper {
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+    flex: 1;
+    margin: 10px 0;
+    border: 1px solid var(--border-input);
+    border-radius: 8px;
+
+    background-color: var(--white);
+    overflow: hidden;
+}
+
+.input-wrapper.has-error {
+    border-color: var(--danger-main);
+    background-color: var(--danger-bg);
+}
+
+.input-wrapper:focus-within {
+    border-color: var(--focus-ring-color);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-ring-color) 30%, transparent 70%);
+}
+
+.input-control {
+    position: relative;
+    display: flex;
     align-items: center;
 }
 
-.input-wrapper {
-    position: relative;
+.auth-form {
+    width: 90%;
+}
+
+.name-row {
+    display: flex;
+    gap: 12px;
     width: 100%;
 }
 
 .auth-input {
-    width: 350px;
-    padding: 12px 32px 12px 40px;
-    margin: 10px 0 10px 0;
-    border: 1px solid var(--text-secondary);
-    border-radius: 8px;
-    background-color: white;
-    font-size: 16px;
-    font-family: inherit;
-    color: var(--text-primary);
-    outline: none;
-}
+    justify-content: center;
 
-.auth-input:focus {
-    border-color: var(--orange);
-    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+    width: 100%;
+    padding: 12px 13px 12px 40px;
+    margin: 0;
+    border: none;
+    outline: none;
+
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-heading);
+    background-color: transparent;
 }
 
 .auth-input::placeholder {
-    color: var(--text-secondary);
     font-size: 14px;
+    color: var(--text-muted);
+}
+
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus,
+.auth-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px color-mix(in srgb, var(--white) 97%, black 3%) inset !important;
+    -webkit-text-fill-color: var(--text-heading) !important;
+    transition: background-color 5000s ease-in-out 0s;
 }
 
 .input-icon {
     position: absolute;
-    left: 12px;
     top: 50%;
+    left: 12px;
     transform: translateY(-50%);
+
     width: 18px;
     height: 18px;
-    color: var(--text-secondary);
+
+    color: var(--text-muted);
+    stroke-width: 2;
     pointer-events: none;
 }
 
-#login-btn, #register-btn {
+.password-visibility-btn {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+
+    width: 22px;
+    height: 22px;
+    padding: 2px;
+    border-radius: 6px;
+
+    color: var(--text-muted);
+    pointer-events: auto;
+    cursor: pointer;
+
+    transition: color 0.2s ease-in-out, all 0.2s ease;
+}
+
+.password-visibility-btn:hover {
+    color: var(--text-heading);
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+#login-password,
+#register-password,
+#confirm-register-password {
+    padding-right: 38px;
+}
+
+#login-password-hide-btn,
+#register-password-hide-btn,
+#register-confirm-password-hide-btn {
+    display: none;
+}
+
+/* ─── Auth Buttons ───────────────────────────────────────────────────────── */
+
+#login-btn,
+#register-btn {
     width: 100%;
     padding: 12px;
-    margin: 12px 0 12px 0;
-    background-color: var(--orange);
-    border: 2px solid var(--orange-hightlight);
+    margin: 12px 0;
+    border: 1px solid var(--navy);
     border-radius: 8px;
+
     font-size: 16px;
-    color: var(--background);
+    font-weight: 600;
+    color: var(--white);
+    background-color: var(--navy);
+    box-shadow: 0 2px 4px rgba(26, 34, 54, 0.2);
     cursor: pointer;
+
+    transition: all 0.2s ease-in-out;
 }
 
-#login-btn:hover, #register-btn:hover {
-    background-color: var(--orange-hightlight);
-    transition: background-color 0.2s ease;
+#login-btn:hover,
+#register-btn:hover {
+    transform: translateY(-1px);
+    background-color: #25304c;
+    box-shadow: 0 4px 6px rgba(26, 34, 54, 0.2);
 }
 
-#show-register, #show-login {
+#login-btn:active,
+#register-btn:active {
+    background-color: #131929;
+    transform: scale(0.97);
+}
+
+.link-style-btn {
+    padding: 0;
+    border: none;
+
+    font: inherit;
     color: var(--text-orange);
+    background-color: transparent;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: color-mix(in srgb, var(--text-orange) 40%, transparent 60%);
+    cursor: pointer;
+
+    transition: text-decoration-color 0.2s ease;
 }
+
+.link-style-btn:hover {
+    color: color-mix(in srgb, var(--text-orange) 80%, black);
+    text-decoration-color: color-mix(in srgb, var(--text-orange) 75%, black 25%);
+}
+
+/* ─── Todo Page Layout ───────────────────────────────────────────────────── */
 
 .todo-page {
-    display: flex;
+    display: none;
     min-height: 100vh;
-    background-color: var(--background);
+
     font-size: 14px;
+    background-color: var(--background);
 }
 
+/* ─── Sidebar ────────────────────────────────────────────────────────────── */
+
 .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
     width: var(--sidebar-width);
+    height: 100vh;
     flex-shrink: 0;
+    padding-left: 20px;
+    padding-right: 10px;
+
     background-color: var(--navy);
-    min-height: 100vh;
-    padding-left: var(--sidebar-sides-padding);
-    padding-right: var(--sidebar-sides-padding);
 }
 
 .sidebar img {
     display: block;
+    position: relative;
+
     width: 150px;
     height: auto;
-    position: relative;
     margin: 16px auto auto 0;
 }
 
 .sidebar-list {
     list-style: none;
-    padding: 0;
-    margin: 0;
+}
+
+.sidebar-contents {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+
+    overflow-y: auto;
+    padding-right: 10px;
+    padding-bottom: 8px;
+}
+
+.sidebar-contents::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-contents::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-contents::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+}
+
+.sidebar-contents::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: auto;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 .sidebar-label {
     display: flex;
-    flex-direction: column;
-    align-items: start;
-    color: var(--text-secondary);
+    align-items: center;
+    justify-content: space-between;
+
     margin-top: 32px;
     margin-bottom: 12px;
+
     font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
     font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+
+    cursor: pointer;
 }
+
+.first-sidebar-label {
+    margin-top: 0;
+}
+
+.sidebar-chevron-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.sidebar-chevron-icon.collapsed {
+    /*transform: rotate(-90deg);*/
+}
+
+.sidebar-chevron-icon.expanded {
+    transform: rotate(90deg);
+}
+
+.sidebar-label:hover {
+    color: color-mix(in srgb, var(--text-secondary) 80%, white 20%);
+}
+
+/* ─── Sidebar Buttons ────────────────────────────────────────────────────── */
 
 .sidebar-btn {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: white;
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
+
     width: 100%;
-    padding: 10px;
+    height: 36px;
+    box-sizing: border-box;
+    padding: 8px;
     margin-top: 8px;
-    margin-left: -10px;
+    margin-left: 2px;
+    border: none;
+    border-radius: 8px;
+
     font-size: 15px;
+    color: color-mix(in srgb, var(--white) 90%, black 10%);
+    background-color: transparent;
+    cursor: pointer;
+
+    transition: background-color 0.15s ease-in-out;
 }
 
 .sidebar-btn:hover {
+    color: var(--white);
     background-color: rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    transition: background-color 0.2s ease;
+}
+
+.sidebar-btn:hover .btn-icon {
+    color: var(--white);
+}
+
+.sidebar-btn:active {
+    transform: scale(0.97);
 }
 
 .sidebar-btn.active {
-    background-color: color-mix(in srgb, var(--orange) 35%, transparent);
-    color: var(--orange);
-    border-radius: 8px;
     font-weight: 500;
+    color: var(--orange-active);
+    background-color: color-mix(in srgb, var(--orange) 25%, transparent 75%);
 }
 
 .sidebar-btn.active .btn-icon {
-    color: var(--orange);
+    color: var(--orange-active);
 }
 
 .btn-icon {
     width: 18px;
     height: 18px;
+    flex-shrink: 0;
+
     color: var(--text-secondary);
     pointer-events: none;
-    flex-shrink: 0;
 }
 
+.project-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ─── Project Menu Button ─────────────────────────────────────────────────────────── */
+
+.sidebar-project-menu-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    margin-left: auto;
+    padding: 2px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 8px;
+    outline: none;
+
+    color: var(--white);
+    background: none;
+}
+
+.project-menu-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.sidebar-btn:hover .sidebar-project-menu-btn {
+    display: flex;
+}
+
+.sidebar-project-menu-btn:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-project-menu-btn:active {
+    transform: scale(0.97);
+}
+
+.project-rename-input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+
+    color: var(--white);
+    font-size: 15px;
+    font-weight: 500;
+    background: none;
+}
+
+/* ─── Project Add Button ─────────────────────────────────────────────────────────── */
+
+.sidebar-add-item {
+    margin-top: 8px;
+    margin-left: 2px;
+
+    transition: background-color 0.15s ease-in-out;
+}
+
+.sidebar-add-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 8px;
+    outline: none;
+
+    scroll-margin-bottom: 12px;
+
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 500;
+    background: none;
+    cursor: pointer;
+}
+
+.sidebar-add-btn:hover {
+    color: var(--white);
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-add-btn:hover .btn-icon {
+    color: var(--white);
+}
+
+.sidebar-add-input {
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+    border: none;
+    outline: none;
+
+    color: var(--white);
+    font-size: 15px;
+    font-weight: 500;
+    background: none;
+}
+
+/* ─── Sidebar Buttons Counters ─────────────────────────────────────────────────────────── */
+
+.tasks-counter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 18px;
+    margin-left: auto;
+    padding: 2px 4px;
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-btn:hover .tasks-counter {
+    color: var(--white);
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ─── Right Side ─────────────────────────────────────────────────────────── */
 .right-side {
-    flex: 1;
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-width: 0;
 }
+
+/* ─── Top Bar ────────────────────────────────────────────────────────────── */
 
 .top-bar {
     display: flex;
+    align-items: center;
+
     width: 100%;
     height: var(--top-bar-height);
     flex-shrink: 0;
-    background-color: var(--top-bar-color);
-    align-items: center;
     padding: 0 24px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+    background-color: var(--top-bar-color);
 }
 
 .search-wrapper {
@@ -256,112 +709,214 @@ body {
 .search-bar {
     width: 100%;
     height: 30px;
-    background-color: var(--search-bar-color);
+    padding: 12px 12px 8px 36px;
     border: none;
     border-radius: 7px;
-    padding: 12px 12px 8px 36px;
+
+    background-color: var(--search-bar-color);
 }
 
 .search-bar::placeholder {
-    align-items: center;
     font-size: 16px;
     color: var(--text-secondary);
+}
+
+/* ─── User Profile ────────────────────────────────────────────────────────────── */
+
+.user-info-wrapper {
+    position: relative;
+    margin-left: auto;
 }
 
 .user-info {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-left: auto;
+
+    cursor: pointer;
 }
 
 .avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background-color: var(--orange);
-    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
-    font-size: 14px;
+
+    width: 36px;
+    height: 36px;
     flex-shrink: 0;
+    border-radius: 50%;
+
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+    background-color: var(--orange);
 }
 
 .user-name {
     max-width: 150px;
+
+    font-weight: 900;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-weight: 900;
-    color: var(--text-primary);
 }
 
+.menu.profile-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+}
+
+/* ─── Main Content ───────────────────────────────────────────────────────── */
+
 .main-content {
-    margin-left: 30px;
-    margin-right: 30px;
+    display: flex;
+    flex-direction: column;
+
+    height: calc(100vh - var(--top-bar-height));
+    margin: 0 40px;
 }
 
 .main-header {
     display: flex;
+    align-items: center;
+    gap: 15px;
+
     width: 100%;
     height: 80px;
     flex-shrink: 0;
-    align-items: center;
-    gap: 15px;
 }
 
 .page-title {
     display: flex;
     align-items: center;
-    color: var(--text-primary);
     gap: 12px;
+
+    color: var(--text-primary);
+}
+
+#curr-title {
+    max-width: 50vw;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .page-title p {
-    font-size: 15px;
-    color: var(--text-secondary);
     margin-top: 10px;
 
+    font-size: 15px;
+    color: var(--text-secondary);
 }
 
-.logout-button {
+/* ─── Sort Tasks Button ──────────────────────────────────────────────────────── */
+
+.sort-tasks-wrapper {
+    position: relative;
+    margin-left: auto;
+}
+
+.sort-btn {
+    position: relative;
+
     display: flex;
     align-items: center;
     gap: 8px;
-    height: 30px;
-    width: 105px;
-    position: relative;
-    margin-left: auto;
-    background-color: var(--navy);
-    color: white;
+
+    height: 38px;
+    padding: 0 16px;
     border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    padding: 8px 14px;
+    border-radius: 10px;
+
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+    background-color: var(--navy);
     white-space: nowrap;
+    cursor: pointer;
+
+    box-shadow: 0 1px 3px color-mix(in srgb, var(--navy) 35%, transparent 65%);
+    transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 }
 
-.logout-icon {
+.sort-btn:hover {
+    background-color: color-mix(in srgb, var(--navy) 85%, white 15%);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--navy) 40%, transparent 60%);
+}
+
+.sort-btn:active {
+    transform: scale(0.97);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--navy) 30%, transparent 70%);
+}
+
+.sort-icon {
     width: 16px;
     height: 16px;
-    color: white;
-    pointer-events: none;
     flex-shrink: 0;
-    stroke-width: 3.2;
+
+    color: var(--white);
+    stroke-width: 2.25;
+    pointer-events: none;
 }
+
+.sort-btn .chevron-icon {
+    width: 14px;
+    height: 14px;
+    margin-left: 2px;
+    flex-shrink: 0;
+
+    color: color-mix(in srgb, var(--white) 70%, transparent 30%);
+    stroke-width: 2.5;
+    transition: transform 0.2s ease;
+}
+
+.sort-btn.open .chevron-icon {
+    transform: rotate(90deg);
+}
+
+/* ─── Sort Tasks Menu ────────────────────────────────────────────────────── */
+
+.menu.sort-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+
+    border-color: color-mix(in srgb, var(--navy) 30%, transparent 70%);
+    background-color: var(--navy);
+}
+
+.sort-menu .menu-item {
+    border-radius: 8px;
+
+    color: var(--white);
+}
+
+.sort-menu .menu-item .task-icon {
+    color: var(--white);
+}
+
+.sort-menu .menu-item:hover {
+    background-color: color-mix(in srgb, var(--white) 15%, transparent 85%);
+}
+
+.sort-menu .menu-item.selected {
+    background-color: color-mix(in srgb, var(--surface-secondary) 25%, transparent 75%);
+    font-weight: 500;
+}
+
+/* ─── Tasks Container ────────────────────────────────────────────────────── */
 
 .tasks-container {
     display: flex;
+    flex: 1;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+
     overflow-y: auto;
-    height: calc(100vh - 210px);
     margin-bottom: 10px;
-    padding-right: 4px;
+    padding: 4px 14px 4px 40px;
 }
 
 .tasks-container::-webkit-scrollbar {
@@ -381,59 +936,362 @@ body {
     background-color: rgba(0, 0, 0, 0.25);
 }
 
+@supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: auto;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+.tasks-container.sorting-disabled .drag-handle {
+    display: none;
+}
+
+/* ─── Task Item ──────────────────────────────────────────────────────────── */
+
 .task-item {
+    position: relative;
+
     display: flex;
     align-items: center;
-    flex-shrink: 0;
     gap: 12px;
-    padding: 12px 14px;
+
     width: 100%;
-    min-height: 65px;
-    background-color: white;
-    border: 2px solid color-mix(in srgb, var(--text-secondary) 50%, transparent);;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-}
-
-.task-body {
-    flex: 1;
-}
-
-.task-text {
-    color: var(--text-primary);
-    font-size: 15px;
-    font-weight: 500;
-}
-
-.task-checkbox {
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    border: 2px solid color-mix(in srgb, var(--text-secondary) 50%, transparent);;
-    border-radius: 4px;
-    cursor: pointer;
+    height: 75px;
     flex-shrink: 0;
-    position: relative;
-    background-color: white;
+    scroll-margin-bottom: 88px;
+    padding: 12px 16px;
+    border: 2px solid color-mix(in srgb, var(--border-color) 50%, transparent 50%);
+    border-left: 4px solid var(--border-color);
+    border-radius: 12px;
+
+    color: var(--text-heading);
+    font-weight: 600;
+    background-color: var(--white);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
 }
 
-.task-checkbox:hover {
-    background-color: color-mix(in srgb, var(--navy) 50%, transparent);;
-}
-
-.task-checkbox:checked {
-    background-color: var(--navy);
-    border-color: var(--navy);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 100%;
+.task-item:hover .task-chevron,
+.task-item:hover .drag-handle {
+    opacity: 1;
+    transition: opacity 0.15s ease-in-out;
 }
 
 .task-item.completed {
-    border: 2px solid color-mix(in srgb, var(--orange) 30%, transparent);
-    background-color: color-mix(in srgb, var(--orange) 10%, transparent);
+    border: none;
+    border-left: 4px solid color-mix(in srgb, var(--border-color) 50%, transparent 50%);
+
+    background-color: color-mix(in srgb, var(--text-secondary) 15%, transparent 85%);
+    box-shadow: none;
 }
+
+.task-item.removing {
+    opacity: 0.3;
+    transition: opacity 0.15s ease-in-out;
+}
+
+.task-item.completed .task-title {
+    pointer-events: none;
+    color: var(--text-secondary);
+    text-decoration: line-through;
+}
+
+.task-item.completed .task-desc {
+    pointer-events: none;
+    color: color-mix(in srgb, var(--text-secondary) 70%, transparent 30%);
+    text-decoration: line-through;
+}
+
+.task-item.completed .due-date-wrapper {
+    pointer-events: none;
+    color: color-mix(in srgb, var(--text-secondary) 70%, transparent 30%);
+}
+
+.task-item.completed .task-due {
+    color: color-mix(in srgb, var(--text-secondary) 70%, transparent 30%);
+}
+
+.task-body {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    flex: 1;
+
+    min-width: 0;
+    max-width: 790px;
+    height: 100%;
+}
+
+.task-primary-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.task-item.is-subtask {
+    width: calc(100% - var(--subtask-depth, 1) * var(--subtask-indentation));
+    margin-left: calc(var(--subtask-depth, 1) * var(--subtask-indentation));
+    border-left-color: var(--border-input);
+}
+
+/* ─── Important Task ────────────────────────────────────────────────────── */
+
+.task-item.important {
+    border-left: 6px solid var(--amber-important-border);
+}
+
+.task-item.is-subtask.important {
+    border-left-width: 4px;
+}
+
+/* ─── Task Title / Description ────────────────────────────────────────────────── */
+
+.task-title-wrapper,
+.task-desc-wrapper {
+    position: relative;
+    display: block;
+}
+
+.task-title,
+.task-desc {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.task-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+.task-desc {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
+.task-item.is-subtask .task-title {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text-label);
+}
+
+.task-item.is-subtask[data-depth="1"] .task-title {
+    border-left-width: 1px;
+
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-body);
+}
+
+.task-item.is-subtask.expired-task .task-title {
+    color: var(--expired-task-color);
+}
+
+.task-title-inner-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.important-subtask-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 20px;
+    height: 20px;
+
+    fill: color-mix(in srgb, var(--gold-important) 75%, black 25%);
+    color: color-mix(in srgb, var(--gold-important) 75%, black 25%);
+}
+
+/* ─── General Tooltip ────────────────────────────────────────────────── */
+
+.floating-tooltip-shell {
+    position: fixed;
+    z-index: 9999;
+
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.12s ease-in-out;
+}
+
+.floating-tooltip-shell.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.floating-tooltip {
+    max-width: 320px;
+    max-height: inherit;
+    padding: 8px 12px;
+
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--white);
+    background-color: var(--navy);
+
+    pointer-events: auto;
+    word-wrap: break-word;
+    overflow-y: auto;
+
+    scrollbar-color: var(--white) var(--navy);
+}
+
+.floating-tooltip-arrow {
+    position: fixed;
+    z-index: 9998;
+
+    width: 8px;
+    height: 8px;
+
+    background-color: var(--navy);
+    transform: rotate(45deg);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease;
+}
+
+.floating-tooltip-arrow.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.tooltip-light-theme .floating-tooltip,
+.tooltip-light-theme.floating-tooltip-arrow {
+    background-color: var(--white);
+    color: var(--navy);
+}
+
+/* ─── Task Inline Editing ────────────────────────────────────────────────── */
+
+.edit-task-input {
+    border: none;
+    outline: none;
+    background: transparent;
+}
+
+.edit-datetime-input {
+    width: 150px;
+    padding: 0;
+    border: none;
+    outline: none;
+    box-shadow: none;
+
+    font-family: var(--font-family);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.edit-datetime-input::-webkit-calendar-picker-indicator {
+    display: none;
+}
+
+/* ─── Drag Handle, Task Chevron and Checkbox ──────────────────────────────────────────────────────── */
+
+.task-chevron,
+.drag-handle {
+    position: absolute;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 50%;
+    left: -32px;
+    transform: translateY(-50%);
+    padding: 2px;
+    border: none;
+
+    background-color: transparent;
+    opacity: 0;
+    outline: none;
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+.drag-handle {
+    left: -50px;
+    cursor: grab;
+
+    color: var(--text-muted);
+}
+
+.task-chevron:hover {
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.task-chevron:hover .chevron-icon {
+    color: color-mix(in srgb, var(--text-muted) 75%, black 25%);
+}
+
+.task-chevron.collapsed .chevron-icon {
+    /*transform: rotate(-90deg);*/
+}
+
+.task-chevron.expanded .chevron-icon {
+    transform: rotate(90deg);
+}
+
+.chevron-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--text-muted);
+}
+
+.task-checkbox {
+    position: relative;
+
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border: 2px solid color-mix(in srgb, var(--text-secondary) 50%, transparent 50%);
+    border-radius: 4px;
+
+    background-color: white;
+    appearance: none;
+    cursor: pointer;
+
+    transition: background-color 0.15s ease-in-out;
+}
+
+.task-checkbox:hover {
+    background-color: color-mix(in srgb, var(--navy) 30%, transparent 70%);
+}
+
+.task-checkbox:active {
+    transform: scale(0.97);
+}
+
+.task-checkbox:checked {
+    border-color: var(--navy);
+
+    background-color: var(--navy);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 110%;
+}
+
+.task-item.completed .task-checkbox:checked {
+    border-color: color-mix(in srgb, var(--navy) 40%, transparent 60%);
+    background-color: color-mix(in srgb, var(--navy) 40%, transparent 60%);
+}
+
+/* ─── Task Meta (due date + delete) ─────────────────────────────────────── */
 
 .task-meta {
     display: flex;
@@ -442,48 +1300,1600 @@ body {
     margin-left: auto;
 }
 
-.task-due {
+.due-date-wrapper {
     display: flex;
     align-items: center;
-    gap: 6px;
+    justify-content: flex-end;
+    gap: 8px;
+
+    min-width: 195px;
+    padding: 4px;
+
     color: var(--text-secondary);
-    font-size: 13px;
 }
 
-.task-delete-btn {
+.due-date-wrapper:hover {
+    color: color-mix(in srgb, var(--text-primary) 70%, transparent 30%);
+}
+
+.task-due {
+    position: relative;
     display: flex;
     align-items: center;
-    background: none;
-    border: none;
-    cursor: pointer;
+
+    font-size: 14px;
     color: var(--text-secondary);
+}
+
+.task-due:hover {
+    color: color-mix(in srgb, var(--text-primary) 70%, transparent 30%);
+}
+
+.no-due-date {
+    color: color-mix(in srgb, var(--text-secondary) 50%, transparent 50%);
+    font-style: italic;
+}
+
+.no-due-date-icon {
+    color: color-mix(in srgb, var(--text-secondary) 50%, transparent 50%);
+    transform: skewX(-12deg);
+}
+
+.no-due-date:hover .task-icon {
+    color: color-mix(in srgb, var(--text-primary) 70%, transparent 30%);
+}
+
+.task-restore-btn {
+    display: flex;
+    align-items: center;
+
+    border: none;
+
+    color: var(--text-secondary);
+    background-color: transparent;
+    cursor: pointer;
 }
 
 .task-icon {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
 }
 
-.new-task-button {
+.task-menu-btn {
+    display: flex;
+    align-items: center;
+
+    border: none;
+
+    color: var(--text-secondary);
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.task-menu-icon {
+    width: 22px;
+    height: 22px;
+}
+
+/* ─── Forced Ancestor ───────────────────────────────────────────────────────── */
+
+.task-item.forced-ancestor {
+    height: 30px;
+    border-radius: 6px;
+    border-color: color-mix(in srgb, var(--border-color) 25%, transparent 75%);
+    border-left-color: color-mix(in srgb, var(--border-color) 50%, transparent 50%);
+
+    background-color: color-mix(in srgb, var(--white) 50%, transparent 50%);
+    box-shadow: none;
+
+    pointer-events: none;
+}
+
+.task-item.forced-ancestor.expired-task {
+    color: var(--text-muted);
+}
+
+.task-item.forced-ancestor .task-checkbox {
+    display: none;
+}
+
+.task-item.forced-ancestor .task-body {
+    flex: 1;
+    width: 100%;
+    max-width: none;
+}
+
+.task-item.forced-ancestor .task-meta {
+    display: none;
+}
+
+.task-item.forced-ancestor .task-title,
+.task-item.is-subtask.forced-ancestor .task-title {
+    opacity: 0.5;
+
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
+.task-item.forced-ancestor .task-desc-wrapper {
+    display: none;
+}
+
+.task-item.forced-ancestor .task-chevron {
+    display: none;
+}
+
+.task-item.forced-ancestor .tooltip-outer {
+    opacity: 0.9;
+}
+
+/* ─── New Subtask Button ────────────────────────────────────────────────── */
+
+.ghost-row {
+    display: none;
+    height: 45px;
+    padding: 8px 18px;
+    border: 1px dashed var(--border-input);
+
+    background-color: var(--search-bar-color);
+
+    color: var(--text-muted);
+}
+
+.ghost-row:hover {
+    background-color: color-mix(in srgb, var(--surface-secondary) 60%, transparent 40%);
+    color: var(--text-body);
+}
+
+.ghost-row:active {
+    transform: scale(0.99);
+}
+
+.ghost-add-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    width: 100%;
+    height: 100%;
+    padding: 4px;
+    border: none;
+    outline: none;
+
+    font-size: 15px;
+    font-weight: 500;
+    background: none;
+    cursor: pointer;
+}
+
+.ghost-add-btn .task-icon {
+    width: 22px;
+    height: 22px;
+}
+
+.ghost-row-input {
+    border: none;
+
+    background-color: var(--white);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus-ring-color) 40%, transparent 60%);
+}
+
+.ghost-row-input:hover {
+    background-color: var(--white);
+}
+
+.ghost-add-input {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+    height: 100%;
+    padding: 4px;
+    border: none;
+    outline: none;
+
+    color: var(--text-body);
+    font-size: 15px;
+    font-weight: 500;
+    background: none;
+}
+
+.ghost-add-input::placeholder {
+    color: var(--text-muted);
+    font-size: 15px;
+    font-weight: 400;
+    font-style: italic;
+}
+
+/* ─── Orphaned Subtasks Breadcrumbs ───────────────────────────────────────────────────────── */
+
+.breadcrumb-item {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+
+    margin-left: calc(var(--subtask-depth, 0) * (var(--subtask-indentation) - 14px));
+
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.breadcrumb-arrow {
+    flex-shrink: 0;
+
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted);
+}
+
+.breadcrumb-label {
+    display: block;
+    min-width: 0;
+    flex: 1;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ─── Task Menu ───────────────────────────────────────────────────────── */
+
+.menu {
+    position: fixed;
+    z-index: 100;
+
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-content: flex-start;
+    gap: 6px;
+
+    min-width: 160px;
+    max-width: 220px;
+    padding: 8px;
+    border: 1px solid color-mix(in srgb, var(--border-color) 30%, transparent 70%);
+    border-radius: 8px;
+
+    background-color: var(--white);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.10s ease-in-out;
+}
+
+.menu.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.menu-arrow {
+    position: fixed;
+    z-index: 99;
+
+    width: 8px;
+    height: 8px;
+    border: 1px solid color-mix(in srgb, var(--border-color) 30%, transparent 70%);
+
+    background-color: var(--white);
+    transform: rotate(45deg);
+
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.12s ease;
+}
+
+.menu-arrow.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    gap: 8px;
+
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+
+    font-size: 14px;
+    color: var(--navy);
+    background-color: transparent;
+    white-space: nowrap;
+    cursor: pointer;
+
+    transition: background-color 0.15s ease-in-out;
+}
+
+.menu-item .task-icon {
+    color: var(--navy);
+}
+
+.menu-item:hover {
+    border: none;
+    border-radius: 6px;
+
+    background-color: color-mix(in srgb, var(--border-color) 15%, transparent 85%);
+}
+
+.menu-item:active {
+    transform: scale(0.97);
+}
+
+.menu-item-danger {
+    color: var(--danger-main);
+}
+
+.menu-item-danger .task-icon {
+    color: var(--danger-main);
+}
+
+.menu-item-danger:hover {
+    border: none;
+    border-radius: 6px;
+
+    background-color: color-mix(in srgb, var(--danger-main) 10%, transparent 90%);
+}
+
+.menu-divider {
+    flex-shrink: 0;
+    width: 100%;
+    height: 1px;
+    border: none;
+
+    background-color: color-mix(in srgb, var(--border-color) 30%, transparent 70%);
+}
+
+.menu-item[data-context="deleted-only"] {
+    display: none;
+}
+
+.menu.deleted-view .menu-item[data-context="deleted-only"] {
+    display: flex;
+}
+
+.menu.deleted-view .menu-item[data-context="default-only"] {
+    display: none;
+}
+
+/* ─── Expired Task ────────────────────────────────────────────────────── */
+
+.expired-task {
+    color: var(--expired-task-color);
+}
+
+.task-item.expired-task .task-title,
+.task-item.expired-task .task-meta,
+.task-item.expired-task .due-date-wrapper,
+.task-item.expired-task .task-due {
+    color: inherit;
+}
+
+.task-item.expired-task .due-date-wrapper:hover {
+    background-color: rgba(0, 0, 0, 0.055);
+    border-radius: 9999px;
+}
+
+/* ─── Deleted Task Assets ────────────────────────────────────────────────────── */
+
+.task-item-locked {
+    pointer-events: none;
+}
+
+.task-item-locked .menu-btn,
+.task-item-locked .task-chevron {
+    pointer-events: auto;
+}
+
+/* ─── New Task Button ────────────────────────────────────────────────────── */
+
+.new-task-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+
     width: 100%;
     height: 50px;
-    background-color: white;
-    border: 2px solid color-mix(in srgb, var(--orange-hightlight) 60%, transparent);
+    flex-shrink: 0;
+    margin-top: auto;
+    margin-bottom: 10px;
     border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    cursor: pointer;
+
     font-size: 18px;
     font-weight: bold;
+    color: var(--white);
+    background-color: var(--navy);
+    border: none;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+
+    transition: background-color 0.15s ease-in-out;
 }
 
-.new-task-button:hover {
-    background-color: #f5f5f5;
+.new-task-btn:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    filter: brightness(1.2);
+    transform: translateY(-2px);
+
+    transition: all 0.2s ease-in-out;
 }
 
-.new-task-icon {
+.new-task-btn:active {
+    transform: scale(0.97);
+}
+
+.new-task-btn.hiding {
+    animation: slideUp 0.2s ease forwards;
+}
+
+.new-task-btn-icon {
+    color: var(--white);
     stroke-width: 2px;
+}
+
+/* ─── No Tasks Message ─────────────────────────────────────────────────────────── */
+
+.no-tasks-message {
+    position: relative;
+    inset: 0;
+    z-index: 100;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+
+    width: 100%;
+    height: 100%;
+}
+
+.no-tasks-icon {
+    width: 48px;
+    height: 48px;
+    color: var(--border-input);
+}
+
+.no-tasks-heading {
+    color: var(--text-body);
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.no-tasks-subtext {
+    max-width: 300px;
+
+    color: var(--text-muted);
+    font-size: 15px;
+    font-weight: 400;
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* ─── Modal Overlay & Container ─────────────────────────────────────────────────────────── */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+
+    display: none;
+    /*display: flex;*/
+    align-items: center;
+    justify-content: center;
+
+    background-color: rgba(0, 0, 0, 0.3);
+
+    animation: modalFadeIn 0.2s ease;
+}
+
+.modal-overlay.hiding {
+    animation: modalFadeOut 0.15s ease forwards;
+}
+
+.modal-overlay.hiding .modal-content {
+    animation: modalContentOut 0.15s ease forwards;
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+
+    width: 90%;
+    max-width: 850px;
+    min-height: 500px;
+    max-height: 80vh;
+    overflow: hidden;
+    border: 1px solid var(--border-layout);
+    border-radius: 12px;
+
+    background-color: white;
+    box-shadow: 0 0 48px rgba(0, 0, 0, 0.12);
+
+    animation: modalContentIn 0.2s ease;
+}
+
+/* ─── Modal Header ─────────────────────────────────────────────────────────── */
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+    height: 60px;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 16px 24px;
+
+    background-color: var(--navy);
+}
+
+.modal-header-left-side {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.modal-back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 8px;
+    background-color: transparent;
+}
+
+.modal-back-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-back-btn-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--white);
+}
+
+.modal-header-title {
+    margin: 0;
+
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--white);
+}
+
+.modal-header-right-side {
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    gap: 16px;
+
+    height: 100%;
+}
+
+.modal-complete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px;
+
+    min-width: 140px;
+    height: 32px;
+    border: 1px solid var(--white);
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+    background: transparent;
+    cursor: pointer;
+
+    transition: background-color 0.15s ease-in-out;
+}
+
+.modal-complete-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.modal-complete-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-complete-btn:active {
+    transform: scale(0.97);
+}
+
+.modal-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+
+    background: transparent;
+    cursor: pointer;
+
+    transition: background-color 0.15s ease-in-out;
+}
+
+.modal-close-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--white);
+}
+
+.modal-close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-close-btn:active {
+    transform: scale(0.97);
+}
+
+/* ─── Modal Body Layout ─────────────────────────────────────────────────────────── */
+
+.modal-body {
+    display: flex;
+    flex: 1;
+
+    min-height: 0;
+    overflow: hidden;
+
+    background-color: color-mix(in srgb, var(--surface-secondary) 30%, white 70%);
+}
+
+.modal-body-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    flex: 1;
+
+    min-height: 0;
+}
+
+.modal-body-left-column,
+.modal-body-right-column {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.modal-body-left-column {
+    flex-shrink: 0;
+
+    min-height: 0;
+    overflow-y: auto;
+    padding: 20px 8px 20px 16px;
+
+    gap: 12px;
+}
+
+.modal-body-left-column::-webkit-scrollbar {
+    width: 15px;
+}
+
+.modal-body-left-column::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-body-left-column::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--text-muted) 40%, transparent 60%);
+    background-clip: padding-box;
+    border: 5px solid transparent;
+    border-radius: 10px;
+}
+
+.modal-body-left-column::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--text-muted) 50%, transparent 50%);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+    .modal-body-left-column {
+        scrollbar-width: auto;
+        scrollbar-color: color-mix(in srgb, var(--text-muted) 40%, transparent 60%) transparent;
+    }
+}
+
+.modal-body-right-column {
+    position: sticky;
+    align-self: stretch;
+
+    max-width: 290px;
+    height: 100%;
+    padding: 16px 12px;
+    border-left: 1px solid color-mix(in srgb, var(--border-layout) 20%, transparent 80%);
+
+    background-color: color-mix(in srgb, var(--surface-tertiary) 60%, white 40%);
+    gap: 24px;
+}
+
+/* ─── Modal Title & Description ─────────────────────────────────────────────────────────── */
+
+.modal-title-wrapper,
+.modal-desc-wrapper {
+    display: block;
+
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 4px 8px;
+
+    text-align: left;
+}
+
+.modal-missing-title-error {
+    background-color: var(--danger-bg);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger-main) 30%, transparent 70%);
+}
+
+#modal-missing-title-msg {
+    display: none;
+
+    margin-top: -12px;
+    margin-bottom: 8px;
+
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--danger-icon);
+}
+
+.modal-star-important-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    float: right;
+    transform: translateY(4px);
+
+    margin-left: 12px;
+    margin-bottom: 4px;
+    border: none;
+
+    background: transparent;
+    cursor: pointer;
+}
+
+.modal-star-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.modal-star-important-btn:hover .modal-star-icon {
+    fill: color-mix(in srgb, var(--gold-important) 95%, black 5%);
+    color: color-mix(in srgb, var(--gold-important) 95%, black 5%);
+}
+
+.modal-star-important-btn.active .modal-star-icon {
+    fill: color-mix(in srgb, var(--gold-important) 75%, black 25%);
+    color: color-mix(in srgb, var(--gold-important) 75%, black 25%);
+}
+
+.edit-textarea {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+
+    margin-left: -6px;
+    border-radius: 6px;
+
+    color: var(--text-heading);
+    font-family: inherit;
+
+    background-color: color-mix(in srgb, var(--white) 40%, transparent 60%);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus-ring-color) 40%, transparent 60%);
+
+    resize: none;
+    overflow-y: auto;
+    border: none;
+    outline: none;
+}
+
+.modal-task-title {
+    display: inline;
+
+    padding: 4px 8px;
+    margin-left: -8px;
+    border-radius: 6px;
+
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text-heading);
+    white-space: normal;
+    word-break: break-word;
+    cursor: text;
+
+    transition: background-color 0.15s ease;
+}
+
+.edit-title-textarea {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.3;
+
+    padding: 4px 8px;
+}
+
+.modal-item-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    margin-bottom: 2px;
+
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-label);
+}
+
+.modal-task-desc {
+    padding: 2px 8px;
+    margin-left: -8px;
+    border-radius: 6px;
+
+    font-size: 16px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text-body);
+    cursor: text;
+}
+
+.modal-task-desc:hover {
+    background-color: color-mix(in srgb, black 3%, transparent 97%);
+}
+
+.edit-desc-textarea {
+    min-height: 80px;
+    flex-shrink: 0;
+
+    font-size: 16px;
+    line-height: 1.7;
+
+    padding: 2px 8px;
+}
+
+.edit-desc-textarea:hover {
+    background-color: color-mix(in srgb, var(--white) 40%, transparent 60%);
+}
+
+.modal-unset-value-text {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.modal-unset-title {
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+/* ─── Modal Widgets ─────────────────────────────────────────────────────────── */
+
+.modal-widget-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    width: 100%;
+}
+
+.modal-widget-control {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+
+    width: 100%;
+    min-height: 45px;
+    padding: 6px 12px;
+    border: 1px solid var(--border-input);
+    border-radius: 8px;
+
+    font-size: 13px;
+    color: var(--text-body);
+    background-color: color-mix(in srgb, var(--surface-secondary) 15%, white 85%);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+.modal-widget-control:hover {
+    background-color: color-mix(in srgb, var(--surface-secondary) 25%, white 75%);
+}
+
+.modal-projects-display .modal-widget-icon {
+    flex-shrink: 0;
+}
+
+.modal-widget-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.modal-widget-unset-value {
+    border: 1px dashed var(--border-input);
+    color: color-mix(in srgb, var(--text-body) 70%, white 30%);
+}
+
+#modal-due-date-text {
+    white-space: nowrap;
+}
+
+#modal-project-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    flex: 1;
+    min-width: 0;
+
+    text-align: start;
+    white-space: normal;
+    word-break: break-word;
+    overflow: hidden;
+}
+
+/* ─── Modal Projects ─────────────────────────────────────────────────────────── */
+
+.modal-project-control .modal-widget-icon:last-child {
+    transition: transform 0.15s ease;
+}
+
+.modal-project-control.menu-open .modal-widget-icon:last-child {
+    transform: rotate(90deg);
+}
+
+.project-select-menu {
+    min-width: 0;
+    max-width: none;
+}
+
+.project-select-menu::-webkit-scrollbar {
+    width: 10px;
+}
+
+.project-select-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.project-select-menu::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--border-input) 60%, transparent 40%);
+    border-radius: 10px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+}
+
+.project-select-menu::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--border-input) 85%, transparent 15%);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+    .project-select-menu {
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--border-input) 60%, transparent 40%) transparent;
+    }
+}
+
+.project-select-menu .menu-item {
+    align-items: center;
+    gap: 8px;
+
+    height: auto;
+    min-height: 36px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.project-select-menu .menu-item:hover {
+    background-color: color-mix(in srgb, var(--surface-secondary) 35%, transparent 65%);
+}
+
+.project-select-menu .menu-item.active {
+    color: var(--text-primary);
+    background-color: color-mix(in srgb, var(--surface-secondary) 55%, transparent 45%);
+    font-weight: 500;
+}
+
+.project-select-menu .menu-item .task-icon {
+    flex-shrink: 0;
+}
+
+.project-select-menu .menu-item-label {
+    flex: 1;
+    min-width: 0;
+
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.project-select-menu .sidebar-add-item {
+    width: 100%;
+    margin: 0;
+}
+
+.project-select-menu .sidebar-add-btn {
+    height: 28px;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.project-select-menu .sidebar-add-btn:hover {
+    color: var(--text-label);
+    background-color: color-mix(in srgb, var(--text-label) 8%, transparent 92%);
+}
+
+.project-select-menu .sidebar-add-btn:hover .btn-icon {
+    color: var(--text-label);
+}
+
+/* ─── Modal Subtasks ─────────────────────────────────────────────────────────── */
+
+.modal-subtasks-meta-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-meta-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+}
+
+.modal-due-date-meta-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-completed-subtasks-counter {
+    padding: 2px 8px;
+    margin-bottom: 2px;
+    border-radius: 9999px;
+
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-body);
+    background-color: color-mix(in srgb, var(--text-muted) 12%, transparent 88%);
+}
+
+.modal-add-subtask-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 6px;
+
+    color: var(--text-label);
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.modal-add-subtask-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.modal-add-subtask-btn:active {
+    transform: scale(0.97);
+}
+
+.modal-subtasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    max-height: calc(4 * 28px + 3 * 10px);
+    overflow-y: auto;
+    padding: 6px 6px;
+    margin: 0;
+    border: 1px solid var(--border-input);
+    border-radius: 8px;
+    list-style: none;
+
+    background-color: color-mix(in srgb, var(--surface-secondary) 15%, white 85%);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.modal-subtasks-list::-webkit-scrollbar {
+    width: 14px;
+}
+
+.modal-subtasks-list::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+.modal-subtasks-list::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--text-muted) 40%, transparent 60%);
+    background-clip: padding-box;
+    border: 5px solid transparent;
+    border-radius: 10px;
+}
+
+.modal-subtasks-list::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--text-muted) 50%, transparent 50%);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+    .modal-subtasks-list {
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--text-muted) 40%, transparent 60%) transparent;
+    }
+}
+
+.modal-subtasks-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    width: 100%;
+    padding: 2px 4px;
+    border-radius: 4px;
+
+    cursor: pointer;
+}
+
+.modal-subtasks-item.completed {
+    text-decoration: line-through;
+}
+
+.modal-subtasks-item.completed .modal-subtask-checkbox,
+.modal-subtasks-item.completed .modal-subtask-label {
+    opacity: 0.5;
+}
+
+.modal-subtasks-item.expired {
+    color: color-mix(in srgb, var(--expired-task-color) 75%, transparent 25%);
+}
+
+.modal-subtasks-item.expired:hover {
+    color: var(--expired-task-color)
+}
+
+.modal-subtasks-item.expired .modal-subtask-checkbox {
+    border: 2px solid color-mix(in srgb, var(--expired-task-color) 75%, transparent 25%);
+}
+
+.modal-subtasks-item.expired:hover .modal-subtask-checkbox {
+    border: 2px solid var(--expired-task-color)
+}
+
+.modal-subtasks-item:hover {
+    background-color: color-mix(in srgb, var(--text-muted) 8%, transparent 92%);
+}
+
+.modal-subtasks-item.expired .modal-subtask-checkbox:checked {
+    background-color: var(--expired-task-color);
+}
+
+.modal-subtask-checkbox {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    margin: 0;
+    border: 2px solid color-mix(in srgb, var(--text-secondary) 50%, transparent 50%);
+    border-radius: 2px;
+
+    background-color: transparent;
+    appearance: none;
+    cursor: pointer;
+
+    transition: background-color 0.15s ease-in-out;
+}
+
+.modal-subtask-checkbox:hover {
+    border-color: var(--text-muted);
+    background-color: color-mix(in srgb, var(--text-secondary) 10%, transparent 90%);
+}
+
+.modal-subtask-checkbox:active {
+    transform: scale(0.97);
+}
+
+.modal-subtask-checkbox:checked {
+    border-color: var(--text-body);
+
+    background-color: var(--text-body);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 125%;
+}
+
+.modal-subtask-label-wrapper {
+    position: relative;
+    display: block;
+    flex: 1;
+    min-width: 0;
+}
+
+.modal-subtask-label {
+    display: block;
+    padding: 4px 2px 4px 0;
+
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ─── Modal No Subtasks Message ─────────────────────────────────────────────────────────── */
+
+.no-subtasks-msg {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 8px;
+
+    text-align: center;
+    pointer-events: none;
+}
+
+.no-subtasks-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--text-body);
+}
+
+.no-subtasks-heading {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-body);
+    line-height: 1.4;
+}
+
+.no-subtasks-subtext {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+/* ─── Modal New Subtask Row ─────────────────────────────────────────────────────────── */
+
+.new-subtask-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 4px 8px;
+    border: 1px solid var(--border-input);
+    border-radius: 8px;
+
+    pointer-events: none;
+}
+
+.new-subtask-item:focus-within {
+    border-color: var(--navy);
+}
+
+.new-subtask-checkbox {
+    flex-shrink: 0;
+    pointer-events: none;
+    opacity: 0.3;
+}
+
+.modal-subtask-input {
+    flex: 1;
+    min-width: 0;
+    max-height: 54px;
+    overflow-y: auto;
+
+    box-sizing: border-box;
+    padding: 2px 4px;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    box-shadow: none;
+
+    font-size: 14px;
+    line-height: 1.3;
+    color: var(--text-body);
+
+    resize: none;
+    pointer-events: auto;
+}
+
+.modal-subtask-input::placeholder {
+    color: var(--text-muted);
+}
+
+.modal-subtask-input::-webkit-scrollbar {
+    width: 4px;
+}
+
+.modal-subtask-input::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-subtask-input::-webkit-scrollbar-thumb {
+    background-color: var(--text-muted);
+    border-radius: 2px;
+}
+
+.modal-subtask-input::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-label);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-muted) transparent;
+}
+
+/* ─── Modal Actions ─────────────────────────────────────────────────────────── */
+
+.modal-actions-wrapper {
+    display: flex;
+    gap: 8px;
+    flex-direction: column;
+}
+
+.modal-actions-btn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+
+    height: 40px;
+    padding: 0 6px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+
+    font-size: 14px;
+    font-weight: 500;
+    background-color: transparent;
+    cursor: pointer;
+
+    transition: all 0.2s ease-in-out;
+}
+
+.modal-actions-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.modal-actions-btn:active {
+    transform: scale(0.97);
+}
+
+#modal-archive-btn {
+    color: var(--text-label);
+}
+
+#modal-archive-btn:hover {
+    color: color-mix(in srgb, var(--text-label) 70%, black);
+    background-color: color-mix(in srgb, var(--text-secondary) 10%, transparent 90%);
+}
+
+#modal-delete-btn {
+    color: var(--text-label);
+}
+
+#modal-delete-btn:hover {
+    color: var(--danger-main);
+    background-color: color-mix(in srgb, var(--danger-bg) 75%, transparent 25%);
+}
+
+.new-task-actions-wrapper {
+    display: flex;
+    gap: 8px;
+    flex-direction: row;
+}
+
+.new-task-actions-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+
+    padding: 8px 12px;
+    border-radius: 8px;
+
+    cursor: pointer;
+}
+
+#modal-cancel-btn {
+    color: var(--text-label);
+    background-color: transparent;
+    border: 1px solid transparent;
+}
+
+#modal-cancel-btn:hover {
+    background-color: rgba(120, 113, 108, 0.1);
+}
+
+#modal-create-task-btn {
+    border: none;
+
+    font-weight: 600;
+    color: var(--white);
+
+    background-color: var(--navy);
+}
+
+#modal-create-task-btn:hover {
+    background-color: #25304c;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+}
+
+/* ─── Modal Status Badge ─────────────────────────────────────────────────────────── */
+
+.expired-status-badge {
+    display: none;
+    align-items: center;
+    gap: 6px;
+
+    width: contain;
+
+    padding: 2px 8px;
+    border: none;
+    border-radius: 9999px;
+
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--danger-icon);
+    background: var(--danger-bg);
+}
+
+.expired-status-badge.active {
+    display: flex;
+}
+
+.modal-overdue-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.task-overdue {
+    color: var(--expired-task-color)
+}
+
+/* ─── Error Toast ─────────────────────────────────────────────────────────── */
+
+.toast {
+    position: fixed;
+    top: 44px;
+    right: 24px;
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    max-width: 310px;
+    padding: 12px 14px;
+    border-left: 5px solid var(--danger-main);
+    border-radius: 8px;
+
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+    background-color: var(--navy);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20px);
+
+    transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.toast .task-icon {
+    stroke-width: 3px;
+    scale: 1.3;
+}
+
+.toast.visible {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ─── Element State ─────────────────────────────────────────────────────────── */
+
+.task-item.collapsing,
+.sidebar-btn.collapsing {
+    overflow: hidden;
+    opacity: 0;
+    max-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-width: 0;
+
+    transition: opacity 0.2s ease, max-height 0.25s ease, margin 0.25s ease, padding 0.25s ease;
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0
+    }
+    to {
+        opacity: 1
+    }
+}
+
+@keyframes modalFadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes modalContentIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes modalContentOut {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(16px) scale(0.98);
+    }
 }
