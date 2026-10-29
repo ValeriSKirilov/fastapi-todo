@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkmate</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+<div class="login-page" style="display: none">
+    <div class="login-form" id="login-section" style="display: none">
+        <img src="img/logo-with-text.png" alt="Checkmate Logo">
+        <h1>Welcome Back!</h1>
+        <p>Sign in to manage your tasks</p>
+        <form class="auth-form" id="login-form">
+            <div class="input-wrapper">
+                <i data-lucide="mail" class="input-icon"></i>
+                <input type="email" id="login-email" class="auth-input" placeholder="Email">
+            </div>
+            <div class="input-wrapper">
+                <i data-lucide="lock" class="input-icon"></i>
+                <input type="password" id="login-password" class="auth-input" placeholder="Password">
+            </div>
+            <button type="submit" id="login-btn">Log In</button>
+        </form>
+        <p>Don't have an account yet? <a href="#" id="show-register">Sign Up</a></p>
+    </div>
+    <div class="register-form" id="register-section" style="display: none">
+        <img src="./img/logo-with-text.png" alt="Checkmate Logo" style="width: 200px"> <!-- TODO  REMOVE -->
+        <h1>Create Your Account</h1>
+        <p>Start your productive journey today. It's quick and easy</p>
+        <form class="auth-form" id="register-form">
+            <div class="input-wrapper">
+                <i data-lucide="user" class="input-icon"></i>
+                <input type="text" id="register-username" class="auth-input" placeholder="First Name">
+            </div>
+            <div class="input-wrapper">
+                <i data-lucide="user" class="input-icon"></i>
+                <input type="text" id="register-lastname" class="auth-input" placeholder="Last Name">
+            </div>
+            <div class="input-wrapper">
+                <i data-lucide="mail" class="input-icon"></i>
+                <input type="email" id="register-email" class="auth-input" placeholder="Email">
+            </div>
+            <div class="input-wrapper">
+                <i data-lucide="lock" class="input-icon"></i>
+                <input type="password" id="register-password" class="auth-input" placeholder="Create Password">
+            </div>
+            <div class="input-wrapper">
+                <i data-lucide="lock" class="input-icon"></i>
+                <input type="password" id="confirm-register-password" class="auth-input" placeholder="Confirm Password">
+            </div>
+            <button type="submit" id="register-btn">Register</button>
+        </form>
+        <p>Already have an account? <a href="#" id="show-login">Log In</a></p>
+    </div>
+</div>
+<div class="todo-page">
+    <div class="sidebar">
+        <img src="./img/logo-with-text-alternative.png" alt="Checkmate Logo">
+        <span class="sidebar-label">Menu</span>
+        <ul class="sidebar-list" id="menu-list">
+            <li>
+                <button class="sidebar-btn" id="filter-dashboard">
+                    <i data-lucide="home" class="btn-icon"></i>
+                    Dashboard
+                </button>
+            </li>
+            <li>
+                <button class="sidebar-btn" id="filter-all"> <!-- TODO remove active -->
+                    <i data-lucide="layout-dashboard" class="btn-icon"></i>
+                    All Tasks
+                </button>
+            </li>
+            <li>
+                <button class="sidebar-btn active" id="filter-today">
+                    <i data-lucide="calendar" class="btn-icon"></i>
+                    Today
+                </button>
+            </li>
+            <li>
+                <button class="sidebar-btn" id="filter-upcoming">
+                    <i data-lucide="calendar-days" class="btn-icon"></i>
+                    Upcoming
+                </button>
+            </li>
+            <li>
+                <button class="sidebar-btn" id="filter-important">
+                    <i data-lucide="move-down" class="btn-icon"></i>
+                    Important
+                </button>
+            </li>
+            <li>
+                <button class="sidebar-btn" id="filter-completed">
+                    <i data-lucide="circle-check-big" class="btn-icon"></i>
+                    Completed
+                </button>
+            </li>
+        </ul>
+        <span class="sidebar-label">Projects</span>
+        <ul class="sidebar-list" id="projects-list">
+            <li>
+                <button class="sidebar-btn" id="filter-work">
+                    <i data-lucide="folder" class="btn-icon"></i>
+                    Urgent
+                </button>
+            </li>
+            <li>
+                <button class="sidebar-btn" id="filter-expired">
+                    <i data-lucide="clock" class="btn-icon"></i>
+                    Expired
+                </button>
+            </li>
+            <li>
+                <button class="sidebar-btn" id="filter-coming-soon">
+                    <i data-lucide="calendar-clock" class="btn-icon"></i>
+                    Coming Soon
+                </button>
+            </li>
+            <li>
+                <button class="sidebar-btn" id="filter-archived">
+                    <i data-lucide="archive" class="btn-icon"></i>
+                    Archived
+                </button>
+            </li>
+        </ul>
+    </div>
+    <div class="right-side">
+        <div class="top-bar">
+            <div class="search-wrapper">
+                <i data-lucide="search" class="input-icon"></i>
+                <input type="text" class="search-bar" placeholder="Search">
+            </div>
+            <div class="user-info">
+                <div class="avatar" id="user-avatar">VK</div>
+                <div class="user-name" id="user-name">Valeri Kirilov</div>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="main-header">
+                <div class="page-title">
+                    <h1 id="curr-title">Today's Tasks</h1>
+                    <p id="additional-info">Wed Oct 25</p>
+                </div>
+                <button class="logout-button">
+                    Log Out
+                    <i data-lucide="power" class="logout-icon"></i>
+                </button>
+            </div>
+            <div class="tasks-container" id="tasks-list">
+                <div class="task-item" data-id="1">
+                    <input type="checkbox" class="task-checkbox" id="task-1">
+                    <div class="task-body">
+                        <label for="task-1" class="task-text">Design web app UI</label>
+                    </div>
+                    <div class="task-meta">
+                        <span class="task-due">
+                            <i data-lucide="calendar" class="task-icon"></i>
+                            Due 6:00 PM
+                        </span>
+                        <button class="task-delete-btn">
+                            <i data-lucide="trash-2" class="task-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="task-item completed" data-id="2">
+                    <input type="checkbox" class="task-checkbox" id="task-2">
+                    <div class="task-body">
+                        <label for="task-2" class="task-text">Buy groceries</label>
+                    </div>
+                    <div class="task-meta">
+                        <span class="task-due">
+                            <i data-lucide="calendar" class="task-icon"></i>
+                            Due 12:00 AM
+                        </span>
+                        <button class="task-delete-btn">
+                            <i data-lucide="trash-2" class="task-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="task-item" data-id="3">
+                    <input type="checkbox" class="task-checkbox" id="task-3">
+                    <div class="task-body">
+                        <label for="task-3" class="task-text">Lorem Ipsum is simply dummy text of the printing and
+                            typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since
+                            1966, when designers at Letraset and James Mosley, the librarian at St Bride Printing
+                            Library in London, took a 1914 Cicero translation and scrambled it to make dummy text for
+                            Letraset's Body Type sheets. It has survived not only many decades, but also the leap into
+                            electronic typesetting, remaining essentially unchanged. It was popularised thanks to these
+                            sheets and more recently with desktop publishing software like Aldus PageMaker and Microsoft
+                            Word including versions of Lorem Ipsum.</label>
+                    </div>
+                    <div class="task-meta">
+                        <span class="task-due">
+                            <i data-lucide="calendar" class="task-icon"></i>
+                            Due 9:00 PM
+                        </span>
+                        <button class="task-delete-btn">
+                            <i data-lucide="trash-2" class="task-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="task-item" data-id="4">
+                    <input type="checkbox" class="task-checkbox" id="task-4">
+                    <div class="task-body">
+                        <label for="task-4" class="task-text">Design web app UI</label>
+                    </div>
+                    <div class="task-meta">
+                        <span class="task-due">
+                            <i data-lucide="calendar" class="task-icon"></i>
+                            Due 6:00 PM
+                        </span>
+                        <button class="task-delete-btn">
+                            <i data-lucide="trash-2" class="task-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="task-item" data-id="5">
+                    <input type="checkbox" class="task-checkbox" id="task-5">
+                    <div class="task-body">
+                        <label for="task-5" class="task-text">Design web app UI</label>
+                    </div>
+                    <div class="task-meta">
+                        <span class="task-due">
+                            <i data-lucide="calendar" class="task-icon"></i>
+                            Due 6:00 PM
+                        </span>
+                        <button class="task-delete-btn">
+                            <i data-lucide="trash-2" class="task-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="task-item" data-id="6">
+                    <input type="checkbox" class="task-checkbox" id="task-6">
+                    <div class="task-body">
+                        <label for="task-6" class="task-text">Design web app UI</label>
+                    </div>
+                    <div class="task-meta">
+                        <span class="task-due">
+                            <i data-lucide="calendar" class="task-icon"></i>
+                            Due 6:00 PM
+                        </span>
+                        <button class="task-delete-btn">
+                            <i data-lucide="trash-2" class="task-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="task-item" data-id="7">
+                    <input type="checkbox" class="task-checkbox" id="task-7">
+                    <div class="task-body">
+                        <label for="task-7" class="task-text">Design web app UI</label>
+                    </div>
+                    <div class="task-meta">
+                        <span class="task-due">
+                            <i data-lucide="calendar" class="task-icon"></i>
+                            Due 6:00 PM
+                        </span>
+                        <button class="task-delete-btn">
+                            <i data-lucide="trash-2" class="task-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="task-item" data-id="8">
+                    <input type="checkbox" class="task-checkbox" id="task-8">
+                    <div class="task-body">
+                        <label for="task-8" class="task-text">Design web app UI</label>
+                    </div>
+                    <div class="task-meta">
+                        <span class="task-due">
+                            <i data-lucide="calendar" class="task-icon"></i>
+                            Due 6:00 PM
+                        </span>
+                        <button class="task-delete-btn">
+                            <i data-lucide="trash-2" class="task-icon"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <button class="new-task-button" id="add-task-btn">
+                <i data-lucide="circle-plus" class="new-task-icon"></i>
+                Create new task
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+</script>
+
+</body>
+</html>
