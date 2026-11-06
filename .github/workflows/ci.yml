@@ -18,6 +18,7 @@ jobs:
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
       REFRESH_TOKEN_EXPIRE_DAYS: 10
       FRONTEND_URL: "^http://localhost.*$"
+      INTERNAL_API_KEY: "fake-internal-api-key"
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v6
