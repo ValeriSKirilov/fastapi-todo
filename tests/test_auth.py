@@ -54,9 +54,10 @@ def test_register_last_name_too_long(anon_client):
 
 def test_register_password_too_short(anon_client):
     response = anon_client.post("/users/register",
-                                json={"email": "shortPass@test.com", "password": "1", "first_name": "Test",
+                                json={"email": "shortPass@test.com", "password": "a1b1c1", "first_name": "Test",
                                       "last_name": "User"})
     assert response.status_code == 422
+    assert response.json()["detail"][0]["type"] == "validation.error.password_weak"
 
 
 def test_register_password_too_long(anon_client):

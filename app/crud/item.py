@@ -1,3 +1,4 @@
+from sqlalchemy import literal
 from sqlalchemy.sql import func
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
@@ -27,7 +28,7 @@ def _would_create_cycle(db: Session, item_id: int, new_parent_id: int) -> bool:
     path_cte = (db.query(Item).filter(Item.id == new_parent_id)
                 .cte(name="path_members_cte", recursive=True))
     recursive_q = db.query(Item).join(path_cte, Item.id == path_cte.c.parent_id)
-    path_cte = path_cte.union_all(recursive_q)
+    path_cte = path_cte.union(recursive_q)
 
     return db.query(path_cte).filter(path_cte.c.id == item_id).first() is not None
 
@@ -36,7 +37,7 @@ def _get_all_descendants(db: Session, item_id: int) -> list[Item]:
     children_cte = (db.query(Item).filter(Item.parent_id == item_id)
                     .cte(name="descendants_cte", recursive=True))
     recursive_q = db.query(Item).join(children_cte, Item.parent_id == children_cte.c.id)
-    children_cte = children_cte.union_all(recursive_q)
+    children_cte = children_cte.union(recursive_q)
 
     return db.query(Item).from_statement(children_cte.select()).all()
 
@@ -46,19 +47,27 @@ def _depth(db: Session, task_id: int) -> int:
                      .cte(name="ancestors_cte", recursive=True))
     recursive_q = (db.query(Item).join(ancestors_cte, Item.id == ancestors_cte.c.parent_id)
                    .filter(Item.is_deleted == False, Item.is_archived == False))
-    ancestors_cte = ancestors_cte.union_all(recursive_q)
+    ancestors_cte = ancestors_cte.union(recursive_q)
 
     return db.query(func.count()).select_from(ancestors_cte).scalar() - 1
 
 
 def _height(db: Session, task_id: int) -> int:
-    subtree_cte = (db.query(Item).filter(Item.parent_id == task_id, Item.is_deleted == False, Item.is_archived == False)
-                   .cte(name="subtree_cte", recursive=True))
-    recursive_q = (db.query(Item).join(subtree_cte, Item.parent_id == subtree_cte.c.id)
-                   .filter(Item.is_deleted == False, Item.is_archived == False))
-    subtree_cte = subtree_cte.union_all(recursive_q)
+    subtree_cte = (db.query(Item, literal(1).label("level")).filter(
+        Item.parent_id == task_id,
+        Item.is_deleted == False,
+        Item.is_archived == False
+    ).cte(name="subtree_cte", recursive=True))
+    recursive_q = (
+        db.query(Item, (subtree_cte.c.level + 1).label("level")).join(
+            subtree_cte, Item.parent_id == subtree_cte.c.id
+        ).filter(
+            Item.is_deleted == False,
+            Item.is_archived == False
+        ))
+    subtree_cte = subtree_cte.union(recursive_q)
 
-    return db.query(func.count(func.distinct(subtree_cte.c.parent_id))).select_from(subtree_cte).scalar()
+    return db.query(func.max(subtree_cte.c.level)).select_from(subtree_cte).scalar() or 0
 
 
 def _validate_parent(db: Session, item_id: int | None, parent_id: int, user_id: int):
@@ -102,8 +111,17 @@ def _rebalance_siblings(db: Session, parent_id: int | None, user_id: int):
     db.commit()
 
 
+def _get_next_position(db: Session, parent_id: int | None, user_id: int) -> Decimal:
+    position = (
+        db.query(func.max(Item.position))
+        .filter(Item.parent_id == parent_id, Item.owner_id == user_id)
+        .scalar()
+    )
+    return (position or Decimal(0)) + 100
+
+
 def get_items(db: Session, user_id: int, limit: int | None = None):
-    return db.query(Item).filter(Item.owner_id == user_id).limit(limit).order_by(Item.position).all()
+    return db.query(Item).filter(Item.owner_id == user_id).order_by(Item.position, Item.id).limit(limit).all()
 
 
 def get_item(db: Session, item_id: int, user_id: int):
@@ -114,12 +132,7 @@ def create_item(db: Session, item: ItemCreate, user_id: int):
     if item.parent_id is not None:
         _validate_parent(db, None, item.parent_id, user_id)
 
-    position = (
-        db.query(func.max(Item.position))
-        .filter(Item.parent_id == item.parent_id, Item.owner_id == user_id)
-        .scalar()
-    )
-    position = (position or 0) + 100
+    position = _get_next_position(db, item.parent_id, user_id)
 
     if item.project_id is not None:
         _validate_project(db, item.project_id, user_id)
@@ -153,7 +166,7 @@ def delete_item(db: Session, item_id: int, user_id: int):
 
 
 def delete_item_permanently(db: Session, item_id: int, user_id: int):
-    db_item = db.query(Item).filter(Item.id == item_id, Item.owner_id == user_id).first()
+    db_item = db.query(Item).filter(Item.id == item_id, Item.owner_id == user_id, Item.is_deleted == True).first()
     if not db_item:
         return None
 
@@ -198,6 +211,12 @@ def restore_item(db: Session, item_id: int, user_id: int):
     db_item = db.query(Item).filter(Item.id == item_id, Item.owner_id == user_id, Item.is_deleted == True).first()
     if not db_item:
         return None
+
+    if db_item.parent_id is not None:
+        parent_id = db_item.parent_id
+        db_parent = db.query(Item).filter(Item.id == parent_id, Item.owner_id == user_id).first()
+        if not db_parent or db_parent.is_deleted == True:
+            raise InvalidParentError("Can't restore a deleted parent's subtask")
 
     parent_deleted_time = db_item.deleted_at
 
@@ -254,14 +273,15 @@ def _get_reorder_neighbor(db: Session, neighbor_id: int | None, target_parent_id
     return neighbor
 
 
-def _compute_position(before: Item | None, after: Item | None) -> Decimal:
+def _compute_position(db: Session, parent_id: int | None, user_id: int, before: Item | None,
+                      after: Item | None) -> Decimal:
     if before is None and after is None:
-        return Decimal(100)
+        return _get_next_position(db, parent_id, user_id)
     if before is None:
-        return after.position - 100
+        return after.position - Decimal(100)
     if after is None:
-        return before.position + 100
-    return (before.position + after.position) / 2
+        return before.position + Decimal(100)
+    return (before.position + after.position) / Decimal(2)
 
 
 def reorder_item(db: Session, item_id: int, item: ItemReorder, user_id: int):
@@ -278,7 +298,7 @@ def reorder_item(db: Session, item_id: int, item: ItemReorder, user_id: int):
 
     _validate_neighbors_are_adjacent(db, item_before, item_after, item_id, item.parent_id, user_id)
 
-    new_position = _compute_position(item_before, item_after)
+    new_position = _compute_position(db, item.parent_id, user_id, item_before, item_after)
 
     if (_needs_rebalance(new_position)
             or (item_before is not None and item_after is not None and item_before.position == item_after.position)):
@@ -287,7 +307,7 @@ def reorder_item(db: Session, item_id: int, item: ItemReorder, user_id: int):
             db.refresh(item_before)
         if item_after:
             db.refresh(item_after)
-        new_position = _compute_position(item_before, item_after)
+        new_position = _compute_position(db, item.parent_id, user_id, item_before, item_after)
 
     db_item.position = new_position
     db_item.parent_id = item.parent_id

@@ -2,6 +2,7 @@ import re
 from pathlib import Path
 from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, ValidationInfo
+from pydantic_core import PydanticCustomError
 
 _email_pattern = re.compile(
     r"^(?!.*\.\.)(?!.*\.@)(?!.*@\.)[^@\s\"()\[\];:,<>]+@[^@\s\"()\[\];:,<>]+\.[^@\s\"()\[\];:,<>]{2,}$"
@@ -25,8 +26,8 @@ COMMON_PASSWORDS = set(common_passwords_path.read_text(encoding="utf-8").split()
 
 class PasswordValidationError(ValueError):
     def __init__(self, code: str, message: str):
-        self.code = code
-        self.message = message
+        super().__init__(message)
+        self.code, self.message = code, message
 
 
 def _check_password_format(password: str, user_info: dict = None) -> str:
@@ -74,11 +75,14 @@ class UserCreate(UserBase):
     @field_validator("password")
     @classmethod
     def validate_password(cls, v: str, info: ValidationInfo) -> str:
-        return _check_password_format(v, {
-            "email": info.data.get("email", ''),
-            "first_name": info.data.get("first_name", ''),
-            "last_name": info.data.get("last_name", ''),
-        })
+        try:
+            return _check_password_format(v, {
+                "email": info.data.get("email", ''),
+                "first_name": info.data.get("first_name", ''),
+                "last_name": info.data.get("last_name", ''),
+            })
+        except PasswordValidationError as e:
+            raise PydanticCustomError(e.code, e.message)
 
 
 class UserResponse(UserBase):

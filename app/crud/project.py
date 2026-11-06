@@ -10,6 +10,7 @@ class DuplicateProjectError(Exception):
     pass
 
 
+# TODO ADD .order_by(position) WHEN POSITON IS IMPLEMENTED
 def get_projects(db: Session, user_id: int, limit: int | None = None):
     return db.query(Project).filter(Project.owner_id == user_id).limit(limit).all()
 

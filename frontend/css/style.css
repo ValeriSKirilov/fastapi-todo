@@ -110,12 +110,97 @@ body {
     font-size: 36px;
     font-weight: 600;
     color: var(--text-heading);
+
+    text-align: center;
+    text-wrap: nowrap;
 }
 
 .login-page p {
     font-size: 14px;
     font-weight: 400;
     color: var(--text-muted);
+
+    text-align: center;
+}
+
+/* ─── Language Switcher ────────────────────────────────────────────────────────── */
+
+.language-switcher {
+    position: relative;
+}
+
+.language-switcher--floating {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 50;
+}
+
+.language-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    height: 38px;
+    padding: 0 14px;
+    border: 1px solid color-mix(in srgb, var(--white) 40%, transparent 60%);
+    border-radius: 10px;
+
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+    background-color: color-mix(in srgb, var(--navy) 55%, transparent 45%);
+    backdrop-filter: blur(8px);
+    cursor: pointer;
+
+    transition: background-color 0.15s ease;
+}
+
+.language-btn:hover {
+    background-color: color-mix(in srgb, var(--navy) 75%, transparent 25%);
+}
+
+.language-btn--icon-only {
+    justify-content: center;
+
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    /*border: 1px solid var(--border-color);*/
+    /*TODO ASK FOR OPINION*/
+    border-radius: 50%;
+
+    color: var(--text-primary);
+    background-color: transparent;
+    backdrop-filter: none;
+}
+
+.language-btn--icon-only:hover {
+    background-color: color-mix(in srgb, var(--border-color) 20%, transparent 80%);
+}
+
+.language-btn--icon-only .language-icon {
+    color: var(--text-primary);
+}
+
+.language-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    color: var(--white);
+    stroke-width: 2.25;
+}
+
+.menu.language-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 140px;
+}
+
+.language-menu .menu-item.selected {
+    font-weight: 700;
+    background-color: color-mix(in srgb, var(--border-color) 15%, transparent 85%);
 }
 
 /* ─── Auth Cards (login / register / success) ────────────────────────────── */
@@ -131,6 +216,8 @@ body {
     align-items: center;
     gap: 16px;
 
+    /*min-width: 480px;*/
+    /*max-width: 540px;*/
     width: 480px;
     height: auto;
     padding: 48px;
@@ -149,15 +236,12 @@ body {
     align-items: center;
     justify-content: center;
     gap: 24px;
+
     padding-top: 56px;
     padding-bottom: 56px;
 }
 
 /* ─── Auth Card — Typography ─────────────────────────────────────────────── */
-
-.success-banner h1 {
-    text-wrap: nowrap;
-}
 
 #confirmation-msg {
     font-size: 17px;
@@ -324,9 +408,9 @@ body {
     padding-right: 38px;
 }
 
-#login-password-hide-btn,
-#register-password-hide-btn,
-#register-confirm-password-hide-btn {
+#login-hide-password-btn,
+#register-hide-password-btn,
+#register-confirm-hide-password-btn {
     display: none;
 }
 
@@ -601,6 +685,14 @@ body {
     background: none;
 }
 
+.sidebar-empty-message {
+    margin-left: 12px;
+
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 500;
+}
+
 /* ─── Project Add Button ─────────────────────────────────────────────────────────── */
 
 .sidebar-add-item {
@@ -721,11 +813,21 @@ body {
     color: var(--text-secondary);
 }
 
+/* ─── Icon Only Lang Switcher And User Wrapper ────────────────────────────────────────────────────────────── */
+
+.lang-user-wrapper {
+    display: flex;
+    align-items: center;
+
+    margin-left: auto;
+    gap: 12px;
+}
+
 /* ─── User Profile ────────────────────────────────────────────────────────────── */
 
 .user-info-wrapper {
     position: relative;
-    margin-left: auto;
+    /*margin-left: auto;*/
 }
 
 .user-info {
@@ -1307,7 +1409,7 @@ body {
     gap: 8px;
 
     min-width: 195px;
-    padding: 4px;
+    padding: 4px 8px;
 
     color: var(--text-secondary);
 }
@@ -1323,6 +1425,11 @@ body {
 
     font-size: 14px;
     color: var(--text-secondary);
+    text-transform: capitalize;
+}
+
+.task-item-locked .task-due {
+    text-transform: none;
 }
 
 .task-due:hover {
@@ -1604,6 +1711,7 @@ body {
     width: 100%;
     padding: 10px 12px;
     border: none;
+    border-radius: 6px;
 
     font-size: 14px;
     color: var(--navy);
@@ -1620,7 +1728,6 @@ body {
 
 .menu-item:hover {
     border: none;
-    border-radius: 6px;
 
     background-color: color-mix(in srgb, var(--border-color) 15%, transparent 85%);
 }
@@ -1648,6 +1755,7 @@ body {
     flex-shrink: 0;
     width: 100%;
     height: 1px;
+    min-height: 1px;
     border: none;
 
     background-color: color-mix(in srgb, var(--border-color) 30%, transparent 70%);
@@ -1689,7 +1797,7 @@ body {
     pointer-events: none;
 }
 
-.task-item-locked .menu-btn,
+.task-item-locked .task-menu-btn,
 .task-item-locked .task-chevron {
     pointer-events: auto;
 }
@@ -2235,6 +2343,7 @@ body {
 
 #modal-due-date-text {
     white-space: nowrap;
+    text-transform: capitalize;
 }
 
 #modal-project-text {
@@ -2408,7 +2517,7 @@ body {
     flex-direction: column;
     gap: 6px;
 
-    max-height: calc(4 * 28px + 3 * 10px);
+    max-height: calc(4 * 28px + 3 * 16px);
     overflow-y: auto;
     padding: 6px 6px;
     margin: 0;
@@ -2816,6 +2925,34 @@ body {
     transform: translateY(0);
     opacity: 1;
     pointer-events: auto;
+}
+
+/* ─── Info Toast ─────────────────────────────────────────────────────────── */
+
+.toast--info {
+    border-left-color: var(--orange-active);
+}
+
+.toast--info .task-icon {
+    stroke-width: 2.5px;
+    scale: 1;
+}
+
+.toast-action-btn {
+    margin-left: 8px;
+    padding: 4px 10px;
+    border: none;
+    border-radius: 6px;
+
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--orange-active);
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.toast-action-btn:hover {
+    background-color: rgba(255, 255, 255, 0.12);
 }
 
 /* ─── Element State ─────────────────────────────────────────────────────────── */

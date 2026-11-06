@@ -131,13 +131,19 @@ def restore_item(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user),
 ):
-    item = crud.restore_item(db, item_id, current_user.id)
-    if item:
-        return item
-    else:
+    try:
+        item = crud.restore_item(db, item_id, current_user.id)
+        if item:
+            return item
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Item not found"
+            )
+    except crud.InvalidParentError as e:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Item not found"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
         )
 
 

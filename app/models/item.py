@@ -24,7 +24,7 @@ class Item(Base):
     is_important = Column(Boolean, nullable=False, default=False, server_default="false")
     is_archived = Column(Boolean, nullable=False, default=False, server_default="false")
     due_date = Column(DateTime(timezone=True), nullable=True)
-    parent_id = Column(Integer, ForeignKey("items.id"), nullable=True)
+    parent_id = Column(Integer, ForeignKey("items.id"), nullable=True, index=True)
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="SET NULL"), index=True, nullable=True)
     position = Column(Numeric, nullable=False)
 

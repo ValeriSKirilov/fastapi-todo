@@ -19,7 +19,7 @@ class ItemBase(BaseModel):
 
 
 class ItemCreate(ItemBase):
-    pass
+    model_config = ConfigDict(extra="forbid")
 
 
 class ItemResponse(ItemBase):
@@ -38,8 +38,8 @@ class ItemUpdate(BaseModel):
     is_important: bool = None
     is_archived: bool = None
     due_date: datetime | None = None
-    parent_id: int | None = None
     project_id: int | None = None
+    model_config = ConfigDict(extra="forbid")
 
 
 class ItemReorder(BaseModel):

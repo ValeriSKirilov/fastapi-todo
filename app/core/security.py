@@ -19,7 +19,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     plainBytes = plain_password.encode("utf-8")
     userBytes = hashed_password.encode("utf-8")
 
-    return bcrypt.checkpw(plainBytes, userBytes)
+    try:
+        return bcrypt.checkpw(plainBytes, userBytes)
+    except ValueError:
+        return False
 
 
 def create_access_token(user_data: dict) -> str:
