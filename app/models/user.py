@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Index, text
+from sqlalchemy import Column, Index, Integer, String, text
 from sqlalchemy.orm import relationship
 
 from ..database import Base
@@ -7,9 +7,7 @@ from ..database import Base
 class User(Base):
     __tablename__ = "users"
 
-    __table_args__ = (
-        Index("uq_users_email_lower", text("lower(email)"), unique=True),
-    )
+    __table_args__ = (Index("uq_users_email_lower", text("lower(email)"), unique=True),)
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, index=True, nullable=False)

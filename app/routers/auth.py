@@ -1,17 +1,22 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Depends, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
+from sqlalchemy.orm import Session
 
-from ..models.user import User
-from ..schemas.user import UserResponse
-from ..schemas.token import Token, TokenRefreshRequest
-from ..database import get_db
+from ..core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    verify_password,
+)
 from ..crud import user as crud
-from ..dependencies.auth import get_current_user, credentials_exception
-from ..core.security import verify_password, create_access_token, create_refresh_token, decode_token
+from ..database import get_db
+from ..dependencies.auth import credentials_exception, get_current_user
+from ..models.user import User
+from ..schemas.token import Token, TokenRefreshRequest
+from ..schemas.user import UserResponse
 
 router = APIRouter(
     prefix="/auth",
@@ -21,7 +26,10 @@ router = APIRouter(
 
 
 @router.post("/login", response_model=Token)
-def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Session = Depends(get_db)):
+def login(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: Session = Depends(get_db),
+):
     email = form_data.username.lower()
     user = crud.get_user_by_email(db, email)
 
@@ -37,7 +45,7 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: Sessio
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "refresh_token": refresh_token
+        "refresh_token": refresh_token,
     }
 
 
@@ -73,7 +81,7 @@ def refresh_access_token(request: TokenRefreshRequest, db: Session = Depends(get
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "refresh_token": request.refresh_token
+        "refresh_token": request.refresh_token,
     }
 
 

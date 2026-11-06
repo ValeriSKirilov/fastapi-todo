@@ -1,9 +1,10 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+
 import jwt
 import pytest
 
-from app.core import security
 from app.config import settings
+from app.core import security
 
 
 def test_hash_password():
@@ -39,7 +40,7 @@ def test_decode_token():
 
 
 def test_expired_token():
-    payload = {"sub": "1", "exp": datetime.now(timezone.utc) - timedelta(minutes=5)}
+    payload = {"sub": "1", "exp": datetime.now(UTC) - timedelta(minutes=5)}
 
     token = jwt.encode(
         payload=payload,

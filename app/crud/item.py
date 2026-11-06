@@ -1,12 +1,13 @@
-from sqlalchemy import literal
-from sqlalchemy.sql import func
-from sqlalchemy.orm import Session
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
+
+from sqlalchemy import literal
+from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 
 from ..models.item import Item
 from ..models.project import Project
-from ..schemas.item import ItemCreate, ItemUpdate, ItemReorder
+from ..schemas.item import ItemCreate, ItemReorder, ItemUpdate
 
 CASCADE_FIELDS = {"is_done", "is_archived", "project_id"}
 MAX_SUBTASK_DEPTH = 2
@@ -25,8 +26,11 @@ class InvalidNeighborError(Exception):
 
 
 def _would_create_cycle(db: Session, item_id: int, new_parent_id: int) -> bool:
-    path_cte = (db.query(Item).filter(Item.id == new_parent_id)
-                .cte(name="path_members_cte", recursive=True))
+    path_cte = (
+        db.query(Item)
+        .filter(Item.id == new_parent_id)
+        .cte(name="path_members_cte", recursive=True)
+    )
     recursive_q = db.query(Item).join(path_cte, Item.id == path_cte.c.parent_id)
     path_cte = path_cte.union(recursive_q)
 
@@ -34,8 +38,11 @@ def _would_create_cycle(db: Session, item_id: int, new_parent_id: int) -> bool:
 
 
 def _get_all_descendants(db: Session, item_id: int) -> list[Item]:
-    children_cte = (db.query(Item).filter(Item.parent_id == item_id)
-                    .cte(name="descendants_cte", recursive=True))
+    children_cte = (
+        db.query(Item)
+        .filter(Item.parent_id == item_id)
+        .cte(name="descendants_cte", recursive=True)
+    )
     recursive_q = db.query(Item).join(children_cte, Item.parent_id == children_cte.c.id)
     children_cte = children_cte.union(recursive_q)
 
@@ -43,39 +50,51 @@ def _get_all_descendants(db: Session, item_id: int) -> list[Item]:
 
 
 def _depth(db: Session, task_id: int) -> int:
-    ancestors_cte = (db.query(Item).filter(Item.id == task_id, Item.is_deleted == False, Item.is_archived == False)
-                     .cte(name="ancestors_cte", recursive=True))
-    recursive_q = (db.query(Item).join(ancestors_cte, Item.id == ancestors_cte.c.parent_id)
-                   .filter(Item.is_deleted == False, Item.is_archived == False))
+    ancestors_cte = (
+        db.query(Item)
+        .filter(Item.id == task_id, Item.is_deleted == False, Item.is_archived == False)
+        .cte(name="ancestors_cte", recursive=True)
+    )
+    recursive_q = (
+        db.query(Item)
+        .join(ancestors_cte, Item.id == ancestors_cte.c.parent_id)
+        .filter(Item.is_deleted == False, Item.is_archived == False)
+    )
     ancestors_cte = ancestors_cte.union(recursive_q)
 
     return db.query(func.count()).select_from(ancestors_cte).scalar() - 1
 
 
 def _height(db: Session, task_id: int) -> int:
-    subtree_cte = (db.query(Item, literal(1).label("level")).filter(
-        Item.parent_id == task_id,
-        Item.is_deleted == False,
-        Item.is_archived == False
-    ).cte(name="subtree_cte", recursive=True))
-    recursive_q = (
-        db.query(Item, (subtree_cte.c.level + 1).label("level")).join(
-            subtree_cte, Item.parent_id == subtree_cte.c.id
-        ).filter(
+    subtree_cte = (
+        db.query(Item, literal(1).label("level"))
+        .filter(
+            Item.parent_id == task_id,
             Item.is_deleted == False,
-            Item.is_archived == False
-        ))
+            Item.is_archived == False,
+        )
+        .cte(name="subtree_cte", recursive=True)
+    )
+    recursive_q = (
+        db.query(Item, (subtree_cte.c.level + 1).label("level"))
+        .join(subtree_cte, Item.parent_id == subtree_cte.c.id)
+        .filter(Item.is_deleted == False, Item.is_archived == False)
+    )
     subtree_cte = subtree_cte.union(recursive_q)
 
-    return db.query(func.max(subtree_cte.c.level)).select_from(subtree_cte).scalar() or 0
+    return (
+        db.query(func.max(subtree_cte.c.level)).select_from(subtree_cte).scalar() or 0
+    )
 
 
 def _validate_parent(db: Session, item_id: int | None, parent_id: int, user_id: int):
-    parent_item = db.query(Item).filter(
-        Item.id == parent_id,
-        Item.is_deleted == False,
-        Item.is_archived == False
-    ).first()
+    parent_item = (
+        db.query(Item)
+        .filter(
+            Item.id == parent_id, Item.is_deleted == False, Item.is_archived == False
+        )
+        .first()
+    )
 
     if parent_item is None or parent_item.owner_id != user_id:
         raise InvalidParentError("Parent task not found or not owned by user")
@@ -121,7 +140,13 @@ def _get_next_position(db: Session, parent_id: int | None, user_id: int) -> Deci
 
 
 def get_items(db: Session, user_id: int, limit: int | None = None):
-    return db.query(Item).filter(Item.owner_id == user_id).order_by(Item.position, Item.id).limit(limit).all()
+    return (
+        db.query(Item)
+        .filter(Item.owner_id == user_id)
+        .order_by(Item.position, Item.id)
+        .limit(limit)
+        .all()
+    )
 
 
 def get_item(db: Session, item_id: int, user_id: int):
@@ -146,16 +171,18 @@ def create_item(db: Session, item: ItemCreate, user_id: int):
 
 
 def delete_item(db: Session, item_id: int, user_id: int):
-    db_item = db.query(Item).filter(Item.id == item_id, Item.owner_id == user_id).first()
-    if not db_item or db_item.is_deleted == True:
+    db_item = (
+        db.query(Item).filter(Item.id == item_id, Item.owner_id == user_id).first()
+    )
+    if db_item is None or db_item.is_deleted is True:
         return None
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     db_item.is_deleted = True
     db_item.deleted_at = now
 
     for descendant in _get_all_descendants(db, item_id):
-        if not descendant.is_deleted:
+        if descendant.is_deleted is not True:
             descendant.is_deleted = True
             descendant.deleted_at = now
 
@@ -166,7 +193,11 @@ def delete_item(db: Session, item_id: int, user_id: int):
 
 
 def delete_item_permanently(db: Session, item_id: int, user_id: int):
-    db_item = db.query(Item).filter(Item.id == item_id, Item.owner_id == user_id, Item.is_deleted == True).first()
+    db_item = (
+        db.query(Item)
+        .filter(Item.id == item_id, Item.owner_id == user_id, Item.is_deleted == True)
+        .first()
+    )
     if not db_item:
         return None
 
@@ -180,12 +211,11 @@ def delete_item_permanently(db: Session, item_id: int, user_id: int):
 
 
 def update_item(db: Session, item_id: int, item: ItemUpdate, user_id: int):
-    db_item = db.query(Item).filter(Item.id == item_id, Item.owner_id == user_id).first()
+    db_item = (
+        db.query(Item).filter(Item.id == item_id, Item.owner_id == user_id).first()
+    )
     if not db_item:
         return None
-
-    if item.parent_id is not None:
-        _validate_parent(db, item_id, item.parent_id, user_id)
 
     if item.project_id is not None:
         _validate_project(db, item.project_id, user_id)
@@ -208,13 +238,21 @@ def update_item(db: Session, item_id: int, item: ItemUpdate, user_id: int):
 
 
 def restore_item(db: Session, item_id: int, user_id: int):
-    db_item = db.query(Item).filter(Item.id == item_id, Item.owner_id == user_id, Item.is_deleted == True).first()
+    db_item = (
+        db.query(Item)
+        .filter(Item.id == item_id, Item.owner_id == user_id, Item.is_deleted == True)
+        .first()
+    )
     if not db_item:
         return None
 
     if db_item.parent_id is not None:
         parent_id = db_item.parent_id
-        db_parent = db.query(Item).filter(Item.id == parent_id, Item.owner_id == user_id).first()
+        db_parent = (
+            db.query(Item)
+            .filter(Item.id == parent_id, Item.owner_id == user_id)
+            .first()
+        )
         if not db_parent or db_parent.is_deleted == True:
             raise InvalidParentError("Can't restore a deleted parent's subtask")
 
@@ -233,13 +271,21 @@ def restore_item(db: Session, item_id: int, user_id: int):
     return db_item
 
 
-def _validate_neighbors_are_adjacent(db: Session, before: Item | None, after: Item | None, item_id: int,
-                                     parent_id: int | None, user_id: int):
+def _validate_neighbors_are_adjacent(
+    db: Session,
+    before: Item | None,
+    after: Item | None,
+    item_id: int,
+    parent_id: int | None,
+    user_id: int,
+):
     if before is None or after is None:
         return
 
     if before.position > after.position:
-        raise InvalidNeighborError("before_id position must be less than after_id position")
+        raise InvalidNeighborError(
+            "before_id position must be less than after_id position"
+        )
 
     intervening = (
         db.query(Item)
@@ -259,22 +305,34 @@ def _validate_neighbors_are_adjacent(db: Session, before: Item | None, after: It
         raise InvalidNeighborError("before_id and after_id are not adjacent")
 
 
-def _get_reorder_neighbor(db: Session, neighbor_id: int | None, target_parent_id: int | None, item_id: int,
-                          user_id: int):
+def _get_reorder_neighbor(
+    db: Session,
+    neighbor_id: int | None,
+    target_parent_id: int | None,
+    item_id: int,
+    user_id: int,
+):
     if neighbor_id is None:
         return None
     if neighbor_id == item_id:
         raise InvalidNeighborError("An item cannot be its own neighbor")
 
-    neighbor = db.query(Item).filter(Item.id == neighbor_id, Item.owner_id == user_id).first()
+    neighbor = (
+        db.query(Item).filter(Item.id == neighbor_id, Item.owner_id == user_id).first()
+    )
     if neighbor is None or neighbor.parent_id != target_parent_id:
         raise InvalidNeighborError("Neighbor item not found in the target group")
 
     return neighbor
 
 
-def _compute_position(db: Session, parent_id: int | None, user_id: int, before: Item | None,
-                      after: Item | None) -> Decimal:
+def _compute_position(
+    db: Session,
+    parent_id: int | None,
+    user_id: int,
+    before: Item | None,
+    after: Item | None,
+) -> Decimal:
     if before is None and after is None:
         return _get_next_position(db, parent_id, user_id)
     if before is None:
@@ -285,29 +343,50 @@ def _compute_position(db: Session, parent_id: int | None, user_id: int, before: 
 
 
 def reorder_item(db: Session, item_id: int, item: ItemReorder, user_id: int):
-    db_item = db.query(Item).filter(Item.id == item_id, Item.owner_id == user_id, Item.is_deleted == False,
-                                    Item.is_archived == False).first()
+    db_item = (
+        db.query(Item)
+        .filter(
+            Item.id == item_id,
+            Item.owner_id == user_id,
+            Item.is_deleted == False,
+            Item.is_archived == False,
+        )
+        .first()
+    )
     if not db_item:
         return None
 
     if item.parent_id is not None:
         _validate_parent(db, item_id, item.parent_id, user_id)
 
-    item_before = _get_reorder_neighbor(db, item.before_id, item.parent_id, item_id, user_id)
-    item_after = _get_reorder_neighbor(db, item.after_id, item.parent_id, item_id, user_id)
+    item_before = _get_reorder_neighbor(
+        db, item.before_id, item.parent_id, item_id, user_id
+    )
+    item_after = _get_reorder_neighbor(
+        db, item.after_id, item.parent_id, item_id, user_id
+    )
 
-    _validate_neighbors_are_adjacent(db, item_before, item_after, item_id, item.parent_id, user_id)
+    _validate_neighbors_are_adjacent(
+        db, item_before, item_after, item_id, item.parent_id, user_id
+    )
 
-    new_position = _compute_position(db, item.parent_id, user_id, item_before, item_after)
+    new_position = _compute_position(
+        db, item.parent_id, user_id, item_before, item_after
+    )
 
-    if (_needs_rebalance(new_position)
-            or (item_before is not None and item_after is not None and item_before.position == item_after.position)):
+    if _needs_rebalance(new_position) or (
+        item_before is not None
+        and item_after is not None
+        and item_before.position == item_after.position
+    ):
         _rebalance_siblings(db, item.parent_id, user_id)
         if item_before:
             db.refresh(item_before)
         if item_after:
             db.refresh(item_after)
-        new_position = _compute_position(db, item.parent_id, user_id, item_before, item_after)
+        new_position = _compute_position(
+            db, item.parent_id, user_id, item_before, item_after
+        )
 
     db_item.position = new_position
     db_item.parent_id = item.parent_id

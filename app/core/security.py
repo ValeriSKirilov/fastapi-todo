@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta, timezone
+import uuid
+from datetime import UTC, datetime, timedelta
 
 import bcrypt
 import jwt
-import uuid
 
 from ..config import settings
 
@@ -29,7 +29,9 @@ def create_access_token(user_data: dict) -> str:
     payload = {}
 
     payload["sub"] = str(user_data["id"])
-    payload["exp"] = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    payload["exp"] = datetime.now(UTC) + timedelta(
+        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+    )
     payload["jti"] = str(uuid.uuid4())
     payload["type"] = "access"
 
@@ -46,7 +48,9 @@ def create_refresh_token(user_data: dict) -> str:
     payload = {}
 
     payload["sub"] = str(user_data["id"])
-    payload["exp"] = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    payload["exp"] = datetime.now(UTC) + timedelta(
+        days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+    )
     payload["jti"] = str(uuid.uuid4())
     payload["type"] = "refresh"
 
@@ -60,8 +64,4 @@ def create_refresh_token(user_data: dict) -> str:
 
 
 def decode_token(token: str) -> dict:
-    return jwt.decode(
-        token,
-        key=settings.SECRET_KEY,
-        algorithms=[settings.ALGORITHM]
-    )
+    return jwt.decode(token, key=settings.SECRET_KEY, algorithms=[settings.ALGORITHM])

@@ -1,22 +1,22 @@
 import itertools
 import os
 from contextlib import contextmanager
-from dotenv import load_dotenv
 
 import pytest
+from dotenv import load_dotenv
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.main import app
-from app.database import get_db, Base
-from app.dependencies.auth import get_current_user
-from app.models.item import Item
-from app.models.user import User
-from app.models.project import Project
 from app.core.security import hash_password
+from app.database import Base, get_db
+from app.dependencies.auth import get_current_user
+from app.main import app
+from app.models.item import Item
+from app.models.project import Project
+from app.models.user import User
 
 load_dotenv()
 
@@ -30,7 +30,9 @@ def engine():
     url = make_url(TEST_DATABASE_URL)
 
     if url.get_backend_name() == "sqlite":
-        eng = create_engine(url, connect_args={"check_same_thread": False}, poolclass=StaticPool)
+        eng = create_engine(
+            url, connect_args={"check_same_thread": False}, poolclass=StaticPool
+        )
 
         @event.listens_for(eng, "connect")
         def _enable_foreign_keys(dbapi_connection, connection_record):
@@ -39,7 +41,9 @@ def engine():
             cursor.close()
     else:
         if "test" not in (url.database or ""):
-            raise RuntimeError("Refusing to run: the test database name must contain 'test'.")
+            raise RuntimeError(
+                "Refusing to run: the test database name must contain 'test'."
+            )
         eng = create_engine(url)
 
     Base.metadata.drop_all(eng)
@@ -169,7 +173,13 @@ def project(db, user):
 
 @pytest.fixture
 def item(db, user):
-    obj = Item(title="Test Item", description="Test Description", is_done=False, owner_id=user.id, position=100)
+    obj = Item(
+        title="Test Item",
+        description="Test Description",
+        is_done=False,
+        owner_id=user.id,
+        position=100,
+    )
     db.add(obj)
     db.commit()
     db.refresh(obj)

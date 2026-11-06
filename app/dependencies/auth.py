@@ -18,7 +18,9 @@ credentials_exception = HTTPException(
 )
 
 
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(get_db)):
+def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(get_db)
+):
     try:
         payload = decode_token(token)
     except InvalidTokenError:

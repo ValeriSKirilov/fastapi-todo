@@ -1,6 +1,5 @@
-from sqlalchemy import func
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from ..models.project import Project
 from ..schemas.project import ProjectCreate, ProjectUpdate
@@ -16,7 +15,11 @@ def get_projects(db: Session, user_id: int, limit: int | None = None):
 
 
 def get_project(db: Session, project_id: int, user_id: int):
-    return db.query(Project).filter(Project.id == project_id, Project.owner_id == user_id).first()
+    return (
+        db.query(Project)
+        .filter(Project.id == project_id, Project.owner_id == user_id)
+        .first()
+    )
 
 
 def create_project(db: Session, project: ProjectCreate, user_id: int):

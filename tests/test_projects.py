@@ -1,9 +1,5 @@
 import sqlalchemy as sa
 
-from app.models.item import Item
-from app.models.user import User
-from app.models.project import Project
-
 
 def test_foreign_keys_pragma_is_active(db, sqlite_only):
     result = db.execute(sa.text("PRAGMA foreign_keys")).scalar()
@@ -148,28 +144,40 @@ def test_update_project_name_whitespace_only_rejected(client, project):
 
 
 def test_update_project_with_duplicate_name(client, project):
-    response = client.post("/projects", json={"name": "Test Project: Update project with duplicate name"})
-    project_id = response.json()['id']
+    response = client.post(
+        "/projects", json={"name": "Test Project: Update project with duplicate name"}
+    )
+    project_id = response.json()["id"]
 
     response = client.put(f"/projects/{project_id}", json={"name": "Test Project"})
     assert response.status_code == 409
 
 
 def test_update_project_with_duplicate_name_case_diff(client, project):
-    response = client.post("/projects",
-                           json={"name": "Test Project: Update project with duplicate name case-different"})
-    project_id = response.json()['id']
+    response = client.post(
+        "/projects",
+        json={
+            "name": "Test Project: Update project with duplicate name case-different"
+        },
+    )
+    project_id = response.json()["id"]
 
     response = client.put(f"/projects/{project_id}", json={"name": "TeSt PrOjEcT"})
     assert response.status_code == 409
 
 
 def test_update_project_with_duplicate_name_whitespace_padded(client, project):
-    response = client.post("/projects",
-                           json={"name": "Test Project: Update project with duplicate name whitespace-padded"})
-    project_id = response.json()['id']
+    response = client.post(
+        "/projects",
+        json={
+            "name": "Test Project: Update project with duplicate name whitespace-padded"
+        },
+    )
+    project_id = response.json()["id"]
 
-    response = client.put(f"/projects/{project_id}", json={"name": "Test Project         "})
+    response = client.put(
+        f"/projects/{project_id}", json={"name": "Test Project         "}
+    )
     assert response.status_code == 409
 
 
@@ -180,7 +188,9 @@ def test_update_nonexistent_project_returns_404(client, project):
 
 def test_update_project_ownership_enforcement(client, as_user, other_user, project):
     with as_user(other_user):
-        response = client.put(f"/projects/{project.id}", json={"name": "Updated Project"})
+        response = client.put(
+            f"/projects/{project.id}", json={"name": "Updated Project"}
+        )
     assert response.status_code == 404
 
 

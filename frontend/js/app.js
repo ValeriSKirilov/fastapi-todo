@@ -1,125 +1,134 @@
-import { API_BASE_URL } from './config.js';
+import { API_BASE_URL } from "./config.js";
 
 let currentDict = {};
-let currentLocale = 'en';
+let currentLocale = "en";
 
 async function loadLocale(locale) {
-    const response = await fetch(`./locales/${locale}.json`);
-    currentDict = await response.json();
-    currentLocale = locale;
+  const response = await fetch(`./locales/${locale}.json`);
+  currentDict = await response.json();
+  currentLocale = locale;
 }
 
 function t(key, vars = {}) {
-    let str = currentDict[key] ?? key;
-    for (const [k, v] of Object.entries(vars)) {
-        str = str.replaceAll(`{${k}}`, v);
-    }
-    return str;
+  let str = currentDict[key] ?? key;
+  for (const [k, v] of Object.entries(vars)) {
+    str = str.replaceAll(`{${k}}`, v);
+  }
+  return str;
 }
 
 function applyTranslations() {
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.dataset.i18n;
-        if (currentDict[key]) el.textContent = currentDict[key];
-    });
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.dataset.i18n;
+    if (currentDict[key]) el.textContent = currentDict[key];
+  });
 
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-        const key = el.dataset.i18nPlaceholder;
-        if (currentDict[key]) el.placeholder = currentDict[key];
-    });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.dataset.i18nPlaceholder;
+    if (currentDict[key]) el.placeholder = currentDict[key];
+  });
 }
 
-const storedLocale = localStorage.getItem('locale');
-const browserLocale = navigator.language.startsWith('bg') ? 'en' : 'bg';
+const storedLocale = localStorage.getItem("locale");
+const browserLocale = navigator.language.startsWith("bg") ? "en" : "bg";
 const initialLocale = storedLocale || browserLocale;
 
 try {
-    await loadLocale(initialLocale);
+  await loadLocale(initialLocale);
 } catch (error) {
-    console.error('Failed to load locale, falling back to empty dict:', error);
+  console.error("Failed to load locale, falling back to empty dict:", error);
 }
 requestAnimationFrame(() => {
-    applyTranslations();
+  applyTranslations();
 });
 
 async function setLocale(locale) {
-    if (locale === currentLocale) return;
+  if (locale === currentLocale) return;
 
-    try {
-        await loadLocale(locale);
-    } catch (error) {
-        console.log('Failed to load locale:', error);
-        return;
-    }
+  try {
+    await loadLocale(locale);
+  } catch (error) {
+    console.log("Failed to load locale:", error);
+    return;
+  }
 
-    localStorage.setItem('locale', locale);
-    document.lang = locale;
-    applyTranslations();
+  localStorage.setItem("locale", locale);
+  document.lang = locale;
+  applyTranslations();
 
-    document.dispatchEvent(new CustomEvent('app:localeChanged', {
-        detail: {locale}
-    }));
+  document.dispatchEvent(
+    new CustomEvent("app:localeChanged", {
+      detail: { locale },
+    }),
+  );
 }
 
 function initLanguageSwitcherLogic() {
-    document.querySelectorAll('.language-switcher').forEach(switcherEl => {
-        const btn = switcherEl.querySelector('.language-btn');
-        const label = switcherEl.querySelector('.language-btn-label');
-        const menu = switcherEl.querySelector('.language-menu');
+  document.querySelectorAll(".language-switcher").forEach((switcherEl) => {
+    const btn = switcherEl.querySelector(".language-btn");
+    const label = switcherEl.querySelector(".language-btn-label");
+    const menu = switcherEl.querySelector(".language-menu");
 
-        function updateUI(locale) {
-            if (label) label.textContent = locale.toUpperCase();
-            menu.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.toggle('selected', item.dataset.locale === locale);
-            });
-        }
+    function updateUI(locale) {
+      if (label) label.textContent = locale.toUpperCase();
+      menu.querySelectorAll(".menu-item").forEach((item) => {
+        item.classList.toggle("selected", item.dataset.locale === locale);
+      });
+    }
 
-        updateUI(currentLocale);
+    updateUI(currentLocale);
 
-        function openMenu() {
-            menu.classList.add('visible');
-        }
+    function openMenu() {
+      menu.classList.add("visible");
+    }
 
-        function closeMenu() {
-            menu.classList.remove('visible');
-        }
+    function closeMenu() {
+      menu.classList.remove("visible");
+    }
 
-        btn.addEventListener('click', () => {
-            menu.classList.contains('visible') ? closeMenu() : openMenu();
-        });
-
-        menu.addEventListener('click', async (e) => {
-            const clickedItem = e.target.closest('.menu-item');
-            if (!clickedItem) return;
-
-            closeMenu();
-            await setLocale(clickedItem.dataset.locale);
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!e.composedPath().includes(switcherEl)) closeMenu();
-        });
-
-        document.addEventListener('app:localeChanged', (e) => {
-            updateUI(e.detail.locale);
-        });
+    btn.addEventListener("click", () => {
+      menu.classList.contains("visible") ? closeMenu() : openMenu();
     });
+
+    menu.addEventListener("click", async (e) => {
+      const clickedItem = e.target.closest(".menu-item");
+      if (!clickedItem) return;
+
+      closeMenu();
+      await setLocale(clickedItem.dataset.locale);
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.composedPath().includes(switcherEl)) closeMenu();
+    });
+
+    document.addEventListener("app:localeChanged", (e) => {
+      updateUI(e.detail.locale);
+    });
+  });
 }
 
 let redirectTimer;
 let currentTasks = [];
 let currentProjects = [];
-let currentFilterId = 'all';
-let currentViewType = 'filter';
+let currentFilterId = "all";
+let currentViewType = "filter";
 const MAX_SUBTASK_DEPTH = 2;
 
-const generalErrorMessage = 'toast.error.general';
-const subtasksUpdateErrorMessage = 'toast.error.subtasks_update';
-const saveBeforeSubUpdateErrorMessage = 'toast.error.save_before_subtasks';
+const generalErrorMessage = "toast.error.general";
+const subtasksUpdateErrorMessage = "toast.error.subtasks_update";
+const saveBeforeSubUpdateErrorMessage = "toast.error.save_before_subtasks";
 
-async function updateItem(resource, itemId, method, payloadObject, itemsCollection, suffix = '') {
-    const token = localStorage.getItem('access_token');
-    const data = payloadObject ? JSON.stringify(payloadObject) : null;
+async function updateItem(
+  resource,
+  itemId,
+  method,
+  payloadObject,
+  itemsCollection,
+  suffix = "",
+) {
+  const token = localStorage.getItem("access_token");
+  const data = payloadObject ? JSON.stringify(payloadObject) : null;
 
   try {
     const response = await fetch(
@@ -134,27 +143,29 @@ async function updateItem(resource, itemId, method, payloadObject, itemsCollecti
       },
     );
 
-        if (response.ok) {
-            const targetItem = itemsCollection.find(item => item.id === Number(itemId));
-            if (targetItem) {
-                if (response.status !== 204) {
-                    const updatedItem = await response.json();
-                    Object.assign(targetItem, updatedItem);
-                } else {
-                    Object.assign(targetItem, payloadObject);
-                }
-                return {success: true, status: response.status};
-            } else {
-                return {success: false, status: response.status};
-            }
+    if (response.ok) {
+      const targetItem = itemsCollection.find(
+        (item) => item.id === Number(itemId),
+      );
+      if (targetItem) {
+        if (response.status !== 204) {
+          const updatedItem = await response.json();
+          Object.assign(targetItem, updatedItem);
         } else {
-            console.log('Task operation failed:', response.statusText);
-            return {success: false, status: response.status};
+          Object.assign(targetItem, payloadObject);
         }
-    } catch (error) {
-        console.log('Task operation error: ', error);
-        return {success: false, status: null};
+        return { success: true, status: response.status };
+      } else {
+        return { success: false, status: response.status };
+      }
+    } else {
+      console.log("Task operation failed:", response.statusText);
+      return { success: false, status: response.status };
     }
+  } catch (error) {
+    console.log("Task operation error: ", error);
+    return { success: false, status: null };
+  }
 }
 
 async function createItem(resource, payload) {
@@ -184,26 +195,26 @@ async function createItem(resource, payload) {
 }
 
 function syncDescendantLocal(taskId, changesObject, tasksArray = currentTasks) {
-    const childrenByParent = new Map();
-    for (const task of tasksArray) {
-        if (task.parent_id !== null && task.parent_id !== undefined) {
-            if (!childrenByParent.has(task.parent_id)) {
-                childrenByParent.set(task.parent_id, []);
-            }
-            childrenByParent.get(task.parent_id).push(task);
-        }
+  const childrenByParent = new Map();
+  for (const task of tasksArray) {
+    if (task.parent_id !== null && task.parent_id !== undefined) {
+      if (!childrenByParent.has(task.parent_id)) {
+        childrenByParent.set(task.parent_id, []);
+      }
+      childrenByParent.get(task.parent_id).push(task);
     }
+  }
 
-    function applyToChildren(id) {
-        const children = childrenByParent.get(id);
-        if (!children) return;
-        for (const child of children) {
-            Object.assign(child, changesObject);
-            applyToChildren(child.id);
-        }
+  function applyToChildren(id) {
+    const children = childrenByParent.get(id);
+    if (!children) return;
+    for (const child of children) {
+      Object.assign(child, changesObject);
+      applyToChildren(child.id);
     }
+  }
 
-    applyToChildren(Number(taskId));
+  applyToChildren(Number(taskId));
 }
 
 // async function cascadeSubtaskCompletion(taskId, isDone, tasksArray) {
@@ -258,8 +269,8 @@ async function completeTaskWithCascade(taskId, isDone) {
     return { success: false };
   }
 
-    syncDescendantLocal(taskId, {is_done: isDone});
-    return {success: true, cascadeSuccess: true};
+  syncDescendantLocal(taskId, { is_done: isDone });
+  return { success: true, cascadeSuccess: true };
 }
 
 async function deleteTaskPermanently(taskId) {
@@ -348,44 +359,49 @@ function showErrorToast(message) {
 
 let infoToastTimeout;
 let infoToastUndoHandler = null;
-const toastUndoBtn = document.getElementById('info-toast-undo');
+const toastUndoBtn = document.getElementById("info-toast-undo");
 
 function hideInfoToast() {
-    clearTimeout(infoToastTimeout);
-    document.getElementById('info-toast').classList.remove('visible');
-    infoToastUndoHandler = null;
+  clearTimeout(infoToastTimeout);
+  document.getElementById("info-toast").classList.remove("visible");
+  infoToastUndoHandler = null;
 }
 
 function showInfoToast(message, onUndo = null, duration = 5000) {
-    const toast = document.getElementById('info-toast');
-    document.getElementById('info-toast-message').textContent = message;
-    document.getElementById('info-toast-undo').style.display = onUndo ? 'inline-flex' : 'none';
+  const toast = document.getElementById("info-toast");
+  document.getElementById("info-toast-message").textContent = message;
+  document.getElementById("info-toast-undo").style.display = onUndo
+    ? "inline-flex"
+    : "none";
 
-    infoToastUndoHandler = onUndo;
-    document.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-            e.preventDefault();
+  infoToastUndoHandler = onUndo;
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+      e.preventDefault();
 
-            toastUndoBtn.click();
-        }
-    });
+      toastUndoBtn.click();
+    }
+  });
 
-    clearTimeout(infoToastTimeout);
-    toast.classList.add('visible');
-    infoToastTimeout = setTimeout(hideInfoToast, duration);
+  clearTimeout(infoToastTimeout);
+  toast.classList.add("visible");
+  infoToastTimeout = setTimeout(hideInfoToast, duration);
 }
 
-toastUndoBtn.addEventListener('click', async () => {
-    const handler = infoToastUndoHandler;
-    hideInfoToast();
-    if (handler) await handler();
+toastUndoBtn.addEventListener("click", async () => {
+  const handler = infoToastUndoHandler;
+  hideInfoToast();
+  if (handler) await handler();
 });
 
 // TODO RECONSIDER MISSING TASKS TITLES OVERALL
-function showMissingTasksMessage(heading = t('main.empty.default.title'), subtext = t('main.empty.default.subtitle')) {
-    document.getElementById('no-tasks-heading').textContent = heading;
-    document.getElementById('no-tasks-subtext').textContent = subtext;
-    document.getElementById('no-tasks-message').style.display = 'flex';
+function showMissingTasksMessage(
+  heading = t("main.empty.default.title"),
+  subtext = t("main.empty.default.subtitle"),
+) {
+  document.getElementById("no-tasks-heading").textContent = heading;
+  document.getElementById("no-tasks-subtext").textContent = subtext;
+  document.getElementById("no-tasks-message").style.display = "flex";
 }
 
 function renderUserProfile(userData) {
@@ -413,23 +429,25 @@ async function fetchAndRenderUser() {
         },
       });
 
-            if (response.ok) {
-                const userData = await response.json();
-                renderUserProfile(userData);
-                switchView('todo-page');
-                document.dispatchEvent(new Event('app:authSuccess'));
-                document.dispatchEvent(new CustomEvent('app:sidebarChanged', {
-                    detail: {filterId: currentFilterId, viewType: currentViewType}
-                }));
-            } else {
-                switchView('login-page');
-            }
-        } catch (error) {
-            switchView('login-page');
-        }
-    } else {
-        switchView('login-page');
+      if (response.ok) {
+        const userData = await response.json();
+        renderUserProfile(userData);
+        switchView("todo-page");
+        document.dispatchEvent(new Event("app:authSuccess"));
+        document.dispatchEvent(
+          new CustomEvent("app:sidebarChanged", {
+            detail: { filterId: currentFilterId, viewType: currentViewType },
+          }),
+        );
+      } else {
+        switchView("login-page");
+      }
+    } catch (error) {
+      switchView("login-page");
     }
+  } else {
+    switchView("login-page");
+  }
 }
 
 function getRelativeDayLabel(rawDateTime) {
@@ -445,29 +463,37 @@ function getRelativeDayLabel(rawDateTime) {
     (startOfNow - startOfDue) / (1000 * 60 * 60 * 24),
   );
 
-    if (daysDiff >= -6 && daysDiff <= -2) return rawDateTime.toLocaleDateString([currentLocale], {weekday: 'short'});
-    if (daysDiff === -1) return t('date.tomorrow');
-    if (daysDiff === 0) return t('date.today');
-    if (daysDiff === 1) return t('date.yesterday');
-    if (daysDiff >= 2 && daysDiff <= 6) return t('date.days_ago', {days: daysDiff});
-    return null;
+  if (daysDiff >= -6 && daysDiff <= -2)
+    return rawDateTime.toLocaleDateString([currentLocale], {
+      weekday: "short",
+    });
+  if (daysDiff === -1) return t("date.tomorrow");
+  if (daysDiff === 0) return t("date.today");
+  if (daysDiff === 1) return t("date.yesterday");
+  if (daysDiff >= 2 && daysDiff <= 6)
+    return t("date.days_ago", { days: daysDiff });
+  return null;
 }
 
 function reformatDateTime(rawDateTime) {
   const relativeLabel = getRelativeDayLabel(rawDateTime);
 
-    const dateToDisplay = relativeLabel ?? rawDateTime.toLocaleDateString([currentLocale], {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        ...(rawDateTime.getFullYear() !== new Date().getFullYear() ? {year: 'numeric'} : {})
+  const dateToDisplay =
+    relativeLabel ??
+    rawDateTime.toLocaleDateString([currentLocale], {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      ...(rawDateTime.getFullYear() !== new Date().getFullYear()
+        ? { year: "numeric" }
+        : {}),
     });
-    const timeToDisplay = rawDateTime.toLocaleTimeString([currentLocale], {
-        hour: 'numeric',
-        minute: '2-digit'
-    });
+  const timeToDisplay = rawDateTime.toLocaleTimeString([currentLocale], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
 
-    return ' ' + dateToDisplay + ', ' + timeToDisplay;
+  return " " + dateToDisplay + ", " + timeToDisplay;
 }
 
 function toDatetimeLocalValue(isoUtcString) {
@@ -733,38 +759,60 @@ function attachFloatingTooltips(
 }
 
 function validateEmailFormat(email) {
-    return /^(?!.*\.\.)(?!.*\.@)(?!.*@\.)[^@\s"()\[\];:,<>]+@[^@\s"()\[\];:,<>]+\.[^@\s"()\[\];:,<>]{2,}$/.test(email);
+  return /^(?!.*\.\.)(?!.*\.@)(?!.*@\.)[^@\s"()\[\];:,<>]+@[^@\s"()\[\];:,<>]+\.[^@\s"()\[\];:,<>]{2,}$/.test(
+    email,
+  );
 }
 
 const COMMON_PASSWORDS = new Set([
-    '12345678', '123456789', 'password', 'password1', 'qwertyui',
-    'qwerty123', '11111111', 'iloveyou', 'abc12345', 'admin123',
+  "12345678",
+  "123456789",
+  "password",
+  "password1",
+  "qwertyui",
+  "qwerty123",
+  "11111111",
+  "iloveyou",
+  "abc12345",
+  "admin123",
 ]);
 
-function validatePassword(password, {email = '', firstName = '', lastName = ''} = {}) {
-    if (new TextEncoder().encode(password).length > 72) return 'validation.error.password_too_long';
+function validatePassword(
+  password,
+  { email = "", firstName = "", lastName = "" } = {},
+) {
+  if (new TextEncoder().encode(password).length > 72)
+    return "validation.error.password_too_long";
 
-    if (!/^(?=.*\p{L})(?=.*\d).{8,}$/u.test(password)) return 'validation.error.password_weak';
+  if (!/^(?=.*\p{L})(?=.*\d).{8,}$/u.test(password))
+    return "validation.error.password_weak";
 
-    if (COMMON_PASSWORDS.has(password.toLowerCase())) return 'validation.error.password_common';
+  if (COMMON_PASSWORDS.has(password.toLowerCase()))
+    return "validation.error.password_common";
 
-    const lower = password.toLowerCase();
-    const emailLocal = email.split('@')[0].toLowerCase();
-    const personal = [emailLocal, firstName.toLowerCase(), lastName.toLowerCase()].filter(part => part.length >= 3);
-    if (personal.some(part => lower.includes(part))) return 'validation.error.password_personal';
+  const lower = password.toLowerCase();
+  const emailLocal = email.split("@")[0].toLowerCase();
+  const personal = [
+    emailLocal,
+    firstName.toLowerCase(),
+    lastName.toLowerCase(),
+  ].filter((part) => part.length >= 3);
+  if (personal.some((part) => lower.includes(part)))
+    return "validation.error.password_personal";
 
-    return null;
+  return null;
 }
 
 function getFieldErrorMessage(input) {
-    if (input.validity.valueMissing) return t('validation.error.required');
-    if (input.validity.tooShort) return t('validation.error.min_length', {length: input.minLength});
-    if (input.validity.customError) {
-        return input.validationMessage === 'invalid-email'
-            ? t('validation.error.email')
-            : t(input.validationMessage);
-    }
-    return input.validationMessage || t('validation.error.default');
+  if (input.validity.valueMissing) return t("validation.error.required");
+  if (input.validity.tooShort)
+    return t("validation.error.min_length", { length: input.minLength });
+  if (input.validity.customError) {
+    return input.validationMessage === "invalid-email"
+      ? t("validation.error.email")
+      : t(input.validationMessage);
+  }
+  return input.validationMessage || t("validation.error.default");
 }
 
 function showFieldError(input) {
@@ -790,48 +838,54 @@ function clearFieldError(input) {
   const wrapper = input.closest(".input-wrapper");
   if (!wrapper) return;
 
-    wrapper.classList.remove('has-error');
-    wrapper.querySelector('.field-error-msg')?.remove();
+  wrapper.classList.remove("has-error");
+  wrapper.querySelector(".field-error-msg")?.remove();
 }
 
 function projectNameExists(name, excludeId = null) {
-    const normalized = name.trim().toLowerCase();
-    return currentProjects.some(p => p.id !== excludeId && p.name.trim().toLowerCase() === normalized);
+  const normalized = name.trim().toLowerCase();
+  return currentProjects.some(
+    (p) => p.id !== excludeId && p.name.trim().toLowerCase() === normalized,
+  );
 }
 
 function initCustomValidation(form) {
-    const checked = form.querySelectorAll('[data-validate-as]');
+  const checked = form.querySelectorAll("[data-validate-as]");
 
-    const applyCustomCheck = (input) => {
-        let error = '';
-        if (input.value !== '') {
-            if (input.dataset.validateAs === 'email' && !validateEmailFormat(input.value)) {
-                error = 'invalid-email';
-            } else if (input.dataset.validateAs === 'password') {
-                error = validatePassword(input.value, {
-                    email: form.elements['email']?.value ?? '',
-                    firstName: form.elements['first_name']?.value ?? '',
-                    lastName: form.elements['last_name']?.value ?? '',
-                }) ?? '';
-            }
-        }
-        input.setCustomValidity(error);
-    };
+  const applyCustomCheck = (input) => {
+    let error = "";
+    if (input.value !== "") {
+      if (
+        input.dataset.validateAs === "email" &&
+        !validateEmailFormat(input.value)
+      ) {
+        error = "invalid-email";
+      } else if (input.dataset.validateAs === "password") {
+        error =
+          validatePassword(input.value, {
+            email: form.elements["email"]?.value ?? "",
+            firstName: form.elements["first_name"]?.value ?? "",
+            lastName: form.elements["last_name"]?.value ?? "",
+          }) ?? "";
+      }
+    }
+    input.setCustomValidity(error);
+  };
 
-    form.addEventListener('input', () => checked.forEach(applyCustomCheck));
+  form.addEventListener("input", () => checked.forEach(applyCustomCheck));
 
-    form.querySelectorAll('[required]').forEach(input => {
-        input.addEventListener('invalid', (e) => {
-            e.preventDefault();
-            applyCustomCheck(input);
-            showFieldError(input);
-        });
-        input.addEventListener('input', () => {
-            applyCustomCheck(input);
-            if (input.validity.valid) clearFieldError(input);
-            else showFieldError(input);
-        });
+  form.querySelectorAll("[required]").forEach((input) => {
+    input.addEventListener("invalid", (e) => {
+      e.preventDefault();
+      applyCustomCheck(input);
+      showFieldError(input);
     });
+    input.addEventListener("input", () => {
+      applyCustomCheck(input);
+      if (input.validity.valid) clearFieldError(input);
+      else showFieldError(input);
+    });
+  });
 }
 
 function initPasswordVisibilityToggle(inputEl, showBtn, hideBtn) {
@@ -1194,10 +1248,10 @@ function initProfileManagementLogic() {
       switchView("login-page");
     }
 
-        if (action === 'delete-account') {
-            alert('TO IMPLEMENT');
-        }
-    });
+    if (action === "delete-account") {
+      alert("TO IMPLEMENT");
+    }
+  });
 
   document.addEventListener("click", (e) => {
     const path = e.composedPath();
@@ -1295,11 +1349,15 @@ function initSortLogic() {
     }
   });
 
-    window.addEventListener('scroll', (e) => {
-        if (!sortMenu.classList.contains('visible')) return;
-        if (e.target === sortMenu || sortMenu.contains(e.target)) return;
-        closeSortMenu();
-    }, true);
+  window.addEventListener(
+    "scroll",
+    (e) => {
+      if (!sortMenu.classList.contains("visible")) return;
+      if (e.target === sortMenu || sortMenu.contains(e.target)) return;
+      closeSortMenu();
+    },
+    true,
+  );
 }
 
 function initTaskManagementLogic() {
@@ -1380,21 +1438,21 @@ function initTaskManagementLogic() {
   function renderTasks(tasksArray, tasksById) {
     document.getElementById("no-tasks-message").style.display = "none";
 
-        if (tasksArray.length === 0) {
-            if (currentFilterId === 'completed') {
-                showMissingTasksMessage(
-                    t('main.empty.completed.title'),
-                    t('main.empty.completed.subtitle')
-                )
-            } else if (currentViewType === 'project') {
-                showMissingTasksMessage(
-                    t('main.empty.project.title'),
-                    t('main.empty.project.subtitle')
-                )
-            } else {
-                showMissingTasksMessage();
-            }
-        }
+    if (tasksArray.length === 0) {
+      if (currentFilterId === "completed") {
+        showMissingTasksMessage(
+          t("main.empty.completed.title"),
+          t("main.empty.completed.subtitle"),
+        );
+      } else if (currentViewType === "project") {
+        showMissingTasksMessage(
+          t("main.empty.project.title"),
+          t("main.empty.project.subtitle"),
+        );
+      } else {
+        showMissingTasksMessage();
+      }
+    }
 
     let allTasksHTML = "";
 
@@ -1404,7 +1462,7 @@ function initTaskManagementLogic() {
                     <div class="task-item is-subtask ghost-row" data-depth="${item.depth}" data-parent-id="${item.parentId}">
                         <button type="button" class="ghost-add-btn">
                             <i data-lucide="plus" class="task-icon"></i>
-                            ${t('task.subtask.add')}
+                            ${t("task.subtask.add")}
                         </button>
                     </div>
                 `;
@@ -1425,14 +1483,14 @@ function initTaskManagementLogic() {
         dueDate = reformatDateTime(rawDate);
       }
 
-            // TODO DUE TRANSLATION
-            const hasDueDateHtml = `
+      // TODO DUE TRANSLATION
+      const hasDueDateHtml = `
                 <div class="due-date-wrapper">
                     ${isExpired(task) ? "<i data-lucide='circle-alert' class='task-icon'></i>" : ""}
                     <i data-lucide="calendar" class="task-icon"></i>
                     <span class="task-due" id="due-${task.id}">
-                        ${t('task.due_date.prefix', {date: currentFilterId === "today" ? dueDate?.split(',').pop().trim() : dueDate})}
-                        <!-- <span>Due</span> ${currentFilterId === "today" ? dueDate?.split(',').pop().trim() : dueDate} -->
+                        ${t("task.due_date.prefix", { date: currentFilterId === "today" ? dueDate?.split(",").pop().trim() : dueDate })}
+                        <!-- <span>Due</span> ${currentFilterId === "today" ? dueDate?.split(",").pop().trim() : dueDate} -->
                     </span>
                 </div>
             `;
@@ -1441,7 +1499,7 @@ function initTaskManagementLogic() {
                 <div class="due-date-wrapper">
                     <i data-lucide="calendar-plus-2" class="task-icon no-due-date-icon"></i>
                     <span class="task-due no-due-date" id="due-${task.id}">
-                        ${t('task.due_date.add')}
+                        ${t("task.due_date.add")}
                     </span>
                 </div>
             `;
@@ -1460,7 +1518,7 @@ function initTaskManagementLogic() {
                     <div class="due-date-wrapper">
                         <i data-lucide="clock" class="task-icon"></i>
                         <span class="task-due" id="due-${task.id}">
-                            ${deletesIn === 1 ? t('task.delete_status.today') : t('task.delete_status.days', {days: deletesIn})}
+                            ${deletesIn === 1 ? t("task.delete_status.today") : t("task.delete_status.days", { days: deletesIn })}
                         </span>
                     </div>
                   `
@@ -1479,8 +1537,12 @@ function initTaskManagementLogic() {
                     <button type="button" class="drag-handle" aria-label="Drag to reorder">
                         <i data-lucide="grip-vertical" class="task-icon"></i>
                     </button>
-                    ${currentFilterId === 'completed' || currentFilterId === 'deleted' ? '' : depth < MAX_SUBTASK_DEPTH
-                ? `<button type="button" class="task-chevron ${isExpanded ? 'expanded' : ''}" id="task-chevron-${task.id}">
+                    ${
+                      currentFilterId === "completed" ||
+                      currentFilterId === "deleted"
+                        ? ""
+                        : depth < MAX_SUBTASK_DEPTH
+                          ? `<button type="button" class="task-chevron ${isExpanded ? "expanded" : ""}" id="task-chevron-${task.id}">
                         <i data-lucide="chevron-right" class="chevron-icon"></i>
                     </button>`
                           : ""
@@ -1913,18 +1975,18 @@ function initTaskManagementLogic() {
         isCompleted,
       );
 
-            if (success) {
-                if (!cascadeSuccess) showErrorToast(t(subtasksUpdateErrorMessage));
-                taskItemElement.classList.add('removing');
-                setTimeout(() => {
-                    refreshUI();
-                }, 150);
-            } else {
-                showErrorToast(t(generalErrorMessage));
-                taskItemElement.classList.remove('completed');
-                clickedCheckbox.checked = !isCompleted;
-            }
-        }
+      if (success) {
+        if (!cascadeSuccess) showErrorToast(t(subtasksUpdateErrorMessage));
+        taskItemElement.classList.add("removing");
+        setTimeout(() => {
+          refreshUI();
+        }, 150);
+      } else {
+        showErrorToast(t(generalErrorMessage));
+        taskItemElement.classList.remove("completed");
+        clickedCheckbox.checked = !isCompleted;
+      }
+    }
 
     if (clickedDateTime) {
       const taskItemElement = clickedDateTime.closest(".task-item");
@@ -1976,13 +2038,13 @@ function initTaskManagementLogic() {
           currentTasks,
         );
 
-                if (result.success) {
-                    refreshUI();
-                } else {
-                    showErrorToast(t(generalErrorMessage));
-                    inputDateTimeElement.replaceWith(clickedDateTime);
-                }
-            });
+        if (result.success) {
+          refreshUI();
+        } else {
+          showErrorToast(t(generalErrorMessage));
+          inputDateTimeElement.replaceWith(clickedDateTime);
+        }
+      });
 
       inputDateTimeElement.addEventListener("blur", async () => {
         if (isProcessing) return;
@@ -2006,11 +2068,11 @@ function initTaskManagementLogic() {
       const parentId = Number(clickedGhostRow.dataset.parentId);
       const ghostBtn = clickedGhostRow.querySelector(".ghost-add-btn");
 
-            const inputEl = document.createElement('input');
-            inputEl.type = 'text';
-            inputEl.className = 'ghost-add-input';
-            inputEl.placeholder = t('task.subtask.placeholder');
-            inputEl.maxLength = 255;
+      const inputEl = document.createElement("input");
+      inputEl.type = "text";
+      inputEl.className = "ghost-add-input";
+      inputEl.placeholder = t("task.subtask.placeholder");
+      inputEl.maxLength = 255;
 
       clickedGhostRow.classList.add("ghost-row-input");
       ghostBtn.replaceWith(inputEl);
@@ -2038,21 +2100,21 @@ function initTaskManagementLogic() {
 
           refreshUI();
 
-                    requestAnimationFrame(() => {
-                        const newGhostBtn = tasksList.querySelector(
-                            `.ghost-row[data-parent-id="${parentId}"]`
-                        );
-                        if (newGhostBtn) {
-                            newGhostBtn.style.display = 'flex';
-                            newGhostBtn.classList.remove('collapsing');
-                            newGhostBtn.scrollIntoView({block: 'nearest'});
-                            newGhostBtn.querySelector('.ghost-add-btn')?.click();
-                        }
-                    });
-                } else {
-                    showErrorToast(t(generalErrorMessage));
-                    inputEl.replaceWith(ghostBtn);
-                }
+          requestAnimationFrame(() => {
+            const newGhostBtn = tasksList.querySelector(
+              `.ghost-row[data-parent-id="${parentId}"]`,
+            );
+            if (newGhostBtn) {
+              newGhostBtn.style.display = "flex";
+              newGhostBtn.classList.remove("collapsing");
+              newGhostBtn.scrollIntoView({ block: "nearest" });
+              newGhostBtn.querySelector(".ghost-add-btn")?.click();
+            }
+          });
+        } else {
+          showErrorToast(t(generalErrorMessage));
+          inputEl.replaceWith(ghostBtn);
+        }
 
         clickedGhostRow.classList.remove("ghost-row-input");
       }
@@ -2134,37 +2196,46 @@ function initTaskManagementLogic() {
       );
       const isDeletedView = currentFilterId === "deleted";
 
-            taskMenu.classList.toggle('deleted-view', isDeletedView);
-            menuDeleteBtn.dataset.action = isDeletedView ? 'delete-forever' : 'delete';
-            document.getElementById('menu-delete-label').textContent =
-                isDeletedView ? t('context_menu.task.delete_forever') : t('context_menu.task.delete');
+      taskMenu.classList.toggle("deleted-view", isDeletedView);
+      menuDeleteBtn.dataset.action = isDeletedView
+        ? "delete-forever"
+        : "delete";
+      document.getElementById("menu-delete-label").textContent = isDeletedView
+        ? t("context_menu.task.delete_forever")
+        : t("context_menu.task.delete");
 
-            if (!isDeletedView) {
-                const importantIcon = targetTask.is_important ? 'star-off' : 'star';
-                document.getElementById('menu-important-icon').outerHTML =
-                    `<i data-lucide="${importantIcon}" class="task-icon" id="menu-important-icon"></i>`;
-                document.getElementById('menu-important-label').textContent =
-                    targetTask.is_important ? t('context_menu.task.remove_importance') : t('context_menu.task.mark_important');
+      if (!isDeletedView) {
+        const importantIcon = targetTask.is_important ? "star-off" : "star";
+        document.getElementById("menu-important-icon").outerHTML =
+          `<i data-lucide="${importantIcon}" class="task-icon" id="menu-important-icon"></i>`;
+        document.getElementById("menu-important-label").textContent =
+          targetTask.is_important
+            ? t("context_menu.task.remove_importance")
+            : t("context_menu.task.mark_important");
 
-                const archiveIcon = targetTask.is_archived ? 'archive-restore' : 'archive';
-                document.getElementById('menu-archive-icon').outerHTML =
-                    `<i data-lucide="${archiveIcon}" class="task-icon" id="menu-archive-icon"></i>`;
-                document.getElementById('menu-archive-label').textContent =
-                    targetTask.is_archived ? t('context_menu.task.unarchive') : t('context_menu.task.archive');
-            }
+        const archiveIcon = targetTask.is_archived
+          ? "archive-restore"
+          : "archive";
+        document.getElementById("menu-archive-icon").outerHTML =
+          `<i data-lucide="${archiveIcon}" class="task-icon" id="menu-archive-icon"></i>`;
+        document.getElementById("menu-archive-label").textContent =
+          targetTask.is_archived
+            ? t("context_menu.task.unarchive")
+            : t("context_menu.task.archive");
+      }
 
       lucide.createIcons();
 
       positionTaskMenu(triggerBtn, taskId);
 
-            taskMenu.classList.add('visible');
-            taskMenuArrow.classList.add('visible');
-            activeMenuTaskId = taskId;
-        } catch (error) {
-            showErrorToast(t(generalErrorMessage));
-            console.log('openMenu failed:' + error);
-        }
+      taskMenu.classList.add("visible");
+      taskMenuArrow.classList.add("visible");
+      activeMenuTaskId = taskId;
+    } catch (error) {
+      showErrorToast(t(generalErrorMessage));
+      console.log("openMenu failed:" + error);
     }
+  }
 
   function closeMenu() {
     taskMenu.classList.remove("visible");
@@ -2180,51 +2251,76 @@ function initTaskManagementLogic() {
     const taskId = activeMenuTaskId;
     const targetTask = currentTasks.find((task) => task.id === Number(taskId));
 
-        if (!targetTask) {
-            showErrorToast(t(generalErrorMessage));
-            closeMenu();
-            return;
+    if (!targetTask) {
+      showErrorToast(t(generalErrorMessage));
+      closeMenu();
+      return;
+    }
+
+    async function deleteTask(isPermanent) {
+      const result = await updateItem(
+        "items",
+        taskId,
+        "DELETE",
+        null,
+        currentTasks,
+        isPermanent ? "/permanent" : "",
+      );
+
+      if (result.success) {
+        if (isPermanent) {
+          const idsToRemove = new Set([
+            Number(taskId),
+            ...getDescendantTaskIds(Number(taskId)),
+          ]);
+          currentTasks = currentTasks.filter(
+            (task) => !idsToRemove.has(task.id),
+          );
+        } else {
+          const nowIso = new Date().toISOString();
+          const targetTask = currentTasks.find(
+            (task) => task.id === Number(taskId),
+          );
+          if (targetTask) {
+            targetTask.is_deleted = true;
+            targetTask.deleted_at = nowIso;
+          }
+          syncDescendantLocal(taskId, { is_deleted: true, deleted_at: nowIso });
+
+          showInfoToast(t("toast.info.task_deleted"), async () => {
+            const undo = await updateItem(
+              "items",
+              taskId,
+              "PUT",
+              { is_deleted: false },
+              currentTasks,
+            );
+            if (undo.success) {
+              syncDescendantLocal(taskId, {
+                is_deleted: false,
+                deleted_at: null,
+              });
+              document.dispatchEvent(new CustomEvent("app:taskUpdated"));
+            } else {
+              showErrorToast(t(generalErrorMessage));
+            }
+          });
         }
 
-        async function deleteTask(isPermanent) {
-            const result = await updateItem('items', taskId, 'DELETE', null, currentTasks, isPermanent ? '/permanent' : '');
-
-            if (result.success) {
-                if (isPermanent) {
-                    const idsToRemove = new Set([Number(taskId), ...getDescendantTaskIds(Number(taskId))]);
-                    currentTasks = currentTasks.filter(task => !idsToRemove.has(task.id));
-                } else {
-                    const nowIso = new Date().toISOString();
-                    const targetTask = currentTasks.find(task => task.id === Number(taskId));
-                    if (targetTask) {
-                        targetTask.is_deleted = true;
-                        targetTask.deleted_at = nowIso;
-                    }
-                    syncDescendantLocal(taskId, {is_deleted: true, deleted_at: nowIso});
-
-                    showInfoToast(t('toast.info.task_deleted'), async () => {
-                        const undo = await updateItem('items', taskId, 'PUT', {is_deleted: false}, currentTasks);
-                        if (undo.success) {
-                            syncDescendantLocal(taskId, {is_deleted: false, deleted_at: null});
-                            document.dispatchEvent(new CustomEvent('app:taskUpdated'));
-                        } else {
-                            showErrorToast(t(generalErrorMessage));
-                        }
-                    });
-                }
-
-                const taskItemElement = document.querySelector(`.task-item[data-id="${taskId}"]`);
-                if (taskItemElement) {
-                    taskItemElement.classList.add('removing');
-                    setTimeout(() => {
-                        refreshUI();
-                    }, 150);
-                } else {
-                    refreshUI();
-                }
-            } else {
-                showErrorToast(t(generalErrorMessage));
-            }
+        const taskItemElement = document.querySelector(
+          `.task-item[data-id="${taskId}"]`,
+        );
+        if (taskItemElement) {
+          taskItemElement.classList.add("removing");
+          setTimeout(() => {
+            refreshUI();
+          }, 150);
+        } else {
+          refreshUI();
+        }
+      } else {
+        showErrorToast(t(generalErrorMessage));
+      }
 
       closeMenu();
     }
@@ -2241,55 +2337,82 @@ function initTaskManagementLogic() {
       return;
     }
 
-        let result;
-        let payloadObject = null;
+    let result;
+    let payloadObject = null;
 
-        switch (action) {
-            case 'important': {
-                payloadObject = {is_important: !targetTask.is_important};
-                result = await updateItem('items', taskId, 'PUT', payloadObject, currentTasks);
-                break;
-            }
-            case 'archive': {
-                payloadObject = {is_archived: !targetTask.is_archived,};
-                result = await updateItem('items', taskId, 'PUT', payloadObject, currentTasks);
-                break;
-            }
-            case 'restore': {
-                result = await updateItem('items', taskId, 'PATH', null, currentTasks, '/restore');
-                break;
-            }
-            default:
-                closeMenu();
-                return;
-        }
+    switch (action) {
+      case "important": {
+        payloadObject = { is_important: !targetTask.is_important };
+        result = await updateItem(
+          "items",
+          taskId,
+          "PUT",
+          payloadObject,
+          currentTasks,
+        );
+        break;
+      }
+      case "archive": {
+        payloadObject = { is_archived: !targetTask.is_archived };
+        result = await updateItem(
+          "items",
+          taskId,
+          "PUT",
+          payloadObject,
+          currentTasks,
+        );
+        break;
+      }
+      case "restore": {
+        result = await updateItem(
+          "items",
+          taskId,
+          "PATH",
+          null,
+          currentTasks,
+          "/restore",
+        );
+        break;
+      }
+      default:
+        closeMenu();
+        return;
+    }
 
-        if (result.success) {
-            if (action === 'archive' && payloadObject.is_archived) {
-                showInfoToast(t('toast.info.task_archived'), async () => {
-                    const undo = await updateItem('items', taskId, 'PUT', {is_archived: false}, currentTasks);
-                    if (undo.success) {
-                        syncDescendantLocal(taskId, {is_archived: false})
-                        document.dispatchEvent(new CustomEvent('app:taskUpdated'));
-                    } else {
-                        showErrorToast(t(generalErrorMessage));
-                    }
-                });
-            }
-
-            const taskItemElement = document.querySelector(`.task-item[data-id="${taskId}"]`);
-
-            if (taskItemElement && (action === 'archive' || action === 'restore')) {
-                taskItemElement.classList.add('removing');
-                setTimeout(() => {
-                    refreshUI();
-                }, 150);
-            } else {
-                refreshUI();
-            }
-        } else {
+    if (result.success) {
+      if (action === "archive" && payloadObject.is_archived) {
+        showInfoToast(t("toast.info.task_archived"), async () => {
+          const undo = await updateItem(
+            "items",
+            taskId,
+            "PUT",
+            { is_archived: false },
+            currentTasks,
+          );
+          if (undo.success) {
+            syncDescendantLocal(taskId, { is_archived: false });
+            document.dispatchEvent(new CustomEvent("app:taskUpdated"));
+          } else {
             showErrorToast(t(generalErrorMessage));
-        }
+          }
+        });
+      }
+
+      const taskItemElement = document.querySelector(
+        `.task-item[data-id="${taskId}"]`,
+      );
+
+      if (taskItemElement && (action === "archive" || action === "restore")) {
+        taskItemElement.classList.add("removing");
+        setTimeout(() => {
+          refreshUI();
+        }, 150);
+      } else {
+        refreshUI();
+      }
+    } else {
+      showErrorToast(t(generalErrorMessage));
+    }
 
     closeMenu();
   });
@@ -2326,18 +2449,18 @@ function initTaskManagementLogic() {
     }
   });
 
-    document.addEventListener('app:taskUpdated', () => {
-        refreshUI();
-        updateSidebarCounts();
-    });
+  document.addEventListener("app:taskUpdated", () => {
+    refreshUI();
+    updateSidebarCounts();
+  });
 
-    document.addEventListener('app:localeChanged', () => {
-        refreshUI();
-    });
+  document.addEventListener("app:localeChanged", () => {
+    refreshUI();
+  });
 
-    function isHidden(el) {
-        return getComputedStyle(el).display === 'none';
-    }
+  function isHidden(el) {
+    return getComputedStyle(el).display === "none";
+  }
 
   function nearestVisibleSibling(el, direction) {
     let sibling =
@@ -2416,9 +2539,9 @@ function initTaskManagementLogic() {
       "/reorder",
     );
 
-        if (!result.success) {
-            showErrorToast(t(generalErrorMessage));
-        }
+    if (!result.success) {
+      showErrorToast(t(generalErrorMessage));
+    }
 
     refreshUI();
   }
@@ -2493,31 +2616,36 @@ function initTaskModalLogic() {
   let nestingLimitNotReached = true;
   let noSubtasksDefaultMessageActive = false;
 
-    const noSubtasksDefaultMessage = () => `
+  const noSubtasksDefaultMessage = () => `
         <li class="modal-subtasks-item no-subtasks-msg" id="no-subtasks-msg">
             <i data-lucide="list-plus" class="no-subtasks-icon"></i>
             <span class="no-subtasks-heading">
-                ${t('modal.subtasks.empty.title')}
+                ${t("modal.subtasks.empty.title")}
             </span>
             <span class="no-subtasks-subtext">
-                ${t('modal.subtasks.empty.subtitle')}
+                ${t("modal.subtasks.empty.subtitle")}
             </span>
         </li>
     `;
 
-    const nestingLimitReachedMessage = () => `
+  const nestingLimitReachedMessage = () => `
         <li class="modal-subtasks-item no-subtasks-msg" id="no-subtasks-msg">
             <i data-lucide="info" class="no-subtasks-icon"></i>
             <span class="no-subtasks-heading">
-                ${t('modal.subtasks.limit.title')}
+                ${t("modal.subtasks.limit.title")}
             </span>
             <span class="no-subtasks-subtext">
-                ${t('modal.subtasks.limit.subtitle', {limit: MAX_SUBTASK_DEPTH + 1})}
+                ${t("modal.subtasks.limit.subtitle", { limit: MAX_SUBTASK_DEPTH + 1 })}
             </span>
         </li>
     `;
 
-    attachFloatingTooltips(modalSubtasksList, '.modal-subtask-label-wrapper', '.modal-subtask-label', 'horizontal');
+  attachFloatingTooltips(
+    modalSubtasksList,
+    ".modal-subtask-label-wrapper",
+    ".modal-subtask-label",
+    "horizontal",
+  );
 
   attachFloatingTooltips(
     modalProjectControl.parentElement,
@@ -2542,16 +2670,18 @@ function initTaskModalLogic() {
 
       const result = await createItem("items", payloadObject);
 
-            if (result.success) {
-                currentTask.id = result.item.id;
-                Object.assign(currentTask, result.item);
-                document.dispatchEvent(new CustomEvent('app:itemCreated', {detail: currentTask}));
-                return true;
-            } else {
-                showErrorToast(t(generalErrorMessage));
-                return false;
-            }
-        }
+      if (result.success) {
+        currentTask.id = result.item.id;
+        Object.assign(currentTask, result.item);
+        document.dispatchEvent(
+          new CustomEvent("app:itemCreated", { detail: currentTask }),
+        );
+        return true;
+      } else {
+        showErrorToast(t(generalErrorMessage));
+        return false;
+      }
+    }
 
     const result = await updateItem(
       "items",
@@ -2561,24 +2691,26 @@ function initTaskModalLogic() {
       currentTasks,
     );
 
-        if (result.success) {
-            const cascadeChanges = [];
-            for (const key of ['is_done', 'is_archived', 'project_id']) {
-                if (Object.prototype.hasOwnProperty.call(currentTask, key)) {
-                    cascadeChanges[key] = payloadObject[key];
-                }
-            }
-            if (Object.key(cascadeChanges).length > 0) {
-                syncDescendantLocal(currentTask.id, cascadeChanges);
-            }
-
-            document.dispatchEvent(new CustomEvent('app:taskUpdated', {detail: currentTask}));
-            return true;
-        } else {
-            showErrorToast(t(generalErrorMessage));
-            return false;
+    if (result.success) {
+      const cascadeChanges = [];
+      for (const key of ["is_done", "is_archived", "project_id"]) {
+        if (Object.prototype.hasOwnProperty.call(currentTask, key)) {
+          cascadeChanges[key] = payloadObject[key];
         }
+      }
+      if (Object.key(cascadeChanges).length > 0) {
+        syncDescendantLocal(currentTask.id, cascadeChanges);
+      }
+
+      document.dispatchEvent(
+        new CustomEvent("app:taskUpdated", { detail: currentTask }),
+      );
+      return true;
+    } else {
+      showErrorToast(t(generalErrorMessage));
+      return false;
     }
+  }
 
   function closeModal() {
     taskDetailsModal.classList.add("hiding");
@@ -2598,14 +2730,23 @@ function initTaskModalLogic() {
     document.dispatchEvent(new CustomEvent("app:taskUpdated"));
   }
 
-    async function deleteCurrentTask() {
-        const result = await updateItem('items', currentTask.id, 'DELETE', null, currentTasks);
+  async function deleteCurrentTask() {
+    const result = await updateItem(
+      "items",
+      currentTask.id,
+      "DELETE",
+      null,
+      currentTasks,
+    );
 
-        if (result.success) {
-            const nowIso = new Date().toISOString();
-            currentTask.is_deleted = true;
-            currentTask.deleted_at = nowIso;
-            syncDescendantLocal(currentTask.id, {is_deleted: true, deleted_at: nowIso});
+    if (result.success) {
+      const nowIso = new Date().toISOString();
+      currentTask.is_deleted = true;
+      currentTask.deleted_at = nowIso;
+      syncDescendantLocal(currentTask.id, {
+        is_deleted: true,
+        deleted_at: nowIso,
+      });
 
       const taskItemElement = document.querySelector(
         `.task-item[data-id="${currentTask.id}"]`,
@@ -2623,25 +2764,23 @@ function initTaskModalLogic() {
         );
       }
 
-            if (ancestorIds.length === 0)
-                closeModal();
-            else
-                modalBackBtn.click();
-        } else {
-            showErrorToast(t(generalErrorMessage));
-        }
+      if (ancestorIds.length === 0) closeModal();
+      else modalBackBtn.click();
+    } else {
+      showErrorToast(t(generalErrorMessage));
     }
+  }
 
-    async function requestClose() {
-        if (isCreatingTask && currentTask?.id) {
-            const result = await deleteTaskPermanently(currentTask.id);
-            if (!result.success) {
-                showErrorToast(t(generalErrorMessage));
-                return;
-            }
-        }
-        closeModal();
+  async function requestClose() {
+    if (isCreatingTask && currentTask?.id) {
+      const result = await deleteTaskPermanently(currentTask.id);
+      if (!result.success) {
+        showErrorToast(t(generalErrorMessage));
+        return;
+      }
     }
+    closeModal();
+  }
 
   function getSubtasksCount() {
     const childrenByParent = new Map();
@@ -2683,13 +2822,18 @@ function initTaskModalLogic() {
       currentTask.due_date !== null && currentTask.due_date !== undefined;
     const overdue = isExpired(currentTask);
 
-        if (!isCreatingTask) {
-            modalDueDateControl.classList.toggle('modal-widget-unset-value', !hasDueDate);
-            modalDueDateControl.classList.toggle('task-overdue', overdue);
-        }
-        modalDueDateText.classList.toggle('modal-unset-value-text', !hasDueDate);
-        modalDueDateText.textContent = hasDueDate ? reformatDateTime(new Date(currentTask.due_date)) : t('task.due_date.add');
-        modalOverdueBadge.classList.toggle('active', overdue);
+    if (!isCreatingTask) {
+      modalDueDateControl.classList.toggle(
+        "modal-widget-unset-value",
+        !hasDueDate,
+      );
+      modalDueDateControl.classList.toggle("task-overdue", overdue);
+    }
+    modalDueDateText.classList.toggle("modal-unset-value-text", !hasDueDate);
+    modalDueDateText.textContent = hasDueDate
+      ? reformatDateTime(new Date(currentTask.due_date))
+      : t("task.due_date.add");
+    modalOverdueBadge.classList.toggle("active", overdue);
 
     const dueDateIcon = hasDueDate ? "calendar" : "calendar-plus-2";
     document.getElementById("modal-due-date-icon").outerHTML =
@@ -2709,16 +2853,24 @@ function initTaskModalLogic() {
       );
     }
 
-        modalProjectText.classList.toggle('modal-unset-value-text', !project);
-        modalProjectText.textContent = project ? project.name : t('modal.project.empty_selection');
+    modalProjectText.classList.toggle("modal-unset-value-text", !project);
+    modalProjectText.textContent = project
+      ? project.name
+      : t("modal.project.empty_selection");
 
-        const {directSubtasks: subtasks, all: allSubtasks, completed: completedSubtasks} = getSubtasksCount();
-        modalCompletedSubtasksCounter.textContent = t('modal.subtasks.count', {
-            completed: completedSubtasks,
-            total: allSubtasks
-        });
+    const {
+      directSubtasks: subtasks,
+      all: allSubtasks,
+      completed: completedSubtasks,
+    } = getSubtasksCount();
+    modalCompletedSubtasksCounter.textContent = t("modal.subtasks.count", {
+      completed: completedSubtasks,
+      total: allSubtasks,
+    });
 
-        modalCompletedSubtasksCounter.style.display = nestingLimitNotReached ? 'inline-flex' : 'none';
+    modalCompletedSubtasksCounter.style.display = nestingLimitNotReached
+      ? "inline-flex"
+      : "none";
 
     const oldElements = modalSubtasksList.querySelectorAll(
       ".modal-subtasks-item",
@@ -2727,10 +2879,12 @@ function initTaskModalLogic() {
 
     let modalSubtasksHTML = "";
 
-        if (allSubtasks === 0) {
-            noSubtasksDefaultMessageActive = true;
-            modalSubtasksHTML += nestingLimitNotReached ? noSubtasksDefaultMessage() : nestingLimitReachedMessage();
-        }
+    if (allSubtasks === 0) {
+      noSubtasksDefaultMessageActive = true;
+      modalSubtasksHTML += nestingLimitNotReached
+        ? noSubtasksDefaultMessage()
+        : nestingLimitReachedMessage();
+    }
 
     if (subtasks) {
       noSubtasksDefaultMessageActive = false;
@@ -2794,51 +2948,70 @@ function initTaskModalLogic() {
     modalAddSubtaskBtn.style.display =
       currentTaskDepth < MAX_SUBTASK_DEPTH ? "flex" : "none";
 
-        if (isCreatingTask) {
-            modalImportantBtn.classList.remove('active');
-            modalTitleText.classList.add('modal-unset-title');
-            modalTitleText.textContent = t('modal.title.default');
+    if (isCreatingTask) {
+      modalImportantBtn.classList.remove("active");
+      modalTitleText.classList.add("modal-unset-title");
+      modalTitleText.textContent = t("modal.title.default");
 
-            modalDescriptionText.textContent = t('modal.description.placeholder');
-            modalDescriptionText.classList.add('modal-unset-value-text');
+      modalDescriptionText.textContent = t("modal.description.placeholder");
+      modalDescriptionText.classList.add("modal-unset-value-text");
 
-            modalDueDateControl.classList.remove('task-overdue');
-            modalDueDateControl.classList.add('modal-widget-unset-value');
-            modalDueDateText.classList.add('modal-unset-value-text');
-            modalDueDateText.textContent = t('task.due_date.add');
-            document.getElementById('modal-due-date-icon').outerHTML =
-                `<i data-lucide="calendar-plus-2" class="modal-widget-icon" id="modal-due-date-icon"></i>`;
+      modalDueDateControl.classList.remove("task-overdue");
+      modalDueDateControl.classList.add("modal-widget-unset-value");
+      modalDueDateText.classList.add("modal-unset-value-text");
+      modalDueDateText.textContent = t("task.due_date.add");
+      document.getElementById("modal-due-date-icon").outerHTML =
+        `<i data-lucide="calendar-plus-2" class="modal-widget-icon" id="modal-due-date-icon"></i>`;
 
-            modalProjectControl.classList.add('modal-widget-unset-value');
-            modalProjectText.classList.add('modal-unset-value-text');
-            modalProjectText.textContent = t('modal.project.move_to');
+      modalProjectControl.classList.add("modal-widget-unset-value");
+      modalProjectText.classList.add("modal-unset-value-text");
+      modalProjectText.textContent = t("modal.project.move_to");
 
-            modalSubtasksList.innerHTML = '';
-            modalSubtasksList.insertAdjacentHTML('beforeend', nestingLimitNotReached ? noSubtasksDefaultMessage() : nestingLimitReachedMessage());
-            noSubtasksDefaultMessageActive = true;
+      modalSubtasksList.innerHTML = "";
+      modalSubtasksList.insertAdjacentHTML(
+        "beforeend",
+        nestingLimitNotReached
+          ? noSubtasksDefaultMessage()
+          : nestingLimitReachedMessage(),
+      );
+      noSubtasksDefaultMessageActive = true;
 
       lucide.createIcons();
 
-            modalTitleText.click();
-        } else {
-            document.getElementById('modal-complete-btn-text').textContent = currentTask.is_done ? t('modal.header.mark_incomplete') : t('modal.header.mark_complete');
-            modalImportantBtn.classList.toggle('active', currentTask.is_important);
+      modalTitleText.click();
+    } else {
+      document.getElementById("modal-complete-btn-text").textContent =
+        currentTask.is_done
+          ? t("modal.header.mark_incomplete")
+          : t("modal.header.mark_complete");
+      modalImportantBtn.classList.toggle("active", currentTask.is_important);
 
       modalTitleText.textContent = currentTask.title;
 
-            const hasDescription = currentTask.description !== null && currentTask.description !== undefined;
-            modalDescriptionText.classList.toggle('modal-unset-value-text', !hasDescription);
-            modalDescriptionText.textContent = hasDescription ? currentTask.description : t('modal.description.placeholder');
+      const hasDescription =
+        currentTask.description !== null &&
+        currentTask.description !== undefined;
+      modalDescriptionText.classList.toggle(
+        "modal-unset-value-text",
+        !hasDescription,
+      );
+      modalDescriptionText.textContent = hasDescription
+        ? currentTask.description
+        : t("modal.description.placeholder");
 
       refreshModalVisual();
 
-            const archiveIcon = currentTask.is_archived ? 'archive-restore' : 'archive';
-            const archiveLabel = currentTask.is_archived ? t('context_menu.task.unarchive') : t('context_menu.task.archive');
-            document.getElementById('modal-archive-icon').outerHTML =
-                `<i data-lucide="${archiveIcon}" class="modal-actions-icon" id="modal-archive-icon"></i>`;
-            document.getElementById('modal-archive-label').textContent = archiveLabel;
-            lucide.createIcons();
-        }
+      const archiveIcon = currentTask.is_archived
+        ? "archive-restore"
+        : "archive";
+      const archiveLabel = currentTask.is_archived
+        ? t("context_menu.task.unarchive")
+        : t("context_menu.task.archive");
+      document.getElementById("modal-archive-icon").outerHTML =
+        `<i data-lucide="${archiveIcon}" class="modal-actions-icon" id="modal-archive-icon"></i>`;
+      document.getElementById("modal-archive-label").textContent = archiveLabel;
+      lucide.createIcons();
+    }
 
     modalCompleteBtn.style.display = isCreatingTask ? "none" : "flex";
     if (isCreatingTask) modalCompletedSubtasksCounter.style.display = "none";
@@ -2909,12 +3082,13 @@ function initTaskModalLogic() {
 
     const originalText = currentTask.title;
 
-        const textAreaElement = document.createElement('textarea');
-        textAreaElement.value = originalText;
-        textAreaElement.className = 'modal-task-title edit-textarea edit-title-textarea';
-        textAreaElement.placeholder = t('modal.title.default');
-        textAreaElement.maxLength = 255;
-        textAreaElement.rows = 1;
+    const textAreaElement = document.createElement("textarea");
+    textAreaElement.value = originalText;
+    textAreaElement.className =
+      "modal-task-title edit-textarea edit-title-textarea";
+    textAreaElement.placeholder = t("modal.title.default");
+    textAreaElement.maxLength = 255;
+    textAreaElement.rows = 1;
 
     modalTitleText.replaceWith(textAreaElement);
 
@@ -2992,12 +3166,13 @@ function initTaskModalLogic() {
       currentTask.description !== null && currentTask.description !== undefined;
     const originalText = hasDescription ? currentTask.description : "";
 
-        const textAreaElement = document.createElement('textarea');
-        textAreaElement.value = originalText;
-        textAreaElement.className = 'modal-task-desc edit-textarea edit-desc-textarea';
-        textAreaElement.maxLength = 5000;
-        textAreaElement.rows = 1;
-        textAreaElement.placeholder = t('modal.description.placeholder');
+    const textAreaElement = document.createElement("textarea");
+    textAreaElement.value = originalText;
+    textAreaElement.className =
+      "modal-task-desc edit-textarea edit-desc-textarea";
+    textAreaElement.maxLength = 5000;
+    textAreaElement.rows = 1;
+    textAreaElement.placeholder = t("modal.description.placeholder");
 
     modalDescriptionText.replaceWith(textAreaElement);
 
@@ -3024,15 +3199,15 @@ function initTaskModalLogic() {
         description: payloadDescription,
       });
 
-            if (success) {
-                if (payloadDescription === null) {
-                    modalDescriptionText.textContent = t('modal.description.placeholder');
-                    modalDescriptionText.classList.add('modal-unset-value-text');
-                } else {
-                    modalDescriptionText.textContent = newText;
-                    modalDescriptionText.classList.remove('modal-unset-value-text');
-                }
-            }
+      if (success) {
+        if (payloadDescription === null) {
+          modalDescriptionText.textContent = t("modal.description.placeholder");
+          modalDescriptionText.classList.add("modal-unset-value-text");
+        } else {
+          modalDescriptionText.textContent = newText;
+          modalDescriptionText.classList.remove("modal-unset-value-text");
+        }
+      }
 
       textAreaElement.replaceWith(modalDescriptionText);
       activeEdit = false;
@@ -3134,7 +3309,7 @@ function initTaskModalLogic() {
     const noProjectHTML = `
             <button type="button" class="menu-item ${!selectedId ? "active" : ""}" data-action="select-project" data-project-id="">
                 <i data-lucide="minus" class="task-icon"></i>
-                ${t('modal.project.clear')}
+                ${t("modal.project.clear")}
             </button>
         `;
 
@@ -3151,13 +3326,13 @@ function initTaskModalLogic() {
 
     projectSelectMenu.innerHTML = `
             ${noProjectHTML}
-            ${currentProjects.length > 0 ? `<div class="menu-divider"></div>` : ''}
+            ${currentProjects.length > 0 ? `<div class="menu-divider"></div>` : ""}
             ${projectItemsHTML}
             <div class="menu-divider"></div>
             <div class="sidebar-add-item" id="modal-add-project-item">
                 <button type="button" class="sidebar-add-btn" id="modal-add-project-btn">
                     <i data-lucide="plus" class="btn-icon"></i>
-                    ${t('sidebar.projects.add')}
+                    ${t("sidebar.projects.add")}
                 </button>
             </div>
         `;
@@ -3232,12 +3407,12 @@ function initTaskModalLogic() {
       return;
     }
 
-        if (clickedAddBtn) {
-            const inputEl = document.createElement('input');
-            inputEl.type = 'text';
-            inputEl.className = 'sidebar-add-input';
-            inputEl.placeholder = t('sidebar.projects.placeholder');
-            inputEl.maxLength = 255;
+    if (clickedAddBtn) {
+      const inputEl = document.createElement("input");
+      inputEl.type = "text";
+      inputEl.className = "sidebar-add-input";
+      inputEl.placeholder = t("sidebar.projects.placeholder");
+      inputEl.maxLength = 255;
 
       clickedAddBtn.replaceWith(inputEl);
       inputEl.focus();
@@ -3247,31 +3422,31 @@ function initTaskModalLogic() {
       async function commit() {
         const name = inputEl.value.trim();
 
-                if (name === '') {
-                    inputEl.replaceWith(clickedAddBtn);
-                    return;
-                }
+        if (name === "") {
+          inputEl.replaceWith(clickedAddBtn);
+          return;
+        }
 
-                if (projectNameExists(name)) {
-                    showErrorToast(t('toast.error.project_exists'));
-                    inputEl.replaceWith(clickedAddBtn);
-                    return;
-                }
+        if (projectNameExists(name)) {
+          showErrorToast(t("toast.error.project_exists"));
+          inputEl.replaceWith(clickedAddBtn);
+          return;
+        }
 
-                const result = await createItem('projects', {name: name});
+        const result = await createItem("projects", { name: name });
 
         if (result.success) {
           currentProjects.push(result.item);
           document.dispatchEvent(new CustomEvent("app:projectsChanged"));
 
-                    closeProjectSelectMenu();
-                    await updateCurrentTask({project_id: result.item.id});
-                    refreshModalVisual();
-                } else {
-                    showErrorToast(t(generalErrorMessage));
-                    inputEl.replaceWith(clickedAddBtn);
-                }
-            }
+          closeProjectSelectMenu();
+          await updateCurrentTask({ project_id: result.item.id });
+          refreshModalVisual();
+        } else {
+          showErrorToast(t(generalErrorMessage));
+          inputEl.replaceWith(clickedAddBtn);
+        }
+      }
 
       inputEl.addEventListener("keydown", async (e) => {
         if (e.key === "Escape") {
@@ -3331,11 +3506,11 @@ function initTaskModalLogic() {
     const li = document.createElement("li");
     li.className = "modal-subtasks-item new-subtask-item";
 
-        const textAreaElement = document.createElement('textarea');
-        textAreaElement.className = 'modal-subtask-input edit-textarea';
-        textAreaElement.placeholder = t('task.subtask.placeholder');
-        textAreaElement.maxLength = 255;
-        textAreaElement.rows = 1;
+    const textAreaElement = document.createElement("textarea");
+    textAreaElement.className = "modal-subtask-input edit-textarea";
+    textAreaElement.placeholder = t("task.subtask.placeholder");
+    textAreaElement.maxLength = 255;
+    textAreaElement.rows = 1;
 
     li.appendChild(textAreaElement);
     modalSubtasksList.appendChild(li);
@@ -3369,17 +3544,19 @@ function initTaskModalLogic() {
         parent_id: currentTask.id,
       });
 
-            if (result.success) {
-                document.dispatchEvent(new CustomEvent('app:itemCreated', {detail: result.item}));
-                li.remove();
-                refreshModalVisual();
-                addSubtaskInputRow();
-            } else {
-                showErrorToast(t(generalErrorMessage));
-                li.remove();
-                activeEdit = false;
-            }
-        }
+      if (result.success) {
+        document.dispatchEvent(
+          new CustomEvent("app:itemCreated", { detail: result.item }),
+        );
+        li.remove();
+        refreshModalVisual();
+        addSubtaskInputRow();
+      } else {
+        showErrorToast(t(generalErrorMessage));
+        li.remove();
+        activeEdit = false;
+      }
+    }
 
     textAreaElement.addEventListener("keydown", async (e) => {
       if (e.key === "Escape") {
@@ -3408,11 +3585,11 @@ function initTaskModalLogic() {
     });
   }
 
-    modalAddSubtaskBtn.addEventListener('click', () => {
-        if (isCreatingTask || !currentTask.id) {
-            showErrorToast(t(saveBeforeSubUpdateErrorMessage));
-            return;
-        }
+  modalAddSubtaskBtn.addEventListener("click", () => {
+    if (isCreatingTask || !currentTask.id) {
+      showErrorToast(t(saveBeforeSubUpdateErrorMessage));
+      return;
+    }
 
     if (modalSubtasksList.querySelector(".new-subtask-item")) {
       modalSubtasksList.querySelector(".new-subtask-item").focus();
@@ -3443,14 +3620,14 @@ function initTaskModalLogic() {
         isCompleted,
       );
 
-            if (success) {
-                if (!cascadeSuccess) showErrorToast(t(subtasksUpdateErrorMessage));
-                refreshModalVisual();
-            } else {
-                showErrorToast(t(generalErrorMessage));
-                clickedCheckbox.checked = !isCompleted;
-            }
-        }
+      if (success) {
+        if (!cascadeSuccess) showErrorToast(t(subtasksUpdateErrorMessage));
+        refreshModalVisual();
+      } else {
+        showErrorToast(t(generalErrorMessage));
+        clickedCheckbox.checked = !isCompleted;
+      }
+    }
 
     if (clickedLabel) {
       const subtaskElement = clickedLabel.closest(".modal-subtasks-item");
@@ -3524,9 +3701,11 @@ function initSidebarLogic() {
       ".sidebar-btn.active[data-project-id]",
     )?.dataset.projectId;
 
-        projectsList.querySelectorAll('li').forEach(li => li.remove());
+    projectsList.querySelectorAll("li").forEach((li) => li.remove());
 
-        const projectsHTML = currentProjects.map(project => `
+    const projectsHTML = currentProjects
+      .map(
+        (project) => `
             <li>
                 <div class="sidebar-btn" id="filter-project-${project.id}" data-category="projects" data-type="project" data-project-id="${project.id}" role="button" tabindex="0">
                     <i data-lucide="folder" class="btn-icon"></i>
@@ -3554,7 +3733,7 @@ function initSidebarLogic() {
             <li class="sidebar-add-item">
                 <button type="button" class="sidebar-add-btn sidebar-btn" data-category="projects" id="add-project-btn">
                     <i data-lucide="plus" class="btn-icon"></i>
-                    <span data-i18n="sidebar.projects.add">${t('sidebar.projects.add')}</span>
+                    <span data-i18n="sidebar.projects.add">${t("sidebar.projects.add")}</span>
                 </button>
             </li>
         `,
@@ -3575,11 +3754,11 @@ function initSidebarLogic() {
     animateItems(items, "show");
   }
 
-    sidebarContents.addEventListener('click', (e) => {
-        const clickedBtn = e.target.closest('.sidebar-btn');
-        const clickedLabel = e.target.closest('.sidebar-label');
-        const clickedAddBtn = e.target.closest('.sidebar-add-btn');
-        const clickedProjectMenuBtn = e.target.closest('.sidebar-project-menu-btn');
+  sidebarContents.addEventListener("click", (e) => {
+    const clickedBtn = e.target.closest(".sidebar-btn");
+    const clickedLabel = e.target.closest(".sidebar-label");
+    const clickedAddBtn = e.target.closest(".sidebar-add-btn");
+    const clickedProjectMenuBtn = e.target.closest(".sidebar-project-menu-btn");
 
     if (clickedProjectMenuBtn) {
       const projectId =
@@ -3592,13 +3771,13 @@ function initSidebarLogic() {
       return;
     }
 
-        if (clickedAddBtn) {
-            const inputEl = document.createElement('input');
-            inputEl.type = 'text';
-            inputEl.className = 'sidebar-add-input';
-            inputEl.id = 'add-project-input';
-            inputEl.placeholder = t('sidebar.projects.placeholder');
-            inputEl.maxLength = 255;
+    if (clickedAddBtn) {
+      const inputEl = document.createElement("input");
+      inputEl.type = "text";
+      inputEl.className = "sidebar-add-input";
+      inputEl.id = "add-project-input";
+      inputEl.placeholder = t("sidebar.projects.placeholder");
+      inputEl.maxLength = 255;
 
       clickedAddBtn.replaceWith(inputEl);
       inputEl.focus();
@@ -3608,18 +3787,18 @@ function initSidebarLogic() {
       async function commit() {
         const name = inputEl.value.trim();
 
-                if (name === '') {
-                    inputEl.replaceWith(clickedAddBtn);
-                    return;
-                }
+        if (name === "") {
+          inputEl.replaceWith(clickedAddBtn);
+          return;
+        }
 
-                if (projectNameExists(name)) {
-                    showErrorToast(t('toast.error.project_exists'));
-                    inputEl.replaceWith(clickedAddBtn);
-                    return;
-                }
+        if (projectNameExists(name)) {
+          showErrorToast(t("toast.error.project_exists"));
+          inputEl.replaceWith(clickedAddBtn);
+          return;
+        }
 
-                const result = await createItem('projects', {name: name});
+        const result = await createItem("projects", { name: name });
 
         if (result.success) {
           currentProjects.push(result.item);
@@ -3641,14 +3820,16 @@ function initSidebarLogic() {
             }
           });
 
-                    document.dispatchEvent(new CustomEvent('app:sidebarChanged', {
-                        detail: {viewType: 'project', filterId: result.item.id}
-                    }));
-                } else {
-                    showErrorToast(t(generalErrorMessage));
-                    inputEl.replaceWith(clickedAddBtn);
-                }
-            }
+          document.dispatchEvent(
+            new CustomEvent("app:sidebarChanged", {
+              detail: { viewType: "project", filterId: result.item.id },
+            }),
+          );
+        } else {
+          showErrorToast(t(generalErrorMessage));
+          inputEl.replaceWith(clickedAddBtn);
+        }
+      }
 
       inputEl.addEventListener("keydown", async (e) => {
         if (e.key === "Escape") {
@@ -3735,11 +3916,11 @@ function initSidebarLogic() {
       (p) => p.id === Number(projectId),
     );
 
-        if (!targetProject) {
-            showErrorToast(t(generalErrorMessage));
-            closeProjectMenu();
-            return;
-        }
+    if (!targetProject) {
+      showErrorToast(t(generalErrorMessage));
+      closeProjectMenu();
+      return;
+    }
 
     if (action === "delete") {
       const wasActive = document
@@ -3759,16 +3940,18 @@ function initSidebarLogic() {
         );
         document.dispatchEvent(new CustomEvent("app:projectsChanged"));
 
-                if (wasActive) {
-                    document.getElementById('filter-all')?.classList.add('active');
-                    document.dispatchEvent(new CustomEvent('app:sidebarChanged', {
-                        detail: {viewType: 'filter', filterId: 'all'}
-                    }));
-                    sidebarContents.scrollTop = 0;
-                }
-            } else {
-                showErrorToast(t(generalErrorMessage));
-            }
+        if (wasActive) {
+          document.getElementById("filter-all")?.classList.add("active");
+          document.dispatchEvent(
+            new CustomEvent("app:sidebarChanged", {
+              detail: { viewType: "filter", filterId: "all" },
+            }),
+          );
+          sidebarContents.scrollTop = 0;
+        }
+      } else {
+        showErrorToast(t(generalErrorMessage));
+      }
 
       closeProjectMenu();
       return;
@@ -3795,35 +3978,45 @@ function initSidebarLogic() {
       async function commit() {
         const newName = inputEl.value.trim();
 
-                if (newName === '' || newName === originalName) {
-                    inputEl.replaceWith(nameSpan);
-                    return;
-                }
+        if (newName === "" || newName === originalName) {
+          inputEl.replaceWith(nameSpan);
+          return;
+        }
 
-                if (projectNameExists(newName, Number(projectId))) {
-                    showErrorToast(t('toast.error.project_exists'));
-                    inputEl.replaceWith(nameSpan);
-                    return;
-                }
+        if (projectNameExists(newName, Number(projectId))) {
+          showErrorToast(t("toast.error.project_exists"));
+          inputEl.replaceWith(nameSpan);
+          return;
+        }
 
-                const result = await updateItem('projects', projectId, 'PUT', {name: newName}, currentProjects);
+        const result = await updateItem(
+          "projects",
+          projectId,
+          "PUT",
+          { name: newName },
+          currentProjects,
+        );
 
         if (result.success) {
           document.dispatchEvent(new CustomEvent("app:projectsChanged"));
 
-                    const wasActive = document.getElementById(`filter-project-${projectId}`)?.classList.contains('active');
-                    if (wasActive) {
-                        setTimeout(() => {
-                            document.dispatchEvent(new CustomEvent('app:sidebarChanged', {
-                                detail: {viewType: 'project', filterId: projectId}
-                            }));
-                        }, 0)
-                    }
-                } else {
-                    showErrorToast(t(generalErrorMessage));
-                    inputEl.replaceWith(nameSpan);
-                }
-            }
+          const wasActive = document
+            .getElementById(`filter-project-${projectId}`)
+            ?.classList.contains("active");
+          if (wasActive) {
+            setTimeout(() => {
+              document.dispatchEvent(
+                new CustomEvent("app:sidebarChanged", {
+                  detail: { viewType: "project", filterId: projectId },
+                }),
+              );
+            }, 0);
+          }
+        } else {
+          showErrorToast(t(generalErrorMessage));
+          inputEl.replaceWith(nameSpan);
+        }
+      }
 
       inputEl.addEventListener("keydown", async (e) => {
         if (e.key === "Escape") {
@@ -3880,61 +4073,66 @@ function initSidebarLogic() {
 }
 
 function initPageHeaderLogic() {
-    function setCurrTitle(filterId, viewType) {
-        document.getElementById('curr-title').textContent = viewType === 'project'
-            ? t('main.header.title.project', {name: currentProjects.find(project => project.id === Number(filterId)).name})
-            : t(`main.header.title.${filterId}`);
-    }
+  function setCurrTitle(filterId, viewType) {
+    document.getElementById("curr-title").textContent =
+      viewType === "project"
+        ? t("main.header.title.project", {
+            name: currentProjects.find(
+              (project) => project.id === Number(filterId),
+            ).name,
+          })
+        : t(`main.header.title.${filterId}`);
+  }
 
-    function setAdditionalInfo() {
-        document.getElementById('additional-info').textContent = new Date().toLocaleDateString([currentLocale], {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric'
-        });
-    }
+  function setAdditionalInfo() {
+    document.getElementById("additional-info").textContent =
+      new Date().toLocaleDateString([currentLocale], {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      });
+  }
 
-    document.addEventListener('app:sidebarChanged', (e) => {
-        const filterId = e.detail.filterId;
-        const viewType = e.detail.viewType;
+  document.addEventListener("app:sidebarChanged", (e) => {
+    const filterId = e.detail.filterId;
+    const viewType = e.detail.viewType;
 
-        currentFilterId = filterId;
-        currentViewType = viewType;
+    currentFilterId = filterId;
+    currentViewType = viewType;
 
-        setCurrTitle(filterId, viewType);
-        setAdditionalInfo();
+    setCurrTitle(filterId, viewType);
+    setAdditionalInfo();
 
-        document.addEventListener('app:localeChanged', (e) => {
-            setCurrTitle(filterId, viewType);
-            setAdditionalInfo();
-        });
-
+    document.addEventListener("app:localeChanged", (e) => {
+      setCurrTitle(filterId, viewType);
+      setAdditionalInfo();
     });
+  });
 }
 
 // DOM
 
 function onDomReady(callback) {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', callback);
-    } else {
-        callback();
-    }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", callback);
+  } else {
+    callback();
+  }
 }
 
 onDomReady(async () => {
-    lucide.createIcons();
+  lucide.createIcons();
 
-    initLanguageSwitcherLogic();
-    initLoginLogic();
-    initRegisterLogic();
-    initSuccessfulLoginLogic();
-    initProfileManagementLogic();
-    initSortLogic();
-    initTaskManagementLogic();
-    initTaskModalLogic();
-    initSidebarLogic();
-    initPageHeaderLogic();
+  initLanguageSwitcherLogic();
+  initLoginLogic();
+  initRegisterLogic();
+  initSuccessfulLoginLogic();
+  initProfileManagementLogic();
+  initSortLogic();
+  initTaskManagementLogic();
+  initTaskModalLogic();
+  initSidebarLogic();
+  initPageHeaderLogic();
 
   await fetchAndRenderUser();
 });

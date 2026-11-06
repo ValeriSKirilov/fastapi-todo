@@ -1,13 +1,9 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
-from .routers import item
-from .routers import auth
-from .routers import user
-from .routers import internal
-from .routers import project
 from .config import settings
+from .routers import auth, internal, item, project, user
 
 app = FastAPI()
 
@@ -24,10 +20,7 @@ app.add_middleware(
 async def general_exception_handler(request: Request, exc: Exception):
     print(f"CRITICAL SYSTEM FAILURE: {exc}")
 
-    return JSONResponse(
-        status_code=500,
-        content={"message": "Internal Server Error"}
-    )
+    return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
 
 
 app.include_router(item.router)
