@@ -1,0 +1,147 @@
+{
+  "common.archive": "Архивиране",
+  "common.unarchive": "Разархивиране",
+  "common.restore": "Възстановяване",
+  "common.delete": "Изтриване",
+  "common.delete_forever": "Изтриване завинаги",
+  "common.rename": "Преименуване",
+  "common.cancel": "Отказ",
+
+  "auth.login.title": "Добре дошли отново!",
+  "auth.login.subtitle": "Влезте, за да управлявате задачите си",
+  "auth.login.email.placeholder": "Имейл",
+  "auth.login.password.placeholder": "Парола",
+  "auth.login.button.submit": "Вход",
+  "auth.login.prompt.no_account": "Все още нямате акаунт?",
+  "auth.login.button.signup": "Регистрация",
+  "auth.login.error.invalid_credentials": "Имейлът или паролата са неверни. Проверете данните си и опитайте отново.",
+
+  "auth.register.title": "Създайте акаунт",
+  "auth.register.subtitle": "Започнете да организирате задачите си още днес. Бързо и лесно е",
+  "auth.register.placeholder.first_name": "Име",
+  "auth.register.placeholder.last_name": "Фамилия",
+  "auth.register.placeholder.email": "Имейл",
+  "auth.register.placeholder.password": "Създайте парола",
+  "auth.register.placeholder.confirm_password": "Повторете паролата",
+  "auth.register.button.submit": "Регистрация",
+  "auth.register.prompt.has_account": "Вече имате акаунт?",
+  "auth.register.button.login": "Вход",
+  "auth.register.error.email_in_use": "Този имейл вече се използва. Моля, използвайте друг.",
+  "auth.register.error.password_mismatch": "Паролите не съвпадат.",
+
+  "auth.success.title": "Добре дошли в Checkmate!",
+  "auth.success.message": "Акаунтът ви е създаден успешно!",
+  "auth.success.redirect_prefix": "След 2 секунди ще бъдете пренасочени към страницата за вход. ",
+  "auth.success.redirect_link": "Натиснете тук",
+  "auth.success.redirect_suffix": ", за да продължите ръчно.",
+
+  "validation.error.required": "Полето е задължително.",
+  "validation.error.email": "Въведете валиден имейл адрес.",
+  "validation.error.min_length": "Минимум {length} символа.",
+  "validation.error.default": "Проверете това поле.",
+  "validation.error.password_weak": "Използвайте поне една буква и една цифра.",
+  "validation.error.password_common": "Тази парола е твърде лесна за налучкване.",
+  "validation.error.password_personal": "Паролата не може да съдържа името или имейла ви.",
+  "validation.error.password_too_long": "Паролата е твърде дълга.",
+
+  "sidebar.category.menu": "Меню",
+  "sidebar.category.review": "Преглед на задачите",
+  "sidebar.category.projects": "Проекти",
+
+  "sidebar.menu.all_tasks": "Всички задачи",
+  "sidebar.menu.today": "Днес",
+  "sidebar.menu.upcoming": "Предстоящи",
+  "sidebar.menu.important": "Важни",
+  "sidebar.menu.completed": "Завършени",
+  "sidebar.menu.expired": "Просрочени",
+  "sidebar.menu.archived": "Архивирани",
+  "sidebar.menu.deleted": "Изтрити",
+
+  "project.add": "Добавяне на проект",
+  "project.name_placeholder": "Име на проекта",
+
+  "topbar.search_placeholder": "Търсене",
+  "topbar.profile.logout": "Изход",
+  "topbar.profile.delete_account": "Изтриване на акаунта",
+
+  "main.header.title.project": "Проект: {name}",
+  "main.header.title.all": "Всички задачи",
+  "main.header.title.today": "Задачи за днес",
+  "main.header.title.upcoming": "Предстоящи задачи",
+  "main.header.title.important": "Важни задачи",
+  "main.header.title.completed": "Завършени задачи",
+  "main.header.title.expired": "Просрочени задачи",
+  "main.header.title.archived": "Архивирани задачи",
+  "main.header.title.deleted": "Изтрити задачи",
+
+  "main.sort.button": "Сортиране",
+  "main.sort.smart": "По приоритет",
+  "main.sort.custom": "Ръчно подреждане",
+
+  "main.empty.default.title": "Няма намерени задачи",
+  "main.empty.default.subtitle": "Опитайте с други филтри или създайте нова задача, за да започнете.",
+  "main.empty.completed.title": "Тук все още е празно",
+  "main.empty.completed.subtitle": "Завършените задачи ще се показват тук.",
+  "main.empty.project.title": "Проектът е празен",
+  "main.empty.project.subtitle": "Създайте нова задача, за да започнете да изграждате проекта си.",
+
+  "main.action.create_task": "Нова задача",
+
+  "task.due_date.prefix": "Краен срок: {date}",
+  "task.due_date.add": "Добавяне на краен срок",
+  "task.delete_status.today": "Изтрива се днес",
+  "task.delete_status.days": "Изтрива се след {days} д.",
+  "task.subtask.add": "Добавяне на подзадача",
+  "task.subtask.placeholder": "Заглавие на подзадачата",
+
+  "context_menu.task.mark_important": "Отбелязване като важна",
+  "context_menu.task.remove_importance": "Премахване на важността",
+
+  "modal.header.title": "Детайли за задачата",
+  "modal.header.mark_complete": "Отбелязване като завършена",
+  "modal.header.mark_incomplete": "Отбелязване като активна",
+  "modal.error.missing_title": "Заглавието на задачата е задължително.",
+
+  "modal.field.description": "Описание",
+  "modal.field.due_date": "Краен срок",
+  "modal.field.project": "Проект",
+  "modal.field.subtasks": "Подзадачи",
+  "modal.field.actions": "Действия",
+
+  "modal.title.default": "Заглавие на задачата",
+  "modal.description.placeholder": "Добавете по-подробно описание...",
+
+  "modal.status.overdue": "Просрочена",
+
+  "modal.project.clear": "Премахване от проект",
+  "modal.project.placeholder": "Добавяне към проект...",
+
+  "modal.subtasks.count": "{completed}/{total} завършени",
+  "modal.subtasks.empty.title": "Все още няма подзадачи",
+  "modal.subtasks.empty.subtitle": "Натиснете бутона [+] по-горе, за да добавите първата си подзадача",
+  "modal.subtasks.limit.title": "Достигнато е максималното ниво на вложеност",
+  "modal.subtasks.limit.subtitle": "Задачите могат да имат най-много {limit} нива на вложеност",
+
+  "modal.action.create": "Създаване на задача",
+
+  "toast.info.task_archived": "Задачата е архивирана",
+  "toast.info.task_deleted": "Задачата е преместена в изтрити",
+  "toast.action.undo": "Отмяна",
+
+  "toast.error.general": "Нещо се обърка. Опитайте отново.",
+  "toast.error.subtasks_update": "Някои подзадачи не бяха обновени.",
+  "toast.error.save_before_subtasks": "Запазете задачата, преди да добавяте подзадачи.",
+  "toast.error.project_exists": "Вече имате проект с това име.",
+
+  "confirm.delete_forever.title": "Изтриване завинаги?",
+  "confirm.delete_forever.message": "Задачата и нейните подзадачи ще бъдат изтрити окончателно. Действието е необратимо.",
+  "confirm.delete_project.title": "Изтриване на проекта?",
+  "confirm.delete_project.message": "Проектът \"{name}\" ще бъде изтрит.",
+  "confirm.delete_account.title": "Изтриване на акаунта?",
+  "confirm.delete_account.message": "Акаунтът ви и всички данни ще бъдат изтрити окончателно. Действието е необратимо.",
+
+  "date.tomorrow": "Утре",
+  "date.today": "Днес",
+  "date.yesterday": "Вчера",
+  "date.days_ago": "преди {days} дни"
+}

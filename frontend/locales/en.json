@@ -1,0 +1,147 @@
+{
+  "common.archive": "Archive",
+  "common.unarchive": "Unarchive",
+  "common.restore": "Restore",
+  "common.delete": "Delete",
+  "common.delete_forever": "Delete forever",
+  "common.rename": "Rename",
+  "common.cancel": "Cancel",
+
+  "auth.login.title": "Welcome back!",
+  "auth.login.subtitle": "Sign in to manage your tasks",
+  "auth.login.email.placeholder": "Email",
+  "auth.login.password.placeholder": "Password",
+  "auth.login.button.submit": "Log in",
+  "auth.login.prompt.no_account": "Don't have an account yet?",
+  "auth.login.button.signup": "Sign up",
+  "auth.login.error.invalid_credentials": "Your email or password may be incorrect. Check your details and try again.",
+
+  "auth.register.title": "Create your account",
+  "auth.register.subtitle": "Start your productive journey today. It's quick and easy",
+  "auth.register.placeholder.first_name": "First name",
+  "auth.register.placeholder.last_name": "Last name",
+  "auth.register.placeholder.email": "Email",
+  "auth.register.placeholder.password": "Create password",
+  "auth.register.placeholder.confirm_password": "Confirm password",
+  "auth.register.button.submit": "Register",
+  "auth.register.prompt.has_account": "Already have an account?",
+  "auth.register.button.login": "Log in",
+  "auth.register.error.email_in_use": "This email is already in use. Please use another one.",
+  "auth.register.error.password_mismatch": "Passwords don't match.",
+
+  "auth.success.title": "Welcome to Checkmate!",
+  "auth.success.message": "Your account has been created successfully!",
+  "auth.success.redirect_prefix": "You will be redirected to the login page in 2 seconds. ",
+  "auth.success.redirect_link": "Click here",
+  "auth.success.redirect_suffix": " to proceed manually.",
+
+  "validation.error.required": "This field is required.",
+  "validation.error.email": "Please enter a valid email address.",
+  "validation.error.min_length": "Must be at least {length} characters.",
+  "validation.error.default": "Please check this field.",
+  "validation.error.password_weak": "Use at least one letter and one number.",
+  "validation.error.password_common": "This password is too common.",
+  "validation.error.password_personal": "Your password can't contain your name or email.",
+  "validation.error.password_too_long": "This password is too long.",
+
+  "sidebar.category.menu": "Menu",
+  "sidebar.category.review": "Review",
+  "sidebar.category.projects": "Projects",
+
+  "sidebar.menu.all_tasks": "All tasks",
+  "sidebar.menu.today": "Today",
+  "sidebar.menu.upcoming": "Upcoming",
+  "sidebar.menu.important": "Important",
+  "sidebar.menu.completed": "Completed",
+  "sidebar.menu.expired": "Expired",
+  "sidebar.menu.archived": "Archived",
+  "sidebar.menu.deleted": "Deleted",
+
+  "project.add": "Add project",
+  "project.name_placeholder": "Project name",
+
+  "topbar.search_placeholder": "Search",
+  "topbar.profile.logout": "Log out",
+  "topbar.profile.delete_account": "Delete account",
+
+  "main.header.title.project": "Project: {name}",
+  "main.header.title.all": "All tasks",
+  "main.header.title.today": "Today's tasks",
+  "main.header.title.upcoming": "Upcoming tasks",
+  "main.header.title.important": "Important tasks",
+  "main.header.title.completed": "Completed tasks",
+  "main.header.title.expired": "Expired tasks",
+  "main.header.title.archived": "Archived tasks",
+  "main.header.title.deleted": "Deleted tasks",
+
+  "main.sort.button": "Sort",
+  "main.sort.smart": "Smart sort",
+  "main.sort.custom": "Custom order",
+
+  "main.empty.default.title": "No tasks found",
+  "main.empty.default.subtitle": "Try adjusting your filters or create a new task to get started.",
+  "main.empty.completed.title": "Nothing to see here",
+  "main.empty.completed.subtitle": "Your completed tasks will live here once you finish them.",
+  "main.empty.project.title": "This project is empty",
+  "main.empty.project.subtitle": "Create a new task to start filling out your project board.",
+
+  "main.action.create_task": "Create new task",
+
+  "task.due_date.prefix": "Due {date}",
+  "task.due_date.add": "Add due date",
+  "task.delete_status.today": "Deletes today",
+  "task.delete_status.days": "Deletes in {days}d",
+  "task.subtask.add": "Add subtask",
+  "task.subtask.placeholder": "Subtask title",
+
+  "context_menu.task.mark_important": "Mark important",
+  "context_menu.task.remove_importance": "Remove importance",
+
+  "modal.header.title": "Task details",
+  "modal.header.mark_complete": "Mark complete",
+  "modal.header.mark_incomplete": "Mark incomplete",
+  "modal.error.missing_title": "A task title is required.",
+
+  "modal.field.description": "Description",
+  "modal.field.due_date": "Due date",
+  "modal.field.project": "Project",
+  "modal.field.subtasks": "Subtasks",
+  "modal.field.actions": "Actions",
+
+  "modal.title.default": "Task title",
+  "modal.description.placeholder": "Add a more detailed description...",
+
+  "modal.status.overdue": "Overdue",
+
+  "modal.project.clear": "Clear project",
+  "modal.project.placeholder": "Add to project...",
+
+  "modal.subtasks.count": "{completed}/{total} completed",
+  "modal.subtasks.empty.title": "You haven't added any subtasks yet",
+  "modal.subtasks.empty.subtitle": "Click the [+] button above to add your first subtask",
+  "modal.subtasks.limit.title": "Maximum nesting level reached",
+  "modal.subtasks.limit.subtitle": "Tasks can be nested up to {limit} levels deep",
+
+  "modal.action.create": "Create task",
+
+  "toast.info.task_archived": "Task archived",
+  "toast.info.task_deleted": "Task moved to deleted",
+  "toast.action.undo": "Undo",
+
+  "toast.error.general": "Something went wrong. Please try again.",
+  "toast.error.subtasks_update": "Some subtasks could not be updated.",
+  "toast.error.save_before_subtasks": "Save this task before adding subtasks.",
+  "toast.error.project_exists": "You already have a project with this name.",
+
+  "confirm.delete_forever.title": "Delete forever?",
+  "confirm.delete_forever.message": "This task and its subtasks will be permanently deleted. This can't be undone.",
+  "confirm.delete_project.title": "Delete project?",
+  "confirm.delete_project.message": "The project \"{name}\" will be deleted.",
+  "confirm.delete_account.title": "Delete account?",
+  "confirm.delete_account.message": "Your account and all your data will be permanently deleted. This can't be undone.",
+
+  "date.tomorrow": "Tomorrow",
+  "date.today": "Today",
+  "date.yesterday": "Yesterday",
+  "date.days_ago": "{days} days ago"
+}
